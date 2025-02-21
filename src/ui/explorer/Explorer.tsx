@@ -1,22 +1,18 @@
 import { Node } from "../../mung/Node";
-import { ClassTogglePanel } from "./ClassTogglePanel";
-import { useMemo, useState } from "react";
+import { useState } from "react";
 import { Surface } from "./Surface";
-import Sheet from "@mui/joy/Sheet";
-import { MungNodeChip } from "./MungNodeChip";
+import { SelectedNodeStore } from "./SelectedNodeStore";
+import { LeftPane } from "./LeftPane";
+import { RightPane } from "./RightPane";
 
 export interface ExplorerProps {
   readonly nodes: Node[];
 }
 
 export function Explorer(props: ExplorerProps) {
-  const allClasses = useMemo<Set<string>>(() => {
-    return new Set(props.nodes.map((n) => n.className));
-  }, [props.nodes]);
-
-  const [visibleClasses, setVisibleClasses] = useState<Set<string>>(allClasses);
-
-  const [selectedNode, setSelectedNode] = useState<Node | null>(null);
+  const [selectedNodeStore, _] = useState<SelectedNodeStore>(
+    () => new SelectedNodeStore(),
+  );
 
   return (
     <div
@@ -27,48 +23,15 @@ export function Explorer(props: ExplorerProps) {
         height: "100%",
       }}
     >
-      <Sheet
-        variant="outlined"
-        sx={{
-          width: "300px",
-          height: "100%",
-          borderWidth: "0 1px 0 0",
-          overflowY: "scroll",
-        }}
-      >
-        left pane
-        {props.nodes.slice(0, 10).map((node) => (
-          <MungNodeChip
-            key={node.id}
-            node={node}
-            selectedNode={selectedNode}
-            onSelected={() => setSelectedNode(node)}
-          />
-        ))}
-        <ClassTogglePanel
-          allClasses={allClasses}
-          visibleClasses={visibleClasses}
-          setVisibleClasses={setVisibleClasses}
-        />
-      </Sheet>
+      <LeftPane nodes={props.nodes} selectedNodeStore={selectedNodeStore} />
       <div
         style={{
           flexGrow: 1,
         }}
       >
-        <Surface nodes={props.nodes} selectedNode={selectedNode} />
+        <Surface nodes={props.nodes} selectedNodeStore={selectedNodeStore} />
       </div>
-      <Sheet
-        variant="outlined"
-        sx={{
-          width: "300px",
-          height: "100%",
-          borderWidth: "0 0 0 1px",
-        }}
-      >
-        right pane
-        <pre>{JSON.stringify(selectedNode, null, 2)}</pre>
-      </Sheet>
+      <RightPane nodes={props.nodes} selectedNodeStore={selectedNodeStore} />
     </div>
   );
 }

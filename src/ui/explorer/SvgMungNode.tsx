@@ -1,12 +1,20 @@
+import { useState } from "react";
 import { Node } from "../../mung/Node";
+import { SelectedNodeStore } from "./SelectedNodeStore";
+import { useAtom } from "jotai";
 
 export interface SvgMungNodeProps {
   readonly node: Node;
-  readonly selectedNode: Node | null;
+  readonly selectedNodeStore: SelectedNodeStore;
 }
 
 export function SvgMungNode(props: SvgMungNodeProps) {
-  const { node, selectedNode } = props;
+  const { node } = props;
+  const [isSelected, setIsSelected] = useAtom(
+    props.selectedNodeStore.getNodeIsSelectedAtom(props.node.id),
+  );
+
+  const [highlighted, setHighlighted] = useState<boolean>(false);
 
   return (
     <rect
@@ -14,13 +22,12 @@ export function SvgMungNode(props: SvgMungNodeProps) {
       y={node.top}
       width={node.width}
       height={node.height}
-      fill={
-        selectedNode?.id == node.id
-          ? "rgba(0, 255, 0, 0.1)"
-          : "rgba(255, 0, 0, 0.1)"
-      }
+      fill={isSelected ? "rgba(0, 255, 0, 0.1)" : "rgba(255, 0, 0, 0.1)"}
       stroke="rgba(255, 0, 0, 1)"
-      strokeWidth={3}
+      strokeWidth={highlighted ? 3 : 0}
+      onClick={() => setIsSelected(true)}
+      onMouseEnter={() => setHighlighted(true)}
+      onMouseLeave={() => setHighlighted(false)}
     />
   );
 }

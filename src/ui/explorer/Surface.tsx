@@ -2,10 +2,11 @@ import { useRef, useEffect } from "react";
 import { Node } from "../../mung/Node";
 import * as d3 from "d3";
 import { SvgMungNode } from "./SvgMungNode";
+import { SelectedNodeStore } from "./SelectedNodeStore";
 
 export interface SurfaceProps {
   readonly nodes: Node[];
-  readonly selectedNode: Node | null;
+  readonly selectedNodeStore: SelectedNodeStore;
 }
 
 export function Surface(props: SurfaceProps) {
@@ -52,7 +53,7 @@ export function Surface(props: SurfaceProps) {
           <SvgMungNode
             key={node.id}
             node={node}
-            selectedNode={props.selectedNode}
+            selectedNodeStore={props.selectedNodeStore}
           />
         ))}
       </g>
