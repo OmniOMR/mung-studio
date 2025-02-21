@@ -1,0 +1,36 @@
+{
+    "name": "mung-studio",
+    "version": "0.1.0-dev",
+    "private": true,
+    "source": [
+        "src/index.html"
+    ],
+    "browserslist": "> 0.5%, last 2 versions, not dead",
+    "scripts": {
+        "start": "npm run clean && parcel",
+        "start-public": "npm run clean && parcel --host 0.0.0.0",
+        "build": "npm run clean && parcel build --public-url ./",
+        "clean": "rm -rf .parcel-cache dist",
+        "serve": "http-server dist",
+        "lint": "eslint src/**/*.tsx",
+        "prettier-check": "prettier src --check",
+        "prettier-write": "prettier src --write"
+    },
+    "devDependencies": {
+        "@babel/core": "^7.23.3",
+        "@babel/eslint-parser": "^7.23.3",
+        "@babel/preset-env": "^7.23.3",
+        "@babel/preset-react": "^7.23.3",
+        "@emotion/react": "^11.14.0",
+        "@emotion/styled": "^11.14.0",
+        "@mui/joy": "^5.0.0-beta.51",
+        "eslint": "^8.54.0",
+        "eslint-plugin-react": "^7.34.0",
+        "parcel": "^2.11.0",
+        "prettier": "^3.5.1",
+        "process": "^0.11.10",
+        "react": "^18.2.0",
+        "react-dom": "^18.2.0",
+        "react-router-dom": "^6.23.0"
+    }
+}
