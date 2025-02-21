@@ -18,17 +18,22 @@ export function InMemoryPage() {
   }
 
   return (
-    <>
-      <h1>In Memory</h1>
-
+    <div
+      style={{
+        position: "relative",
+        height: "100vh",
+        overflow: "hidden",
+      }}
+    >
       {mungNodes === null && (
         <>
+          <h1>In Memory</h1>
           <p>Upload MuNG file:</p>
           <input type="file" onChange={(e) => handleFileUpload(e.target)} />
         </>
       )}
 
       {mungNodes !== null && <Explorer nodes={mungNodes} />}
-    </>
+    </div>
   );
 }

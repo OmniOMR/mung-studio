@@ -1,3 +1,7 @@
+// must be imported before React and React DOM
+// https://github.com/aidenybai/react-scan
+import { scan } from "react-scan";
+
 import { createRoot } from "react-dom/client";
 import { Application } from "./Application";
 
