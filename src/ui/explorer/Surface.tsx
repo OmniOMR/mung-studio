@@ -5,7 +5,8 @@ import { SvgMungNode } from "./SvgMungNode";
 import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { NotationGraphStore } from "./state/NotationGraphStore";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
+import { SvgEdgeNode } from "./SvgEdgeNode";
 
 export interface SurfaceProps {
   readonly notationGraphStore: NotationGraphStore;
@@ -15,6 +16,7 @@ export interface SurfaceProps {
 
 export function Surface(props: SurfaceProps) {
   const nodeList = useAtomValue(props.notationGraphStore.nodeListAtom);
+  const edges = useAtomValue(props.notationGraphStore.edgesAtom);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
@@ -46,6 +48,21 @@ export function Surface(props: SurfaceProps) {
         background: "#eee",
       }}
     >
+      <defs>
+        {/* Used by edges to render the arrow head */}
+        {/* https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker */}
+        <marker
+          id="mung-edge-arrow-head"
+          viewBox="0 0 10 10"
+          refX="5"
+          refY="5"
+          markerWidth="6"
+          markerHeight="6"
+          orient="auto-start-reverse"
+        >
+          <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
+        </marker>
+      </defs>
       <g>
         <image
           x="0"
@@ -62,6 +79,13 @@ export function Surface(props: SurfaceProps) {
             notationGraphStore={props.notationGraphStore}
             selectedNodeStore={props.selectedNodeStore}
             classVisibilityStore={props.classVisibilityStore}
+          />
+        ))}
+        {edges.map((edge) => (
+          <SvgEdgeNode
+            key={edge.id}
+            edge={edge}
+            notationGraphStore={props.notationGraphStore}
           />
         ))}
       </g>

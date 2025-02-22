@@ -8,8 +8,8 @@ export interface Node {
   left: number;
   width: number;
   height: number;
-  // outlinks
-  // inlinks
+  outlinks: number[];
+  inlinks: number[];
   // mask
   dataset: string;
   document: string;

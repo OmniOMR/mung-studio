@@ -1,11 +1,28 @@
 import { Atom, atom, PrimitiveAtom } from "jotai";
 import { Node } from "../../../mung/Node";
 
+export interface Edge {
+  readonly id: string;
+  readonly fromId: number;
+  readonly toId: number;
+}
+
+export interface EdgeWithNodes extends Edge {
+  readonly from: Node;
+  readonly to: Node;
+}
+
+export function computeEdgeId(fromId: number, toId: number): string {
+  return fromId + "_" + toId;
+}
+
 /**
  * Stores the Music Notation Graph state
  */
 export class NotationGraphStore {
   constructor(nodes: Node[]) {
+    // === vertices ===
+
     this.nodeAtoms = new Map<number, PrimitiveAtom<Node>>();
     for (const node of nodes) {
       this.nodeAtoms.set(node.id, atom<Node>(node));
@@ -14,6 +31,59 @@ export class NotationGraphStore {
     this.nodeListBaseAtom = atom<number[]>(
       nodes.map((node) => node.id).sort((a, b) => a - b),
     );
+
+    // === edges ===
+
+    const edges: Edge[] = [];
+
+    for (const node of nodes) {
+      // validate outlinks
+      for (const id of node.outlinks) {
+        if (!this.nodeAtoms.has(id)) {
+          throw new Error(
+            `Node ${node.id} has outlink to ${id} which does not exist.`,
+          );
+        }
+      }
+
+      // validate inlinks
+      for (const id of node.inlinks) {
+        if (!this.nodeAtoms.has(id)) {
+          throw new Error(
+            `Node ${node.id} has inlink to ${id} which does not exist.`,
+          );
+        }
+      }
+
+      // construct edges
+      edges.push(
+        ...node.outlinks.map((targetId) => ({
+          id: computeEdgeId(node.id, targetId),
+          fromId: node.id,
+          toId: targetId,
+        })),
+      );
+    }
+
+    this.edgesBaseAtom = atom<Edge[]>(edges);
+
+    this.edgeWithNodesAtoms = new Map<string, Atom<EdgeWithNodes>>();
+    for (const edge of edges) {
+      this.edgeWithNodesAtoms.set(
+        edge.id,
+        atom<EdgeWithNodes>((get) => {
+          const from = get(this.nodeAtoms.get(edge.fromId)!);
+          const to = get(this.nodeAtoms.get(edge.toId)!);
+          return {
+            ...edge,
+            from,
+            to,
+          };
+        }),
+      );
+    }
+
+    // === class names ===
 
     this.classNamesBaseAtom = atom<Set<string>>(
       new Set<string>(nodes.map((node) => node.className)),
@@ -57,6 +127,25 @@ export class NotationGraphStore {
   ///////////////////
   // Edges (Links) //
   ///////////////////
+
+  private readonly edgesBaseAtom: PrimitiveAtom<Edge[]>;
+
+  /**
+   * Exposes the list of all edges
+   */
+  public readonly edgesAtom = atom((get) => get(this.edgesBaseAtom));
+
+  private readonly edgeWithNodesAtoms: Map<string, Atom<EdgeWithNodes>>;
+
+  public getEdgeWithNodesAtom(edge: Edge): Atom<EdgeWithNodes> {
+    const edgeAtom = this.edgeWithNodesAtoms.get(edge.id);
+
+    if (edgeAtom === undefined) {
+      throw new Error("Requested edge does not exist");
+    }
+
+    return edgeAtom;
+  }
 
   /////////////////
   // Class Names //

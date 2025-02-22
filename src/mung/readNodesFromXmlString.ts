@@ -38,7 +38,15 @@ function readNodeFromXmlElement(
     left: parseInt(element.querySelector("Left")?.innerHTML || "NaN"),
     width: parseInt(element.querySelector("Width")?.innerHTML || "NaN"),
     height: parseInt(element.querySelector("Height")?.innerHTML || "NaN"),
+    outlinks: parseIntList(element.querySelector("Outlinks")?.innerHTML),
+    inlinks: parseIntList(element.querySelector("Inlinks")?.innerHTML),
     dataset,
     document,
   };
+}
+
+function parseIntList(value?: string): number[] {
+  if (!value) return [];
+  const parts = value.split(" ");
+  return parts.map((part) => parseInt(part));
 }
