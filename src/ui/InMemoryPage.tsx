@@ -33,7 +33,7 @@ export function InMemoryPage() {
         </>
       )}
 
-      {mungNodes !== null && <Explorer nodes={mungNodes} />}
+      {mungNodes !== null && <Explorer initialNodes={mungNodes} />}
     </div>
   );
 }

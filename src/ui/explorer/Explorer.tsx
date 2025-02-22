@@ -1,21 +1,26 @@
 import { Node } from "../../mung/Node";
 import { useState } from "react";
 import { Surface } from "./Surface";
-import { SelectedNodeStore } from "./SelectedNodeStore";
+import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { LeftPane } from "./LeftPane";
 import { RightPane } from "./RightPane";
-import { ClassVisibilityStore } from "./ClassVisibilityStore";
+import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
+import { NotationGraphStore } from "./state/NotationGraphStore";
 
 export interface ExplorerProps {
-  readonly nodes: Node[];
+  readonly initialNodes: Node[];
 }
 
 export function Explorer(props: ExplorerProps) {
-  const [selectedNodeStore, _] = useState<SelectedNodeStore>(
-    () => new SelectedNodeStore(),
+  const [notationGraphStore, _] = useState<NotationGraphStore>(
+    () => new NotationGraphStore(props.initialNodes)
   );
 
-  const [classVisibilityStore, __] = useState<ClassVisibilityStore>(
+  const [selectedNodeStore, __] = useState<SelectedNodeStore>(
+    () => new SelectedNodeStore(notationGraphStore),
+  );
+
+  const [classVisibilityStore, ___] = useState<ClassVisibilityStore>(
     () => new ClassVisibilityStore(),
   );
 
@@ -29,7 +34,7 @@ export function Explorer(props: ExplorerProps) {
       }}
     >
       <LeftPane
-        nodes={props.nodes}
+        notationGraphStore={notationGraphStore}
         selectedNodeStore={selectedNodeStore}
         classVisibilityStore={classVisibilityStore}
       />
@@ -39,12 +44,15 @@ export function Explorer(props: ExplorerProps) {
         }}
       >
         <Surface
-          nodes={props.nodes}
+          notationGraphStore={notationGraphStore}
           selectedNodeStore={selectedNodeStore}
           classVisibilityStore={classVisibilityStore}
         />
       </div>
-      <RightPane nodes={props.nodes} selectedNodeStore={selectedNodeStore} />
+      <RightPane
+        notationGraphStore={notationGraphStore}
+        selectedNodeStore={selectedNodeStore}
+      />
     </div>
   );
 }

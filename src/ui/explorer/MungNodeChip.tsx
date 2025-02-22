@@ -1,16 +1,20 @@
 import Chip from "@mui/joy/Chip";
 import { Node } from "../../mung/Node";
-import { SelectedNodeStore } from "./SelectedNodeStore";
-import { useAtom } from "jotai";
+import { SelectedNodeStore } from "./state/SelectedNodeStore";
+import { useAtom, useAtomValue } from "jotai";
+import { NotationGraphStore } from "./state/NotationGraphStore";
 
 export interface MungNodeChipProps {
-  readonly node: Node;
+  readonly nodeId: number;
+  readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
 }
 
 export function MungNodeChip(props: MungNodeChipProps) {
+  const node = useAtomValue(props.notationGraphStore.getNodeAtom(props.nodeId));
+  
   const [isSelected, setIsSelected] = useAtom(
-    props.selectedNodeStore.getNodeIsSelectedAtom(props.node.id),
+    props.selectedNodeStore.getNodeIsSelectedAtom(props.nodeId),
   );
 
   return (
@@ -19,7 +23,7 @@ export function MungNodeChip(props: MungNodeChipProps) {
       variant={isSelected ? "solid" : "soft"}
       onClick={() => setIsSelected(!isSelected)}
     >
-      {props.node.id}
+      {node.id}
     </Chip>
   );
 }

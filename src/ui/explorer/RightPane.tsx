@@ -1,10 +1,11 @@
 import Sheet from "@mui/joy/Sheet";
-import { SelectedNodeStore } from "./SelectedNodeStore";
+import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { Node } from "../../mung/Node";
 import { useAtomValue } from "jotai";
+import { NotationGraphStore } from "./state/NotationGraphStore";
 
 export interface RightPaneProps {
-  readonly nodes: Node[];
+  readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
 }
 
@@ -12,6 +13,8 @@ export function RightPane(props: RightPaneProps) {
   const selectedNodeId = useAtomValue(
     props.selectedNodeStore.selectedNodeIdAtom,
   );
+  
+  const node = useAtomValue(props.selectedNodeStore.selectedNodeAtom);
 
   return (
     <Sheet
@@ -22,13 +25,9 @@ export function RightPane(props: RightPaneProps) {
         borderWidth: "0 0 0 1px",
       }}
     >
-      right pane, selected node: {selectedNodeId}
+      selected node: {selectedNodeId}
       <pre>
-        {JSON.stringify(
-          props.nodes.filter((n) => n.id === selectedNodeId),
-          null,
-          2,
-        )}
+        {JSON.stringify(node, null, 2)}
       </pre>
     </Sheet>
   );

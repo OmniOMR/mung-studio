@@ -1,21 +1,20 @@
 import Sheet from "@mui/joy/Sheet";
 import { MungNodeChip } from "./MungNodeChip";
-import { Node } from "../../mung/Node";
-import { SelectedNodeStore } from "./SelectedNodeStore";
+import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { ClassTogglePanel } from "./ClassTogglePanel";
-import { useMemo, useState } from "react";
-import { ClassVisibilityStore } from "./ClassVisibilityStore";
+import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
+import { NotationGraphStore } from "./state/NotationGraphStore";
+import { useAtomValue } from "jotai";
 
 export interface LeftPaneProps {
-  readonly nodes: Node[];
+  readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
   readonly classVisibilityStore: ClassVisibilityStore;
 }
 
 export function LeftPane(props: LeftPaneProps) {
-  const allClasses = useMemo<Set<string>>(() => {
-    return new Set(props.nodes.map((n) => n.className));
-  }, [props.nodes]);
+  const nodeList = useAtomValue(props.notationGraphStore.nodeListAtom);
+  const classNames = useAtomValue(props.notationGraphStore.classNamesAtom);
 
   return (
     <Sheet
@@ -28,13 +27,14 @@ export function LeftPane(props: LeftPaneProps) {
       }}
     >
       <ClassTogglePanel
-        allClasses={allClasses}
+        classNames={classNames}
         classVisibilityStore={props.classVisibilityStore}
       />
-      {props.nodes.map((node) => (
+      {nodeList.map((nodeId) => (
         <MungNodeChip
-          key={node.id}
-          node={node}
+          key={nodeId}
+          nodeId={nodeId}
+          notationGraphStore={props.notationGraphStore}
           selectedNodeStore={props.selectedNodeStore}
         />
       ))}

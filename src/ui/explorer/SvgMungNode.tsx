@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Node } from "../../mung/Node";
-import { SelectedNodeStore } from "./SelectedNodeStore";
-import { useAtom } from "jotai";
-import { ClassVisibilityStore } from "./ClassVisibilityStore";
+import { SelectedNodeStore } from "./state/SelectedNodeStore";
+import { useAtom, useAtomValue } from "jotai";
+import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
+import { NotationGraphStore } from "./state/NotationGraphStore";
 
 export interface SvgMungNodeProps {
-  readonly node: Node;
+  readonly nodeId: number;
+  readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
   readonly classVisibilityStore: ClassVisibilityStore;
 }
@@ -25,12 +27,13 @@ function classNameToHue(className: string): number {
 }
 
 export function SvgMungNode(props: SvgMungNodeProps) {
-  const { node } = props;
+  const node = useAtomValue(props.notationGraphStore.getNodeAtom(props.nodeId));
+  
   const [isSelected, setIsSelected] = useAtom(
-    props.selectedNodeStore.getNodeIsSelectedAtom(props.node.id),
+    props.selectedNodeStore.getNodeIsSelectedAtom(node.id),
   );
   const [isVisible, setIsVisible] = useAtom(
-    props.classVisibilityStore.getIsClassVisibleAtom(props.node.className),
+    props.classVisibilityStore.getIsClassVisibleAtom(node.className),
   );
 
   const [highlighted, setHighlighted] = useState<boolean>(false);

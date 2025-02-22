@@ -2,16 +2,20 @@ import { useRef, useEffect } from "react";
 import { Node } from "../../mung/Node";
 import * as d3 from "d3";
 import { SvgMungNode } from "./SvgMungNode";
-import { SelectedNodeStore } from "./SelectedNodeStore";
-import { ClassVisibilityStore } from "./ClassVisibilityStore";
+import { SelectedNodeStore } from "./state/SelectedNodeStore";
+import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
+import { NotationGraphStore } from "./state/NotationGraphStore";
+import { useAtomValue } from "jotai";
 
 export interface SurfaceProps {
-  readonly nodes: Node[];
+  readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
   readonly classVisibilityStore: ClassVisibilityStore;
 }
 
 export function Surface(props: SurfaceProps) {
+  const nodeList = useAtomValue(props.notationGraphStore.nodeListAtom);
+
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   useEffect(() => {
@@ -51,10 +55,11 @@ export function Surface(props: SurfaceProps) {
             imageRendering: "pixelated",
           }}
         />
-        {props.nodes.map((node) => (
+        {nodeList.map((nodeId) => (
           <SvgMungNode
-            key={node.id}
-            node={node}
+            key={nodeId}
+            nodeId={nodeId}
+            notationGraphStore={props.notationGraphStore}
             selectedNodeStore={props.selectedNodeStore}
             classVisibilityStore={props.classVisibilityStore}
           />

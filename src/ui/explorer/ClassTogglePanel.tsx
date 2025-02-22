@@ -1,15 +1,15 @@
 import { useAtom } from "jotai";
-import { ClassVisibilityStore } from "./ClassVisibilityStore";
+import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 
 export interface ClassTogglePanelProps {
-  readonly allClasses: Set<string>;
+  readonly classNames: string[];
   readonly classVisibilityStore: ClassVisibilityStore;
 }
 
 export function ClassTogglePanel(props: ClassTogglePanelProps) {
   return (
     <ul>
-      {[...props.allClasses].sort().map((className) => (
+      {props.classNames.map((className) => (
         <li key={className}>
           <OneClassToggle
             className={className}

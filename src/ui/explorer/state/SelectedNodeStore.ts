@@ -1,9 +1,19 @@
 import { atom, PrimitiveAtom, WritableAtom } from "jotai";
+import { NotationGraphStore } from "./NotationGraphStore";
 
 /**
  * Contains atoms that track the selected node
  */
 export class SelectedNodeStore {
+  /**
+   * Reference to the notation graph
+   */
+  private readonly notationGraphStore: NotationGraphStore;
+  
+  constructor(notationGraphStore: NotationGraphStore) {
+    this.notationGraphStore = notationGraphStore;
+  }
+
   ////////////////////
   // SelectedNodeId //
   ////////////////////
@@ -35,6 +45,17 @@ export class SelectedNodeStore {
         set(this.getNodeIsSelectedBaseAtom(newValue), true);
       }
     },
+  );
+
+  /**
+   * Exploses the selected node or null
+   */
+  public readonly selectedNodeAtom = atom(
+    get => {
+      const nodeId = get(this.selectedNodeIdAtom);
+      if (nodeId === null) return null;
+      return get(this.notationGraphStore.getNodeAtom(nodeId));
+    }
   );
 
   /////////////////////////////////
