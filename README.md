@@ -1,5 +1,7 @@
 # MuNG Studio
 
+Try MuNG Studio at: https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio
+
 The MuNG format: https://github.com/OMR-Research/mung
 
 The MUSCIMA++ v2.0 dataset: https://github.com/OMR-Research/muscima-pp/releases/tag/v2.0
