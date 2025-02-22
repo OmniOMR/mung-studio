@@ -5,19 +5,18 @@ import { Node } from "../../../mung/Node";
  * Stores the Music Notation Graph state
  */
 export class NotationGraphStore {
-
   constructor(nodes: Node[]) {
     this.nodeAtoms = new Map<number, PrimitiveAtom<Node>>();
     for (const node of nodes) {
-      this.nodeAtoms.set(node.id, atom<Node>(node))
+      this.nodeAtoms.set(node.id, atom<Node>(node));
     }
 
     this.nodeListBaseAtom = atom<number[]>(
-      nodes.map(node => node.id).sort((a, b) => a - b)
+      nodes.map((node) => node.id).sort((a, b) => a - b),
     );
 
     this.classNamesBaseAtom = atom<Set<string>>(
-      new Set<string>(nodes.map(node => node.className))
+      new Set<string>(nodes.map((node) => node.className)),
     );
   }
 
@@ -41,8 +40,8 @@ export class NotationGraphStore {
   /**
    * Read-only atom that exposes the list of existing node IDs
    */
-  public readonly nodeListAtom: Atom<number[]> = atom(
-    get => get(this.nodeListBaseAtom)
+  public readonly nodeListAtom: Atom<number[]> = atom((get) =>
+    get(this.nodeListBaseAtom),
   );
 
   public getNodeAtom(nodeId: number): PrimitiveAtom<Node> {
@@ -71,8 +70,7 @@ export class NotationGraphStore {
   /**
    * Read-only atom that exposes the list of known class names
    */
-  public readonly classNamesAtom: Atom<string[]> = atom(
-    get => [...get(this.classNamesBaseAtom)].sort()
+  public readonly classNamesAtom: Atom<string[]> = atom((get) =>
+    [...get(this.classNamesBaseAtom)].sort(),
   );
-
 }

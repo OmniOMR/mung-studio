@@ -13,7 +13,7 @@ export interface ExplorerProps {
 
 export function Explorer(props: ExplorerProps) {
   const [notationGraphStore, _] = useState<NotationGraphStore>(
-    () => new NotationGraphStore(props.initialNodes)
+    () => new NotationGraphStore(props.initialNodes),
   );
 
   const [selectedNodeStore, __] = useState<SelectedNodeStore>(

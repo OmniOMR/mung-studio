@@ -28,7 +28,7 @@ function classNameToHue(className: string): number {
 
 export function SvgMungNode(props: SvgMungNodeProps) {
   const node = useAtomValue(props.notationGraphStore.getNodeAtom(props.nodeId));
-  
+
   const [isSelected, setIsSelected] = useAtom(
     props.selectedNodeStore.getNodeIsSelectedAtom(node.id),
   );

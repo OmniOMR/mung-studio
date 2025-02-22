@@ -12,7 +12,7 @@ export interface MungNodeChipProps {
 
 export function MungNodeChip(props: MungNodeChipProps) {
   const node = useAtomValue(props.notationGraphStore.getNodeAtom(props.nodeId));
-  
+
   const [isSelected, setIsSelected] = useAtom(
     props.selectedNodeStore.getNodeIsSelectedAtom(props.nodeId),
   );

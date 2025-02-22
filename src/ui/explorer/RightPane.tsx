@@ -13,7 +13,7 @@ export function RightPane(props: RightPaneProps) {
   const selectedNodeId = useAtomValue(
     props.selectedNodeStore.selectedNodeIdAtom,
   );
-  
+
   const node = useAtomValue(props.selectedNodeStore.selectedNodeAtom);
 
   return (
@@ -26,9 +26,7 @@ export function RightPane(props: RightPaneProps) {
       }}
     >
       selected node: {selectedNodeId}
-      <pre>
-        {JSON.stringify(node, null, 2)}
-      </pre>
+      <pre>{JSON.stringify(node, null, 2)}</pre>
     </Sheet>
   );
 }

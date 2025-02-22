@@ -9,7 +9,7 @@ export class SelectedNodeStore {
    * Reference to the notation graph
    */
   private readonly notationGraphStore: NotationGraphStore;
-  
+
   constructor(notationGraphStore: NotationGraphStore) {
     this.notationGraphStore = notationGraphStore;
   }
@@ -48,15 +48,13 @@ export class SelectedNodeStore {
   );
 
   /**
-   * Exploses the selected node or null
+   * Exposes the selected node or null
    */
-  public readonly selectedNodeAtom = atom(
-    get => {
-      const nodeId = get(this.selectedNodeIdAtom);
-      if (nodeId === null) return null;
-      return get(this.notationGraphStore.getNodeAtom(nodeId));
-    }
-  );
+  public readonly selectedNodeAtom = atom((get) => {
+    const nodeId = get(this.selectedNodeIdAtom);
+    if (nodeId === null) return null;
+    return get(this.notationGraphStore.getNodeAtom(nodeId));
+  });
 
   /////////////////////////////////
   // NodeIsSelected (base atoms) //
