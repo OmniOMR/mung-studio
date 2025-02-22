@@ -1,14 +1,14 @@
 import { useRef, useEffect } from "react";
-import { Node } from "../../mung/Node";
 import * as d3 from "d3";
 import { SvgMungNode } from "./SvgMungNode";
 import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { NotationGraphStore } from "./state/NotationGraphStore";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { SvgEdgeNode } from "./SvgEdgeNode";
 
 export interface SurfaceProps {
+  readonly backgroundImageUrl: string | null;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
   readonly classVisibilityStore: ClassVisibilityStore;
@@ -36,8 +36,6 @@ export function Surface(props: SurfaceProps) {
       g.attr("transform", transform);
     }
   }, []);
-
-  const uuid = "fbc49126-72c9-4b12-a6ff-8455d2ce9b4d";
 
   return (
     <svg
@@ -67,7 +65,7 @@ export function Surface(props: SurfaceProps) {
         <image
           x="0"
           y="0"
-          href={`https://api.kramerius.mzk.cz/search/iiif/uuid:${uuid}/full/max/0/default.jpg`}
+          href={props.backgroundImageUrl ?? undefined}
           style={{
             imageRendering: "pixelated",
           }}

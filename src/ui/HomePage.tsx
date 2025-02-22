@@ -1,13 +1,31 @@
-import { Link } from "react-router-dom";
+import { Link as RouterLink } from "react-router-dom";
+import Link from "@mui/joy/Link";
+import Typography from "@mui/joy/Typography";
+import Box from "@mui/joy/Box";
 
 export function HomePage() {
   return (
-    <>
-      <h1>MuNG Studio</h1>
+    <Box
+      sx={{
+        maxWidth: "800px",
+        margin: "80px auto",
+      }}
+    >
+      <Typography level="h1" gutterBottom>
+        MuNG Studio
+      </Typography>
 
-      <p>Welcome sailor!</p>
+      <Typography level="body-md" gutterBottom>
+        This is a viewer for the MuNG format.
+      </Typography>
 
-      <Link to="in-memory">Preview MuNG file by uploading it</Link>
-    </>
+      <Typography level="body-md" gutterBottom>
+        Proceed to the{" "}
+        <Link component={RouterLink} to="in-memory">
+          in-memory file preview
+        </Link>{" "}
+        page to start viewing.
+      </Typography>
+    </Box>
   );
 }
