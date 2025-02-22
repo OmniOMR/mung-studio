@@ -3,10 +3,12 @@ import { Node } from "../../mung/Node";
 import * as d3 from "d3";
 import { SvgMungNode } from "./SvgMungNode";
 import { SelectedNodeStore } from "./SelectedNodeStore";
+import { ClassVisibilityStore } from "./ClassVisibilityStore";
 
 export interface SurfaceProps {
   readonly nodes: Node[];
   readonly selectedNodeStore: SelectedNodeStore;
+  readonly classVisibilityStore: ClassVisibilityStore;
 }
 
 export function Surface(props: SurfaceProps) {
@@ -54,6 +56,7 @@ export function Surface(props: SurfaceProps) {
             key={node.id}
             node={node}
             selectedNodeStore={props.selectedNodeStore}
+            classVisibilityStore={props.classVisibilityStore}
           />
         ))}
       </g>

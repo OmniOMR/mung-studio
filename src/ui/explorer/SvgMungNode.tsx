@@ -2,10 +2,12 @@ import { useState } from "react";
 import { Node } from "../../mung/Node";
 import { SelectedNodeStore } from "./SelectedNodeStore";
 import { useAtom } from "jotai";
+import { ClassVisibilityStore } from "./ClassVisibilityStore";
 
 export interface SvgMungNodeProps {
   readonly node: Node;
   readonly selectedNodeStore: SelectedNodeStore;
+  readonly classVisibilityStore: ClassVisibilityStore;
 }
 
 export function SvgMungNode(props: SvgMungNodeProps) {
@@ -13,11 +15,17 @@ export function SvgMungNode(props: SvgMungNodeProps) {
   const [isSelected, setIsSelected] = useAtom(
     props.selectedNodeStore.getNodeIsSelectedAtom(props.node.id),
   );
+  const [isVisible, setIsVisible] = useAtom(
+    props.classVisibilityStore.getIsClassVisibleAtom(props.node.className),
+  );
 
   const [highlighted, setHighlighted] = useState<boolean>(false);
 
   return (
     <rect
+      style={{
+        display: isVisible ? undefined : "none",
+      }}
       x={node.left}
       y={node.top}
       width={node.width}

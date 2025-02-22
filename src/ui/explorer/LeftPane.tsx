@@ -4,18 +4,18 @@ import { Node } from "../../mung/Node";
 import { SelectedNodeStore } from "./SelectedNodeStore";
 import { ClassTogglePanel } from "./ClassTogglePanel";
 import { useMemo, useState } from "react";
+import { ClassVisibilityStore } from "./ClassVisibilityStore";
 
 export interface LeftPaneProps {
   readonly nodes: Node[];
   readonly selectedNodeStore: SelectedNodeStore;
+  readonly classVisibilityStore: ClassVisibilityStore;
 }
 
 export function LeftPane(props: LeftPaneProps) {
   const allClasses = useMemo<Set<string>>(() => {
     return new Set(props.nodes.map((n) => n.className));
   }, [props.nodes]);
-
-  const [visibleClasses, setVisibleClasses] = useState<Set<string>>(allClasses);
 
   return (
     <Sheet
@@ -27,7 +27,10 @@ export function LeftPane(props: LeftPaneProps) {
         overflowY: "scroll",
       }}
     >
-      left pane
+      <ClassTogglePanel
+        allClasses={allClasses}
+        classVisibilityStore={props.classVisibilityStore}
+      />
       {props.nodes.map((node) => (
         <MungNodeChip
           key={node.id}
@@ -35,11 +38,6 @@ export function LeftPane(props: LeftPaneProps) {
           selectedNodeStore={props.selectedNodeStore}
         />
       ))}
-      <ClassTogglePanel
-        allClasses={allClasses}
-        visibleClasses={visibleClasses}
-        setVisibleClasses={setVisibleClasses}
-      />
     </Sheet>
   );
 }
