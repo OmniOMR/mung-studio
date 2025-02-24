@@ -3,6 +3,9 @@ import Link from "@mui/joy/Link";
 import Typography from "@mui/joy/Typography";
 import Box from "@mui/joy/Box";
 
+import packageJson from "../../package.json"
+const VERSION = packageJson.version
+
 export function HomePage() {
   return (
     <Box
@@ -11,8 +14,12 @@ export function HomePage() {
         margin: "80px auto",
       }}
     >
-      <Typography level="h1" gutterBottom>
+      <Typography level="h1">
         MuNG Studio
+      </Typography>
+
+      <Typography level="body-sm" gutterBottom sx={{ mb: 2 }}>
+        Version {VERSION}
       </Typography>
 
       <Typography level="body-md" gutterBottom>
