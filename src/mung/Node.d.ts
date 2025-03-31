@@ -11,6 +11,7 @@ export interface Node {
   outlinks: number[];
   inlinks: number[];
   // mask
+  polygon: number[] | null;
   dataset: string;
   document: string;
 }

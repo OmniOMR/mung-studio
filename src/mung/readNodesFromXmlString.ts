@@ -40,6 +40,7 @@ function readNodeFromXmlElement(
     height: parseInt(element.querySelector("Height")?.innerHTML || "NaN"),
     outlinks: parseIntList(element.querySelector("Outlinks")?.innerHTML),
     inlinks: parseIntList(element.querySelector("Inlinks")?.innerHTML),
+    polygon: null,
     dataset,
     document,
   };

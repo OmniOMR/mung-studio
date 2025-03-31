@@ -4,6 +4,7 @@ import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { useAtom, useAtomValue } from "jotai";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { NotationGraphStore } from "./state/NotationGraphStore";
+import { svgPathFromMungPolygon } from "../../mung/svgPathFromMungPolygon";
 
 export interface SvgMungNodeProps {
   readonly nodeId: number;
@@ -42,20 +43,30 @@ export function SvgMungNode(props: SvgMungNodeProps) {
   const lightness = highlighted ? 90 : 50;
 
   return (
-    <rect
-      style={{
-        display: isVisible ? undefined : "none",
-      }}
-      x={node.left}
-      y={node.top}
-      width={node.width}
-      height={node.height}
-      fill={`hsla(${hue}, 100%, ${lightness}%, 0.2)`}
-      stroke={`hsla(${hue}, 100%, ${lightness}%, 1.0)`}
-      strokeWidth={isSelected ? "var(--scene-screen-pixel)" : "0"}
-      onClick={() => setIsSelected(true)}
-      onMouseEnter={() => setHighlighted(true)}
-      onMouseLeave={() => setHighlighted(false)}
-    />
+    <>
+      {node.polygon && (
+        <path
+          d={svgPathFromMungPolygon(node)}
+          fill={`hsla(${hue}, 100%, ${lightness}%, 0.2)`}
+          stroke={`hsla(${hue}, 100%, ${lightness}%, 1.0)`}
+          strokeWidth={isSelected ? "var(--scene-screen-pixel)" : "0"}
+        />
+      )}
+      <rect
+        style={{
+          display: isVisible ? undefined : "none",
+        }}
+        x={node.left}
+        y={node.top}
+        width={node.width}
+        height={node.height}
+        fill={`hsla(${hue}, 100%, ${lightness}%, 0.2)`}
+        stroke={`hsla(${hue}, 100%, ${lightness}%, 1.0)`}
+        strokeWidth={isSelected ? "var(--scene-screen-pixel)" : "0"}
+        onClick={() => setIsSelected(true)}
+        onMouseEnter={() => setHighlighted(true)}
+        onMouseLeave={() => setHighlighted(false)}
+      />
+    </>
   );
 }

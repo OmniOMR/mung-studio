@@ -78,6 +78,28 @@ function pick_nearby_node(nodes: Node[], center: Node): Node {
   return nodes_and_disances[i].node;
 }
 
+/**
+ * Generates the polygon field for the given node
+ */
+function generatePolygon(node: Node) {
+  const points: number[] = [];
+
+  const vertices = 50;
+  const center_x = node.left + node.width / 2;
+  const center_y = node.top + node.height / 2;
+  const radius = Math.min(node.width, node.height);
+  for (let i = 0; i < vertices; i++) {
+    const angle = (i / vertices) * 2 * Math.PI;
+    const radius_fraction = uniform(0.8, 1);
+    const x = center_x + Math.cos(angle) * radius * radius_fraction;
+    const y = center_y + Math.sin(angle) * radius * radius_fraction;
+
+    points.push(Math.round(x), Math.round(y));
+  }
+
+  node.polygon = points;
+}
+
 function generateTestNodes(): Node[] {
   const nodes: Node[] = [];
 
@@ -89,7 +111,7 @@ function generateTestNodes(): Node[] {
   const max_size = 200;
 
   for (let i = 0; i < 2_000; i++) {
-    nodes.push({
+    const node = {
       id: i,
       className: pick(classes),
       top: Math.round(Math.random() * (page_height - max_size)),
@@ -98,22 +120,25 @@ function generateTestNodes(): Node[] {
       height: Math.round(uniform(min_size, max_size)),
       outlinks: [],
       inlinks: [],
+      polygon: null,
       dataset: "test",
       document: "test",
-    });
+    };
+    generatePolygon(node);
+    nodes.push(node);
   }
 
   // generate edges
   for (let i = 0; i < 2_000; i++) {
     const a = pick(nodes);
     const b = pick_nearby_node(nodes, a);
-    
+
     // prevent double-links
     if (a.outlinks.indexOf(b.id) !== -1) {
       i--;
       continue;
     }
-    
+
     a.outlinks.push(b.id);
     b.inlinks.push(a.id);
   }

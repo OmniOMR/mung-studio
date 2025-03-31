@@ -50,3 +50,10 @@ Rendering the SVG red arrows between MuNG nodes is SLOW. And it's slow on the GP
 In the profiler, in the GPU section, there are green rectangles that now take around 18ms to finish (way over the frame budget). These green rectangles are (I guess) something like GPU draw-calls.
 
 This happens even if I render JUST the edges, without any nodes (rectangles). When I render only the background image, these GPU draw calls take around 0.8 ms and when I render the background with the node rectangles, they take around 2.5 ms.
+
+
+## Polygons
+
+Polygon rendering has the same issues as SVG arrows. They consume GPU. It takes around 50ms just to render them, which feels very sluggish.
+
+> **Note:** When polygons are occluded from view, the GPU rendering time goes down significantly. So the browser does not render what cannot be seen.
