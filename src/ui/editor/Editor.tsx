@@ -88,6 +88,7 @@ export function Editor(props: EditorProps) {
           flexDirection: "row",
           justifyItems: "stretch",
           overflow: "hidden",
+          flexGrow: 1,
         }}
       >
         <OverviewPanel

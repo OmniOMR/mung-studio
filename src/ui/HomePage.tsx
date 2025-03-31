@@ -31,6 +31,16 @@ export function HomePage() {
         </Link>{" "}
         page to start viewing.
       </Typography>
+
+      <Typography level="h2">Development</Typography>
+
+      <Typography level="body-md" gutterBottom>
+        Open{" "}
+        <Link component={RouterLink} to="performance-testing">
+          the performance testing page
+        </Link>{" "}
+        to inspect editor's performance in heavy documents.
+      </Typography>
     </Box>
   );
 }
