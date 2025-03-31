@@ -7,6 +7,11 @@ The MuNG format: https://github.com/OMR-Research/mung
 The MUSCIMA++ v2.0 dataset: https://github.com/OMR-Research/muscima-pp/releases/tag/v2.0
 
 
+## Documentation
+
+- [Performance bottlenecks](docs/performance-bottlenecks.md)
+
+
 ## Before comitting changes
 
 ```bash

@@ -82,7 +82,7 @@ function generateTestNodes(): Node[] {
   const nodes: Node[] = [];
 
   // generate nodes
-  const classes = ["noteheadFull", "stem", "staff", "beam", "barline"];
+  const classes = ["noteheadFull", "stem", "flag", "beam", "barline"];
   const page_width = 6670;
   const page_height = 8281;
   const min_size = 20;
