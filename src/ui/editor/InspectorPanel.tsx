@@ -4,12 +4,15 @@ import { Node } from "../../mung/Node";
 import { useAtomValue } from "jotai";
 import { NotationGraphStore } from "./state/NotationGraphStore";
 
-export interface RightPaneProps {
+export interface InspectorPanelProps {
   readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
 }
 
-export function RightPane(props: RightPaneProps) {
+/**
+ * The right-side panel, showing details about selected nodes.
+ */
+export function InspectorPanel(props: InspectorPanelProps) {
   const selectedNodeId = useAtomValue(
     props.selectedNodeStore.selectedNodeIdAtom,
   );

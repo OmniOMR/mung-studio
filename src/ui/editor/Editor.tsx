@@ -1,9 +1,9 @@
 import { Node } from "../../mung/Node";
 import { useState } from "react";
-import { Surface } from "./Surface";
+import { SceneView } from "./SceneView";
 import { SelectedNodeStore } from "./state/SelectedNodeStore";
-import { LeftPane } from "./LeftPane";
-import { RightPane } from "./RightPane";
+import { OverviewPanel } from "./OverviewPanel";
+import { InspectorPanel } from "./InspectorPanel";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { NotationGraphStore } from "./state/NotationGraphStore";
 import Box from "@mui/joy/Box";
@@ -13,13 +13,34 @@ import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 
-export interface ExplorerProps {
+export interface EditorProps {
+  /**
+   * When the <Editor> component is created, it uses this value to
+   * initialize its internal state. Then this value is ignored.
+   */
   readonly initialNodes: Node[];
+
+  /**
+   * The scanned music document image URL,
+   * if null, then no image is displayed.
+   */
   readonly backgroundImageUrl: string | null;
+
+  /**
+   * Callback triggered, when the user wants to leave the editor.
+   */
   readonly onClose: () => void;
 }
 
-export function Explorer(props: ExplorerProps) {
+/**
+ * The root component for editing/vieweing a single mung document.
+ * Contains the scene view, overview panel and the inspector panel
+ * plus additional minor sub-components.
+ *
+ * It is self-contained, meaning you can have two instances of this component,
+ * that could edit two different mung documents.
+ */
+export function Editor(props: EditorProps) {
   const [notationGraphStore, _] = useState<NotationGraphStore>(
     () => new NotationGraphStore(props.initialNodes),
   );
@@ -69,7 +90,7 @@ export function Explorer(props: ExplorerProps) {
           overflow: "hidden",
         }}
       >
-        <LeftPane
+        <OverviewPanel
           notationGraphStore={notationGraphStore}
           selectedNodeStore={selectedNodeStore}
           classVisibilityStore={classVisibilityStore}
@@ -79,14 +100,14 @@ export function Explorer(props: ExplorerProps) {
             flexGrow: 1,
           }}
         >
-          <Surface
+          <SceneView
             backgroundImageUrl={props.backgroundImageUrl}
             notationGraphStore={notationGraphStore}
             selectedNodeStore={selectedNodeStore}
             classVisibilityStore={classVisibilityStore}
           />
         </Box>
-        <RightPane
+        <InspectorPanel
           notationGraphStore={notationGraphStore}
           selectedNodeStore={selectedNodeStore}
         />

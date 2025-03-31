@@ -1,12 +1,12 @@
 import { useAtom } from "jotai";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 
-export interface ClassTogglePanelProps {
+export interface ClassToggleGroupProps {
   readonly classNames: string[];
   readonly classVisibilityStore: ClassVisibilityStore;
 }
 
-export function ClassTogglePanel(props: ClassTogglePanelProps) {
+export function ClassToggleGroup(props: ClassToggleGroupProps) {
   return (
     <ul>
       {props.classNames.map((className) => (

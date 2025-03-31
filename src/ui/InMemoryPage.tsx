@@ -1,7 +1,7 @@
 import { SyntheticEvent, useEffect, useState } from "react";
 import { readNodesFromXmlString } from "../mung/readNodesFromXmlString";
 import { Node } from "../mung/Node";
-import { Explorer } from "./explorer/Explorer";
+import { Editor } from "./editor/Editor";
 import Box from "@mui/joy/Box";
 import Typography from "@mui/joy/Typography";
 import { Link as RouterLink } from "react-router-dom";
@@ -118,7 +118,7 @@ export function InMemoryPage() {
           overflow: "hidden",
         }}
       >
-        <Explorer
+        <Editor
           initialNodes={userData.nodes}
           backgroundImageUrl={userData.imageUrl}
           onClose={handleClose}

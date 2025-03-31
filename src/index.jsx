@@ -2,7 +2,6 @@
  * Starts up the entire application
  */
 async function bootstrapApplication() {
-  
   // Debugging tool that displays react re-renders of components.
   // Must be imported before React and React DOM.
   // https://github.com/aidenybai/react-scan
@@ -11,9 +10,9 @@ async function bootstrapApplication() {
   }
 
   // import dependencies
-  const { createRoot } = await import("react-dom/client")
-  const { Application } = await import("./Application")
-  
+  const { createRoot } = await import("react-dom/client");
+  const { Application } = await import("./Application");
+
   // you can await async initialization code here
   // ...
 

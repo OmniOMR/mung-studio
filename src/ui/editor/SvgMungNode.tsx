@@ -52,7 +52,7 @@ export function SvgMungNode(props: SvgMungNodeProps) {
       height={node.height}
       fill={`hsla(${hue}, 100%, ${lightness}%, 0.2)`}
       stroke={`hsla(${hue}, 100%, ${lightness}%, 1.0)`}
-      strokeWidth={isSelected ? "var(--surface-screen-pixel)" : "0"}
+      strokeWidth={isSelected ? "var(--scene-screen-pixel)" : "0"}
       onClick={() => setIsSelected(true)}
       onMouseEnter={() => setHighlighted(true)}
       onMouseLeave={() => setHighlighted(false)}

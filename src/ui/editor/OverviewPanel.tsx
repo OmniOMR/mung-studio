@@ -1,18 +1,23 @@
 import Sheet from "@mui/joy/Sheet";
 import { MungNodeChip } from "./MungNodeChip";
 import { SelectedNodeStore } from "./state/SelectedNodeStore";
-import { ClassTogglePanel } from "./ClassTogglePanel";
+import { ClassToggleGroup } from "./ClassToggleGroup";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { NotationGraphStore } from "./state/NotationGraphStore";
 import { useAtomValue } from "jotai";
 
-export interface LeftPaneProps {
+export interface OverviewPanelProps {
   readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
   readonly classVisibilityStore: ClassVisibilityStore;
 }
 
-export function LeftPane(props: LeftPaneProps) {
+/**
+ * The left panel which contains an overview of all nodes in the scene
+ * in a list-like view. This panel provides non-visual navigation
+ * and orientation in the scene to the user.
+ */
+export function OverviewPanel(props: OverviewPanelProps) {
   const nodeList = useAtomValue(props.notationGraphStore.nodeListAtom);
   const classNames = useAtomValue(props.notationGraphStore.classNamesAtom);
 
@@ -26,7 +31,7 @@ export function LeftPane(props: LeftPaneProps) {
         overflowY: "scroll",
       }}
     >
-      <ClassTogglePanel
+      <ClassToggleGroup
         classNames={classNames}
         classVisibilityStore={props.classVisibilityStore}
       />
