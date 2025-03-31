@@ -33,7 +33,7 @@ export function SceneView(props: SceneViewProps) {
 
     const g = svgElement.select("g");
 
-    const zoom = d3.zoom().scaleExtent([0.1, 10]).on("zoom", zoomed);
+    const zoom = d3.zoom().on("zoom", zoomed);
 
     svgElement.call(zoom);
 
