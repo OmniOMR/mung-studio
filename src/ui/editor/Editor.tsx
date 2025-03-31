@@ -1,6 +1,6 @@
 import { Node } from "../../mung/Node";
 import { useState } from "react";
-import { SceneView } from "./SceneView";
+import { SceneView } from "./scene-view/SceneView";
 import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { OverviewPanel } from "./OverviewPanel";
 import { InspectorPanel } from "./InspectorPanel";

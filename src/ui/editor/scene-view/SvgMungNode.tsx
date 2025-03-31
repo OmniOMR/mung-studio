@@ -1,30 +1,17 @@
 import { useState } from "react";
-import { Node } from "../../mung/Node";
-import { SelectedNodeStore } from "./state/SelectedNodeStore";
+import { Node } from "../../../mung/Node";
+import { SelectedNodeStore } from "../state/SelectedNodeStore";
 import { useAtom, useAtomValue } from "jotai";
-import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
-import { NotationGraphStore } from "./state/NotationGraphStore";
-import { svgPathFromMungPolygon } from "../../mung/svgPathFromMungPolygon";
+import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
+import { NotationGraphStore } from "../state/NotationGraphStore";
+import { svgPathFromMungPolygon } from "../../../mung/svgPathFromMungPolygon";
+import { classNameToHue } from "../../../mung/classNameToHue";
 
 export interface SvgMungNodeProps {
   readonly nodeId: number;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
   readonly classVisibilityStore: ClassVisibilityStore;
-}
-
-function classNameToHue(className: string): number {
-  let hash = 0,
-    i,
-    chr;
-  if (className.length === 0) return hash;
-  for (i = 0; i < className.length; i++) {
-    chr = className.charCodeAt(i);
-    hash = (hash << 5) - hash + chr;
-    hash |= 0; // Convert to 32bit integer
-  }
-
-  return hash % 360;
 }
 
 export function SvgMungNode(props: SvgMungNodeProps) {

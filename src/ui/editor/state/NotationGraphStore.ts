@@ -1,4 +1,4 @@
-import { Atom, atom, PrimitiveAtom } from "jotai";
+import { Atom, atom, getDefaultStore, PrimitiveAtom } from "jotai";
 import { Node } from "../../../mung/Node";
 
 export interface Edge {
@@ -20,6 +20,11 @@ export function computeEdgeId(fromId: number, toId: number): string {
  * Stores the Music Notation Graph state
  */
 export class NotationGraphStore {
+  /**
+   * Jotai store used to access atoms from plain JS
+   */
+  private store = getDefaultStore();
+
   constructor(nodes: Node[]) {
     // === vertices ===
 
@@ -122,6 +127,14 @@ export class NotationGraphStore {
     }
 
     return nodeAtom;
+  }
+
+  /**
+   * Reads all nodes in this store
+   */
+  public getAllNodes(): Node[] {
+    const ids = this.store.get(this.nodeListAtom);
+    return ids.map((id) => this.store.get(this.getNodeAtom(id)));
   }
 
   ///////////////////

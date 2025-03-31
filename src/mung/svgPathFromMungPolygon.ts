@@ -24,7 +24,7 @@ export function svgPathFromMungPolygon(node: Node): string {
     } else {
       parts.push(String(polygon[i]));
       on_x = true;
-      
+
       // line to the next point
       parts.push("L");
     }
