@@ -3,10 +3,10 @@ import { useEffect, useRef } from "react";
 import { customizeD3ZoomBehaviour } from "./customizeD3ZoomBehaviour";
 import { NodeEditorOverlay } from "./NodeEditorOverlay";
 import { SelectedNodeStore } from "../state/SelectedNodeStore";
-import { ZoomEventDispatcher } from "./ZoomEventDispatcher";
+import { ZoomEventBus } from "./ZoomEventBus";
 
 export interface ForegroundLayerProps {
-  readonly zoomEventDispatcher: ZoomEventDispatcher;
+  readonly zoomEventBus: ZoomEventBus;
   readonly selectedNodeStore: SelectedNodeStore;
 }
 
@@ -31,7 +31,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
       g.attr("transform", transform.toString());
       g.style("--scene-screen-pixel", 1.0 / transform.k);
 
-      props.zoomEventDispatcher.dispatchEvent(transform);
+      props.zoomEventBus.emitEvent(transform);
     }
   }, []);
 

@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
-import { ZoomEventDispatcher } from "./ZoomEventDispatcher";
+import { ZoomEventBus } from "./ZoomEventBus";
 import { NotationGraphStore } from "../state/NotationGraphStore";
 import { Node } from "../../../mung/Node";
 import { classNameToHue } from "../../../mung/classNameToHue";
 
 export interface SceneLayerProps {
-  readonly zoomEventDispatcher: ZoomEventDispatcher;
+  readonly zoomEventBus: ZoomEventBus;
   readonly notationGraphStore: NotationGraphStore;
 }
 
@@ -26,9 +26,9 @@ export function SceneLayer_Canvas2D(props: SceneLayerProps) {
       renderToCanvas(nodes, ctx, transform);
     };
 
-    props.zoomEventDispatcher.addListener(onZoom);
+    props.zoomEventBus.addListener(onZoom);
     return () => {
-      props.zoomEventDispatcher.removeListener(onZoom);
+      props.zoomEventBus.removeListener(onZoom);
     };
   }, []);
 

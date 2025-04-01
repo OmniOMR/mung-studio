@@ -2,7 +2,7 @@ import { useState } from "react";
 import { SelectedNodeStore } from "../state/SelectedNodeStore";
 import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
 import { NotationGraphStore } from "../state/NotationGraphStore";
-import { ZoomEventDispatcher } from "./ZoomEventDispatcher";
+import { ZoomEventBus } from "./ZoomEventBus";
 import { ForegroundLayer } from "./ForegroundLayer";
 import { SceneLayer_Canvas2D } from "./SceneLayer_Canvas2D";
 import { SceneLayer_SVG } from "./scene-layer-svg/SceneLayer_SVG";
@@ -23,9 +23,7 @@ export interface SceneViewProps {
  * with the scene to the user.
  */
 export function SceneView(props: SceneViewProps) {
-  const [zoomEventDispatcher, _] = useState<ZoomEventDispatcher>(
-    () => new ZoomEventDispatcher(),
-  );
+  const [zoomEventBus, _] = useState<ZoomEventBus>(() => new ZoomEventBus());
 
   return (
     <div
@@ -37,14 +35,14 @@ export function SceneView(props: SceneViewProps) {
     >
       {/* The gray background and the scanned document image */}
       <BackgroundLayer
-        zoomEventDispatcher={zoomEventDispatcher}
+        zoomEventBus={zoomEventBus}
         backgroundImageUrl={props.backgroundImageUrl}
       />
 
       {/* Objects that are not being edited, but there is many of them,
       so tricks have to be made to render them fast */}
       <SceneLayer_SVG
-        zoomEventDispatcher={zoomEventDispatcher}
+        zoomEventBus={zoomEventBus}
         notationGraphStore={props.notationGraphStore}
         selectedNodeStore={props.selectedNodeStore}
         classVisibilityStore={props.classVisibilityStore}
@@ -58,7 +56,7 @@ export function SceneView(props: SceneViewProps) {
       {/* The editing overlay for the current object, consumes pointer events
       and contains the zoom controlling code */}
       <ForegroundLayer
-        zoomEventDispatcher={zoomEventDispatcher}
+        zoomEventBus={zoomEventBus}
         selectedNodeStore={props.selectedNodeStore}
       />
     </div>

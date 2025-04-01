@@ -6,7 +6,7 @@ import { NotationGraphStore } from "../../state/NotationGraphStore";
 import { SelectedNodeStore } from "../../state/SelectedNodeStore";
 import { SvgLink } from "./SvgLink";
 import { SvgNode } from "./SvgNode";
-import { ZoomEventDispatcher } from "../ZoomEventDispatcher";
+import { ZoomEventBus } from "../ZoomEventBus";
 import {
   EditorStateStore,
   LinkDisplayMode,
@@ -14,7 +14,7 @@ import {
 } from "../../state/EditorStateStore";
 
 export interface SceneLayerProps {
-  readonly zoomEventDispatcher: ZoomEventDispatcher;
+  readonly zoomEventBus: ZoomEventBus;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
   readonly classVisibilityStore: ClassVisibilityStore;
@@ -46,9 +46,9 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
       g.attr("transform", transform.toString());
     };
 
-    props.zoomEventDispatcher.addListener(onZoom);
+    props.zoomEventBus.addListener(onZoom);
     return () => {
-      props.zoomEventDispatcher.removeListener(onZoom);
+      props.zoomEventBus.removeListener(onZoom);
     };
   }, []);
 

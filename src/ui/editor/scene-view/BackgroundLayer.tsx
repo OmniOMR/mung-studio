@@ -1,9 +1,9 @@
 import { useEffect, useRef } from "react";
 import * as d3 from "d3";
-import { ZoomEventDispatcher } from "./ZoomEventDispatcher";
+import { ZoomEventBus } from "./ZoomEventBus";
 
 export interface BackgroundLayerProps {
-  readonly zoomEventDispatcher: ZoomEventDispatcher;
+  readonly zoomEventBus: ZoomEventBus;
   readonly backgroundImageUrl: string | null;
 }
 
@@ -19,9 +19,9 @@ export function BackgroundLayer(props: BackgroundLayerProps) {
       g.attr("transform", transform.toString());
     };
 
-    props.zoomEventDispatcher.addListener(onZoom);
+    props.zoomEventBus.addListener(onZoom);
     return () => {
-      props.zoomEventDispatcher.removeListener(onZoom);
+      props.zoomEventBus.removeListener(onZoom);
     };
   }, []);
 

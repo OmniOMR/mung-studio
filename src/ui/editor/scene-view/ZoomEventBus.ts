@@ -7,7 +7,7 @@ export type ZoomEventListener = (transform: d3.ZoomTransform) => void;
  * Lets users subscribe to zooming events, to trigger necessary actions in
  * various react components, while side-stepping react to preserve performance
  */
-export class ZoomEventDispatcher {
+export class ZoomEventBus {
   private listeners: ZoomEventListener[] = [];
 
   /**
@@ -27,7 +27,7 @@ export class ZoomEventDispatcher {
   /**
    * Calls all listeners
    */
-  public dispatchEvent(transform: d3.ZoomTransform) {
+  public emitEvent(transform: d3.ZoomTransform) {
     for (const listener of this.listeners) {
       listener(transform);
     }
