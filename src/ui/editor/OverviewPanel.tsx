@@ -5,11 +5,14 @@ import { ClassToggleGroup } from "./ClassToggleGroup";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { NotationGraphStore } from "./state/NotationGraphStore";
 import { useAtomValue } from "jotai";
+import { EditorModeButtons } from "./EditorModeButtons";
+import { EditorStateStore } from "./state/EditorStateStore";
 
 export interface OverviewPanelProps {
   readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
   readonly classVisibilityStore: ClassVisibilityStore;
+  readonly editorStateStore: EditorStateStore;
 }
 
 /**
@@ -31,18 +34,21 @@ export function OverviewPanel(props: OverviewPanelProps) {
         overflowY: "scroll",
       }}
     >
+      <EditorModeButtons editorStateStore={props.editorStateStore} />
+
       <ClassToggleGroup
         classNames={classNames}
         classVisibilityStore={props.classVisibilityStore}
       />
-      {nodeList.map((nodeId) => (
+      {/* Commented out as it sucks away performance */}
+      {/* {nodeList.map((nodeId) => (
         <MungNodeChip
           key={nodeId}
           nodeId={nodeId}
           notationGraphStore={props.notationGraphStore}
           selectedNodeStore={props.selectedNodeStore}
         />
-      ))}
+      ))} */}
     </Sheet>
   );
 }

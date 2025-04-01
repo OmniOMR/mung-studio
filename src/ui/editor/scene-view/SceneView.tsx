@@ -3,7 +3,7 @@ import { SelectedNodeStore } from "../state/SelectedNodeStore";
 import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
 import { NotationGraphStore } from "../state/NotationGraphStore";
 import { ZoomEventBus } from "./ZoomEventBus";
-import { ForegroundLayer } from "./ForegroundLayer";
+import { ForegroundLayer } from "./foreground-layer/ForegroundLayer";
 import { SceneLayer_Canvas2D } from "./SceneLayer_Canvas2D";
 import { SceneLayer_SVG } from "./scene-layer-svg/SceneLayer_SVG";
 import { BackgroundLayer } from "./BackgroundLayer";
@@ -58,6 +58,9 @@ export function SceneView(props: SceneViewProps) {
       <ForegroundLayer
         zoomEventBus={zoomEventBus}
         selectedNodeStore={props.selectedNodeStore}
+        notationGraphStore={props.notationGraphStore}
+        editorStateStore={props.editorStateStore}
+        classVisibilityStore={props.classVisibilityStore}
       />
     </div>
   );

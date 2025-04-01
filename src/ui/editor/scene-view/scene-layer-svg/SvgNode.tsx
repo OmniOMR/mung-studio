@@ -19,14 +19,16 @@ export interface SvgNodeProps {
 export function SvgNode(props: SvgNodeProps) {
   const node = useAtomValue(props.notationGraphStore.getNodeAtom(props.nodeId));
 
-  const [isSelected, setIsSelected] = useAtom(
+  const isSelected = useAtomValue(
     props.selectedNodeStore.getNodeIsSelectedAtom(node.id),
   );
-  const [isVisible, setIsVisible] = useAtom(
-    props.classVisibilityStore.getIsClassVisibleAtom(node.className),
-  );
+  const isVisible =
+    useAtomValue(
+      props.classVisibilityStore.getIsClassVisibleAtom(node.className),
+    ) || isSelected; // must be visible if is selected
 
-  const [highlighted, setHighlighted] = useState<boolean>(false);
+  // NOTE: used to a state here, but now highlights are rendered in overlay only
+  const highlighted = false;
 
   // decide on how to display
   const hue = classNameToHue(node.className);
@@ -61,11 +63,6 @@ export function SvgNode(props: SvgNodeProps) {
           fill={`hsla(${hue}, 100%, ${lightness}%, 0.2)`}
           stroke={`hsla(${hue}, 100%, ${lightness}%, 1.0)`}
           strokeWidth={isSelected ? "var(--scene-screen-pixel)" : "0"}
-
-          // TODO: these have to be moved into a separate system
-          // onClick={() => setIsSelected(true)}
-          // onMouseEnter={() => setHighlighted(true)}
-          // onMouseLeave={() => setHighlighted(false)}
         />
       )}
     </>

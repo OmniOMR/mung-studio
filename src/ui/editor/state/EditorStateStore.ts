@@ -1,4 +1,5 @@
 import { atom, PrimitiveAtom } from "jotai";
+import { Node } from "../../../mung/Node";
 
 /**
  * How should nodes in the scene view be displayed
@@ -18,6 +19,27 @@ export enum LinkDisplayMode {
 }
 
 /**
+ * List of modes the editor as a whole can be in
+ */
+export enum EditorMode {
+  /**
+   * The default mode, user can select nodes and view their details.
+   */
+  Default,
+
+  /**
+   * Mode for editing a single selected node
+   * (TBD, not really designed yet)
+   */
+  NodeEditing,
+
+  /**
+   * Specialized mode for editing precedence edges
+   */
+  PrecedenceLinkEditing,
+}
+
+/**
  * Contans state that belongs to the editor
  * (what is visible, what editing mode is currently on, etc.)
  */
@@ -29,4 +51,12 @@ export class EditorStateStore {
   public linkDisplayModeAtom: PrimitiveAtom<LinkDisplayMode> = atom(
     LinkDisplayMode.Arrows,
   );
+
+  public editorModeAtom: PrimitiveAtom<EditorMode> = atom(EditorMode.Default);
+
+  /**
+   * Contains the currently highlighted atom.
+   * Could be extracted into a store should nodes react by changing color.
+   */
+  public highlightedNodeAtom: PrimitiveAtom<Node | null> = atom(null);
 }

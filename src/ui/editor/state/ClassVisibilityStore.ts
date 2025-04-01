@@ -1,4 +1,4 @@
-import { atom, PrimitiveAtom } from "jotai";
+import { atom, getDefaultStore, PrimitiveAtom } from "jotai";
 
 const INITIALLY_DISABLED = new Set([
   "staffLine",
@@ -9,6 +9,11 @@ const INITIALLY_DISABLED = new Set([
 ]);
 
 export class ClassVisibilityStore {
+  /**
+   * Jotai store used to access atoms from plain JS
+   */
+  private store = getDefaultStore();
+
   private isClassVisibleAtoms = new Map<string, PrimitiveAtom<boolean>>();
 
   public getIsClassVisibleAtom(className: string): PrimitiveAtom<boolean> {
@@ -18,5 +23,17 @@ export class ClassVisibilityStore {
     }
 
     return this.isClassVisibleAtoms.get(className)!;
+  }
+
+  public getVisibleClasses(): Set<string> {
+    const out = new Set<string>();
+
+    for (let [key, value] of this.isClassVisibleAtoms) {
+      if (this.store.get(value)) {
+        out.add(key);
+      }
+    }
+
+    return out;
   }
 }

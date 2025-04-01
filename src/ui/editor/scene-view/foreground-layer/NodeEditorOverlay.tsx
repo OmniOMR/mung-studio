@@ -1,5 +1,5 @@
 import { useAtom } from "jotai";
-import { SelectedNodeStore } from "./state/SelectedNodeStore";
+import { SelectedNodeStore } from "../../state/SelectedNodeStore";
 import { MouseEvent, useState } from "react";
 
 export interface NodeEditorOverlayProps {

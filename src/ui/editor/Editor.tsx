@@ -102,6 +102,7 @@ export function Editor(props: EditorProps) {
           notationGraphStore={notationGraphStore}
           selectedNodeStore={selectedNodeStore}
           classVisibilityStore={classVisibilityStore}
+          editorStateStore={editorStateStore}
         />
         <Box
           sx={{
