@@ -1,12 +1,12 @@
 import { useAtomValue } from "jotai";
-import { Edge, NotationGraphStore } from "../state/NotationGraphStore";
+import { Edge, NotationGraphStore } from "../../state/NotationGraphStore";
 
-export interface SvgEdgeNodeProps {
+export interface SvgLinkProps {
   readonly edge: Edge;
   readonly notationGraphStore: NotationGraphStore;
 }
 
-export function SvgMungEdge(props: SvgEdgeNodeProps) {
+export function SvgLink(props: SvgLinkProps) {
   const edgeWithNodes = useAtomValue(
     props.notationGraphStore.getEdgeWithNodesAtom(props.edge),
   );

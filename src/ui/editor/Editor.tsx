@@ -12,6 +12,8 @@ import Sheet from "@mui/joy/Sheet";
 import Typography from "@mui/joy/Typography";
 import Stack from "@mui/joy/Stack";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { EditorStateStore } from "./state/EditorStateStore";
+import { DisplayModeButtons } from "./DisplayModeButtons";
 
 export interface EditorProps {
   /**
@@ -41,16 +43,20 @@ export interface EditorProps {
  * that could edit two different mung documents.
  */
 export function Editor(props: EditorProps) {
-  const [notationGraphStore, _] = useState<NotationGraphStore>(
+  const [notationGraphStore, _1] = useState<NotationGraphStore>(
     () => new NotationGraphStore(props.initialNodes),
   );
 
-  const [selectedNodeStore, __] = useState<SelectedNodeStore>(
+  const [selectedNodeStore, _2] = useState<SelectedNodeStore>(
     () => new SelectedNodeStore(notationGraphStore),
   );
 
-  const [classVisibilityStore, ___] = useState<ClassVisibilityStore>(
+  const [classVisibilityStore, _3] = useState<ClassVisibilityStore>(
     () => new ClassVisibilityStore(),
+  );
+
+  const [editorStateStore, _4] = useState<EditorStateStore>(
+    () => new EditorStateStore(),
   );
 
   return (
@@ -80,6 +86,7 @@ export function Editor(props: EditorProps) {
           <Typography level="body-lg" sx={{ fontWeight: 700 }}>
             MuNG Studio
           </Typography>
+          <DisplayModeButtons editorStateStore={editorStateStore} />
         </Stack>
       </Sheet>
       <Box
@@ -106,6 +113,7 @@ export function Editor(props: EditorProps) {
             notationGraphStore={notationGraphStore}
             selectedNodeStore={selectedNodeStore}
             classVisibilityStore={classVisibilityStore}
+            editorStateStore={editorStateStore}
           />
         </Box>
         <InspectorPanel

@@ -5,14 +5,16 @@ import { NotationGraphStore } from "../state/NotationGraphStore";
 import { ZoomEventDispatcher } from "./ZoomEventDispatcher";
 import { ForegroundLayer } from "./ForegroundLayer";
 import { SceneLayer_Canvas2D } from "./SceneLayer_Canvas2D";
-import { SceneLayer_SVG } from "./SceneLayer_SVG";
+import { SceneLayer_SVG } from "./scene-layer-svg/SceneLayer_SVG";
 import { BackgroundLayer } from "./BackgroundLayer";
+import { EditorStateStore } from "../state/EditorStateStore";
 
 export interface SceneViewProps {
   readonly backgroundImageUrl: string | null;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
   readonly classVisibilityStore: ClassVisibilityStore;
+  readonly editorStateStore: EditorStateStore;
 }
 
 /**
@@ -46,6 +48,7 @@ export function SceneView(props: SceneViewProps) {
         notationGraphStore={props.notationGraphStore}
         selectedNodeStore={props.selectedNodeStore}
         classVisibilityStore={props.classVisibilityStore}
+        editorStateStore={props.editorStateStore}
       />
       {/* <SceneLayer_Canvas2D
         zoomEventDispatcher={zoomEventDispatcher}
