@@ -134,13 +134,13 @@ function generateTestNodes(): Node[] {
     const b = pick_nearby_node(nodes, a);
 
     // prevent double-links
-    if (a.outlinks.indexOf(b.id) !== -1) {
+    if (a.syntaxOutlinks.indexOf(b.id) !== -1) {
       i--;
       continue;
     }
 
-    a.outlinks.push(b.id);
-    b.inlinks.push(a.id);
+    a.syntaxOutlinks.push(b.id);
+    b.syntaxInlinks.push(a.id);
   }
 
   return nodes;

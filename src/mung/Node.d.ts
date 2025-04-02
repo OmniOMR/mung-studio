@@ -1,17 +1,22 @@
 /**
- * MuNG Node
+ * Represents a single MuNG Node (annotated object).
+ *
+ * The application assumes this object to be immutable.
+ * (so do NOT mutate instances of nodes)
  */
 export interface Node {
-  id: number;
-  className: string;
-  top: number;
-  left: number;
-  width: number;
-  height: number;
-  outlinks: number[];
-  inlinks: number[];
+  readonly id: number;
+  readonly className: string;
+  readonly top: number;
+  readonly left: number;
+  readonly width: number;
+  readonly height: number;
+  readonly syntaxOutlinks: number[];
+  readonly syntaxInlinks: number[];
+  readonly precedenceOutlinks: number[];
+  readonly precedenceInlinks: number[];
   // mask
-  polygon: number[] | null;
-  dataset: string;
-  document: string;
+  readonly polygon: number[] | null;
+  readonly dataset: string;
+  readonly document: string;
 }

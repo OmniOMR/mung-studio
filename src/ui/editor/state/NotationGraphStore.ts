@@ -43,7 +43,7 @@ export class NotationGraphStore {
 
     for (const node of nodes) {
       // validate outlinks
-      for (const id of node.outlinks) {
+      for (const id of node.syntaxOutlinks) {
         if (!this.nodeAtoms.has(id)) {
           throw new Error(
             `Node ${node.id} has outlink to ${id} which does not exist.`,
@@ -52,7 +52,7 @@ export class NotationGraphStore {
       }
 
       // validate inlinks
-      for (const id of node.inlinks) {
+      for (const id of node.syntaxInlinks) {
         if (!this.nodeAtoms.has(id)) {
           throw new Error(
             `Node ${node.id} has inlink to ${id} which does not exist.`,
@@ -62,7 +62,7 @@ export class NotationGraphStore {
 
       // construct edges
       edges.push(
-        ...node.outlinks.map((targetId) => ({
+        ...node.syntaxOutlinks.map((targetId) => ({
           id: computeEdgeId(node.id, targetId),
           fromId: node.id,
           toId: targetId,

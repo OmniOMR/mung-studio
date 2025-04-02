@@ -5,17 +5,17 @@ import { Node } from "../../../mung/Node";
  * How should nodes in the scene view be displayed
  */
 export enum NodeDisplayMode {
-  Bboxes,
-  PolygonsAndMasks,
-  Hidden,
+  Bboxes = "Bboxes",
+  PolygonsAndMasks = "PolygonsAndMasks",
+  Hidden = "Hidden",
 }
 
 /**
  * How should links in the scene view be displayed
  */
 export enum LinkDisplayMode {
-  Arrows,
-  Hidden,
+  Arrows = "Arrows",
+  Hidden = "Hidden",
 }
 
 /**
@@ -25,18 +25,18 @@ export enum EditorMode {
   /**
    * The default mode, user can select nodes and view their details.
    */
-  Default,
+  Default = "Default",
 
   /**
    * Mode for editing a single selected node
    * (TBD, not really designed yet)
    */
-  NodeEditing,
+  NodeEditing = "NodeEditing",
 
   /**
    * Specialized mode for editing precedence edges
    */
-  PrecedenceLinkEditing,
+  PrecedenceLinkEditing = "PrecedenceLinkEditing",
 }
 
 /**
