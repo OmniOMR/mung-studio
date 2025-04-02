@@ -2,7 +2,7 @@ import Sheet from "@mui/joy/Sheet";
 import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { Node } from "../../mung/Node";
 import { useAtomValue } from "jotai";
-import { NotationGraphStore } from "./state/NotationGraphStore";
+import { NotationGraphStore } from "./state/notation-graph-store/NotationGraphStore";
 
 export interface InspectorPanelProps {
   readonly notationGraphStore: NotationGraphStore;

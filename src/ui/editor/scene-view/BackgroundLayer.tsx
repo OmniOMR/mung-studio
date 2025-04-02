@@ -37,10 +37,10 @@ export function BackgroundLayer(props: BackgroundLayerProps) {
       }}
     >
       <defs>
-        {/* Used by edges to render the arrow head */}
+        {/* Used by links to render the arrow head */}
         {/* https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker */}
         <marker
-          id="mung-edge-arrow-head"
+          id="mung-link-arrow-head"
           viewBox="0 0 10 10"
           refX="5"
           refY="5"

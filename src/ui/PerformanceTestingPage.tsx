@@ -81,13 +81,18 @@ function pick_nearby_node(nodes: Node[], center: Node): Node {
 /**
  * Generates the polygon field for the given node
  */
-function generatePolygon(node: Node) {
+function generatePolygon(
+  top: number,
+  left: number,
+  width: number,
+  height: number,
+): number[] {
   const points: number[] = [];
 
   const vertices = 50;
-  const center_x = node.left + node.width / 2;
-  const center_y = node.top + node.height / 2;
-  const radius = Math.min(node.width, node.height);
+  const center_x = left + width / 2;
+  const center_y = top + height / 2;
+  const radius = Math.min(width, height);
   for (let i = 0; i < vertices; i++) {
     const angle = (i / vertices) * 2 * Math.PI;
     const radius_fraction = uniform(0.8, 1);
@@ -97,7 +102,7 @@ function generatePolygon(node: Node) {
     points.push(Math.round(x), Math.round(y));
   }
 
-  node.polygon = points;
+  return points;
 }
 
 function generateTestNodes(): Node[] {
@@ -111,24 +116,30 @@ function generateTestNodes(): Node[] {
   const max_size = 200;
 
   for (let i = 0; i < 2_000; i++) {
-    const node = {
+    const top = Math.round(Math.random() * (page_height - max_size));
+    const left = Math.round(Math.random() * (page_width - max_size));
+    const width = Math.round(uniform(min_size, max_size));
+    const height = Math.round(uniform(min_size, max_size));
+
+    const node: Node = {
       id: i,
       className: pick(classes),
-      top: Math.round(Math.random() * (page_height - max_size)),
-      left: Math.round(Math.random() * (page_width - max_size)),
-      width: Math.round(uniform(min_size, max_size)),
-      height: Math.round(uniform(min_size, max_size)),
-      outlinks: [],
-      inlinks: [],
-      polygon: null,
+      top,
+      left,
+      width,
+      height,
+      syntaxOutlinks: [],
+      syntaxInlinks: [],
+      precedenceOutlinks: [],
+      precedenceInlinks: [],
+      polygon: generatePolygon(top, left, width, height),
       dataset: "test",
       document: "test",
     };
-    generatePolygon(node);
     nodes.push(node);
   }
 
-  // generate edges
+  // generate links
   for (let i = 0; i < 2_000; i++) {
     const a = pick(nodes);
     const b = pick_nearby_node(nodes, a);

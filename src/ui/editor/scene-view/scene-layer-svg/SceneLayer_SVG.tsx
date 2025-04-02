@@ -2,16 +2,17 @@ import * as d3 from "d3";
 import { useAtomValue } from "jotai";
 import { useEffect, useRef } from "react";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
-import { NotationGraphStore } from "../../state/NotationGraphStore";
-import { SelectedNodeStore } from "../../state/SelectedNodeStore";
-import { SvgLink } from "./SvgLink";
-import { SvgNode } from "./SvgNode";
-import { ZoomEventBus } from "../ZoomEventBus";
 import {
   EditorStateStore,
   LinkDisplayMode,
   NodeDisplayMode,
 } from "../../state/EditorStateStore";
+import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
+import { SelectedNodeStore } from "../../state/SelectedNodeStore";
+import { ZoomEventBus } from "../ZoomEventBus";
+import { SvgLink } from "./SvgLink";
+import { SvgNode } from "./SvgNode";
+import { getLinkId } from "../../../../mung/getLinkId";
 
 export interface SceneLayerProps {
   readonly zoomEventBus: ZoomEventBus;
@@ -32,8 +33,8 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
     props.editorStateStore.linkDisplayModeAtom,
   );
 
-  const nodeList = useAtomValue(props.notationGraphStore.nodeListAtom);
-  const links = useAtomValue(props.notationGraphStore.edgesAtom);
+  const nodeIds = useAtomValue(props.notationGraphStore.nodeIdsAtom);
+  const links = useAtomValue(props.notationGraphStore.linksAtom);
 
   const gRef = useRef<SVGGElement | null>(null);
 
@@ -67,7 +68,7 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
         {/* Used by links to render the arrow head */}
         {/* https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker */}
         <marker
-          id="mung-edge-arrow-head"
+          id="mung-link-arrow-head"
           viewBox="0 0 10 10"
           refX="5"
           refY="5"
@@ -82,7 +83,7 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
         {/* Nodes */}
         {nodeDisplayMode !== NodeDisplayMode.Hidden && (
           <g>
-            {nodeList.map((nodeId) => (
+            {nodeIds.map((nodeId) => (
               <SvgNode
                 key={nodeId}
                 nodeId={nodeId}
@@ -98,10 +99,10 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
         {/* Links */}
         {linkDisplayMode !== LinkDisplayMode.Hidden && (
           <g>
-            {links.map((edge) => (
+            {links.map((link) => (
               <SvgLink
-                key={edge.id}
-                edge={edge}
+                key={getLinkId(link)}
+                link={link}
                 notationGraphStore={props.notationGraphStore}
               />
             ))}

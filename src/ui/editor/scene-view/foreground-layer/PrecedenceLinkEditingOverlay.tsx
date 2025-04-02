@@ -3,11 +3,14 @@ import { Node } from "../../../../mung/Node";
 import * as d3 from "d3";
 import { EditorStateStore } from "../../state/EditorStateStore";
 import { useAtomValue } from "jotai";
+import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
+import { LinkType } from "../../../../mung/LinkType";
 
 export interface PrecedenceLinkEditingOverlayProps {
   readonly svgRef: RefObject<SVGSVGElement | null>;
   readonly transformRef: RefObject<d3.ZoomTransform>;
   readonly editorStateStore: EditorStateStore;
+  readonly notationGraphStore: NotationGraphStore;
 }
 
 export function PrecedenceLinkEditingOverlay(
@@ -45,8 +48,8 @@ export function PrecedenceLinkEditingOverlay(
         return;
       }
 
-      // the user really wants to create the line
-      console.log("TODO: Create precedence link!", { from, to });
+      // the user really wants to create (or delete) the link
+      props.notationGraphStore.toggleLink(from.id, to.id, LinkType.Precedence);
       setSourceNode(null);
     },
     [highlightedNode, sourceNode, setSourceNode],
@@ -110,7 +113,7 @@ export function PrecedenceLinkEditingOverlay(
         x2={0}
         y2={0}
         stroke="green"
-        markerEnd="url(#mung-edge-arrow-head)"
+        markerEnd="url(#mung-link-arrow-head)"
       />
     </g>
   );

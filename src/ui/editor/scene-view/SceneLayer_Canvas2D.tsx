@@ -1,8 +1,8 @@
 import { useEffect, useRef } from "react";
 import { ZoomEventBus } from "./ZoomEventBus";
-import { NotationGraphStore } from "../state/NotationGraphStore";
 import { Node } from "../../../mung/Node";
 import { classNameToHue } from "../../../mung/classNameToHue";
+import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
 
 export interface SceneLayerProps {
   readonly zoomEventBus: ZoomEventBus;
@@ -22,7 +22,7 @@ export function SceneLayer_Canvas2D(props: SceneLayerProps) {
     if (!ctx) return;
 
     const onZoom = (transform: d3.ZoomTransform) => {
-      const nodes = props.notationGraphStore.getAllNodes();
+      const nodes = props.notationGraphStore.nodes;
       renderToCanvas(nodes, ctx, transform);
     };
 
@@ -48,7 +48,7 @@ export function SceneLayer_Canvas2D(props: SceneLayerProps) {
 }
 
 function renderToCanvas(
-  nodes: Node[],
+  nodes: readonly Node[],
   ctx: CanvasRenderingContext2D,
   t: d3.ZoomTransform,
 ) {

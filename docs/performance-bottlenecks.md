@@ -43,13 +43,13 @@ One way to fix this is to coerce emotion to remove this selector... but that's u
 > **Note:** SVG `<image>` elements are rendered blazing fast, even when they are crazy big (if there's a few of them).
 
 
-## Graph edge arrows (SVG arrows)
+## Graph link arrows (SVG arrows)
 
 Rendering the SVG red arrows between MuNG nodes is SLOW. And it's slow on the GPU side! When looking at the profiler, all the browser-level code finishes fast, but frames are still dropped.
 
 In the profiler, in the GPU section, there are green rectangles that now take around 18ms to finish (way over the frame budget). These green rectangles are (I guess) something like GPU draw-calls.
 
-This happens even if I render JUST the edges, without any nodes (rectangles). When I render only the background image, these GPU draw calls take around 0.8 ms and when I render the background with the node rectangles, they take around 2.5 ms.
+This happens even if I render JUST the links, without any nodes (rectangles). When I render only the background image, these GPU draw calls take around 0.8 ms and when I render the background with the node rectangles, they take around 2.5 ms.
 
 
 ## Polygons

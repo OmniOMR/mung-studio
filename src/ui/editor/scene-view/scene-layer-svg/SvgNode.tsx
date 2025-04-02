@@ -3,7 +3,7 @@ import { Node } from "../../../../mung/Node";
 import { SelectedNodeStore } from "../../state/SelectedNodeStore";
 import { useAtom, useAtomValue } from "jotai";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
-import { NotationGraphStore } from "../../state/NotationGraphStore";
+import { NotationGraphStore } from "../../state/OLD_NotationGraphStore";
 import { svgPathFromMungPolygon } from "../../../../mung/svgPathFromMungPolygon";
 import { classNameToHue } from "../../../../mung/classNameToHue";
 import { NodeDisplayMode } from "../../state/EditorStateStore";

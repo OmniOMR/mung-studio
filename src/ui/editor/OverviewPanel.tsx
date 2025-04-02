@@ -3,10 +3,10 @@ import { MungNodeChip } from "./MungNodeChip";
 import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { ClassToggleGroup } from "./ClassToggleGroup";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
-import { NotationGraphStore } from "./state/NotationGraphStore";
 import { useAtomValue } from "jotai";
 import { EditorModeButtons } from "./EditorModeButtons";
 import { EditorStateStore } from "./state/EditorStateStore";
+import { NotationGraphStore } from "./state/notation-graph-store/NotationGraphStore";
 
 export interface OverviewPanelProps {
   readonly notationGraphStore: NotationGraphStore;
@@ -21,7 +21,7 @@ export interface OverviewPanelProps {
  * and orientation in the scene to the user.
  */
 export function OverviewPanel(props: OverviewPanelProps) {
-  const nodeList = useAtomValue(props.notationGraphStore.nodeListAtom);
+  const nodeList = useAtomValue(props.notationGraphStore.nodeIdsAtom);
   const classNames = useAtomValue(props.notationGraphStore.classNamesAtom);
 
   return (

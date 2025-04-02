@@ -5,7 +5,7 @@ import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { OverviewPanel } from "./OverviewPanel";
 import { InspectorPanel } from "./InspectorPanel";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
-import { NotationGraphStore } from "./state/NotationGraphStore";
+import { NotationGraphStore } from "./state/notation-graph-store/NotationGraphStore";
 import Box from "@mui/joy/Box";
 import Button from "@mui/joy/Button";
 import Sheet from "@mui/joy/Sheet";
@@ -44,7 +44,7 @@ export interface EditorProps {
  */
 export function Editor(props: EditorProps) {
   const [notationGraphStore, _1] = useState<NotationGraphStore>(
-    () => new NotationGraphStore(props.initialNodes),
+    () => new NotationGraphStore(props.initialNodes, null),
   );
 
   const [selectedNodeStore, _2] = useState<SelectedNodeStore>(

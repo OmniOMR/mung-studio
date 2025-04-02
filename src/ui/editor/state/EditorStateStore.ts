@@ -34,7 +34,7 @@ export enum EditorMode {
   NodeEditing = "NodeEditing",
 
   /**
-   * Specialized mode for editing precedence edges
+   * Specialized mode for editing precedence links
    */
   PrecedenceLinkEditing = "PrecedenceLinkEditing",
 }

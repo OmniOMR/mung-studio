@@ -1,10 +1,10 @@
 import { RefObject, useCallback, useEffect } from "react";
 import * as d3 from "d3";
-import { NotationGraphStore } from "../../state/NotationGraphStore";
 import { Node } from "../../../../mung/Node";
 import { EditorStateStore } from "../../state/EditorStateStore";
 import { useAtom } from "jotai";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
+import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 
 export interface PointerInteractorProps {
   readonly svgRef: RefObject<SVGSVGElement | null>;
@@ -30,12 +30,8 @@ export function PointerInteractor(props: PointerInteractorProps) {
       const x = t.invertX(e.offsetX);
       const y = t.invertY(e.offsetY);
 
-      // TODO: this should be refactored to be fast,
-      // currently takes longer then to do the hit-estimation loop below
-      const nodes = props.notationGraphStore.getAllNodes();
-
       const newHighlightedNode = getHighlightedNode(
-        nodes,
+        props.notationGraphStore.nodes,
         x,
         y,
         props.classVisibilityStore,
@@ -75,7 +71,7 @@ export function PointerInteractor(props: PointerInteractorProps) {
 }
 
 function getHighlightedNode(
-  nodes: Node[],
+  nodes: readonly Node[],
   pointer_x: number,
   pointer_y: number,
   classVisibilityStore: ClassVisibilityStore,

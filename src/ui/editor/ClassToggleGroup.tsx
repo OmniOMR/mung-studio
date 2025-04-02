@@ -2,7 +2,7 @@ import { useAtom } from "jotai";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 
 export interface ClassToggleGroupProps {
-  readonly classNames: string[];
+  readonly classNames: readonly string[];
   readonly classVisibilityStore: ClassVisibilityStore;
 }
 

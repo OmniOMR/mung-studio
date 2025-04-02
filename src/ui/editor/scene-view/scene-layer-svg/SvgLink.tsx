@@ -1,21 +1,25 @@
 import { useAtomValue } from "jotai";
-import { Edge, NotationGraphStore } from "../../state/NotationGraphStore";
+import { Link } from "../../../../mung/Link";
+import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
+import { LinkType } from "../../../../mung/LinkType";
 
 export interface SvgLinkProps {
-  readonly edge: Edge;
+  readonly link: Link;
   readonly notationGraphStore: NotationGraphStore;
 }
 
 export function SvgLink(props: SvgLinkProps) {
-  const edgeWithNodes = useAtomValue(
-    props.notationGraphStore.getEdgeWithNodesAtom(props.edge),
+  const linkWithNodes = useAtomValue(
+    props.notationGraphStore.getLinkWithNodesAtom(props.link),
   );
 
-  const x1 = edgeWithNodes.from.left + edgeWithNodes.from.width / 2;
-  const y1 = edgeWithNodes.from.top + edgeWithNodes.from.height / 2;
+  const x1 = linkWithNodes.fromNode.left + linkWithNodes.fromNode.width / 2;
+  const y1 = linkWithNodes.fromNode.top + linkWithNodes.fromNode.height / 2;
 
-  const x2 = edgeWithNodes.to.left + edgeWithNodes.to.width / 2;
-  const y2 = edgeWithNodes.to.top + edgeWithNodes.to.height / 2;
+  const x2 = linkWithNodes.toNode.left + linkWithNodes.toNode.width / 2;
+  const y2 = linkWithNodes.toNode.top + linkWithNodes.toNode.height / 2;
+
+  const color = linkWithNodes.type === LinkType.Syntax ? "red" : "green";
 
   return (
     <line
@@ -23,8 +27,8 @@ export function SvgLink(props: SvgLinkProps) {
       y1={y1}
       x2={x2}
       y2={y2}
-      stroke="red"
-      markerEnd="url(#mung-edge-arrow-head)"
+      stroke={color}
+      markerEnd="url(#mung-link-arrow-head)"
     />
   );
 }

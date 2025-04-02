@@ -47,6 +47,14 @@ export class NodeCollection {
   }
 
   /**
+   * Returns all node ids in the graph as a read-only snapshot.
+   * This method is fast and can be used by React to render node lists.
+   */
+  public getAllNodeIds(): readonly number[] {
+    return this.nodeIds;
+  }
+
+  /**
    * Returns a node value by its ID. The node must exist.
    */
   public getNode(nodeId: number): Node {
@@ -77,12 +85,12 @@ export class NodeCollection {
     if (this.hasNode(node.id)) {
       throw new Error(`Node with ID ${node.id} is already present.`);
     }
-    if (node.syntaxInlinks.length === 0 && node.syntaxOutlinks.length === 0) {
+    if (node.syntaxInlinks.length !== 0 || node.syntaxOutlinks.length !== 0) {
       throw new Error(`Given node has syntax links attached.`);
     }
     if (
-      node.precedenceInlinks.length === 0 &&
-      node.precedenceOutlinks.length === 0
+      node.precedenceInlinks.length !== 0 ||
+      node.precedenceOutlinks.length !== 0
     ) {
       throw new Error(`Given node has precedence links attached.`);
     }
@@ -104,7 +112,7 @@ export class NodeCollection {
    * Links cannot be changed via this method, use the dedicated one instead.
    */
   public updateNode(newValue: Node) {
-    if (this.hasNode(newValue.id)) {
+    if (!this.hasNode(newValue.id)) {
       throw new Error(`Cannot update node ${newValue.id}, it is missing.`);
     }
 
@@ -132,6 +140,7 @@ export class NodeCollection {
 
     // emit events
     this._onNodeUpdatedOrLinked.dispatch({
+      nodeId,
       oldValue,
       newValue,
       isLinkUpdate: false,
@@ -145,7 +154,7 @@ export class NodeCollection {
    * @param nodeId ID of the node to remove.
    */
   public removeNode(nodeId: number) {
-    if (this.hasNode(nodeId)) {
+    if (!this.hasNode(nodeId)) {
       throw new Error(`Cannot remove node ${nodeId}, it is missing.`);
     }
     const node = this.getNode(nodeId);
@@ -181,12 +190,12 @@ export class NodeCollection {
    * @param type Type of the link (syntactic or precedence).
    */
   public insertLink(fromId: number, toId: number, type: LinkType) {
-    if (this.hasNode(fromId)) {
+    if (!this.hasNode(fromId)) {
       throw new Error(`Cannot add link from node ${fromId}, it is missing.`);
     }
     const oldFromNode = this.getNode(fromId);
 
-    if (this.hasNode(toId)) {
+    if (!this.hasNode(toId)) {
       throw new Error(`Cannot add link to node ${toId}, it is missing.`);
     }
     const oldToNode = this.getNode(toId);
@@ -216,11 +225,13 @@ export class NodeCollection {
 
     // emit events
     this._onNodeUpdatedOrLinked.dispatch({
+      nodeId: fromId,
       oldValue: oldFromNode,
       newValue: newFromNode,
       isLinkUpdate: true,
     });
     this._onNodeUpdatedOrLinked.dispatch({
+      nodeId: toId,
       oldValue: oldToNode,
       newValue: newToNode,
       isLinkUpdate: true,
@@ -243,12 +254,12 @@ export class NodeCollection {
    * precedence).
    */
   public removeLink(fromId: number, toId: number, type: LinkType) {
-    if (this.hasNode(fromId)) {
+    if (!this.hasNode(fromId)) {
       throw new Error(`Cannot remove link from node ${fromId}, it is missing.`);
     }
     const oldFromNode = this.getNode(fromId);
 
-    if (this.hasNode(toId)) {
+    if (!this.hasNode(toId)) {
       throw new Error(`Cannot remove link to node ${toId}, it is missing.`);
     }
     const oldToNode = this.getNode(toId);
@@ -282,11 +293,13 @@ export class NodeCollection {
 
     // emit events
     this._onNodeUpdatedOrLinked.dispatch({
+      nodeId: fromId,
       oldValue: oldFromNode,
       newValue: newFromNode,
       isLinkUpdate: true,
     });
     this._onNodeUpdatedOrLinked.dispatch({
+      nodeId: toId,
       oldValue: oldToNode,
       newValue: newToNode,
       isLinkUpdate: true,
@@ -395,6 +408,11 @@ function compareArrays(a: number[], b: number[]): boolean {
  * value of a node to the event consumer
  */
 export interface NodeUpdateMetadata {
+  /**
+   * ID of the node that was updated
+   */
+  readonly nodeId: number;
+
   /**
    * Value of the node before the update took place
    */
