@@ -10,6 +10,7 @@ The MUSCIMA++ v2.0 dataset: https://github.com/OMR-Research/muscima-pp/releases/
 ## Documentation
 
 - [Performance bottlenecks](docs/performance-bottlenecks.md)
+- [Simple PHP backend](docs/simple-php-backend.md)
 
 
 ## Before comitting changes
