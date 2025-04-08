@@ -10,9 +10,9 @@ This simple backend is implemented in the `simple-php-backend` folder in the roo
 The backend server consists of two files:
 
 - `index.php` Contains the entire backend server.
-- `config.php` Contains configuration that you can modify.
+- `config.php` Contains configuration that must modify.
 
-To install the server, simply copy these two files into any PHP-running web hosting, into a folder of your choosing.
+To install the server, simply copy these two files into any PHP-running web hosting, into a folder of your choosing, and modify the config file properly.
 
 
 ## Client integration
@@ -48,15 +48,6 @@ documents/
 ```
 
 
-## Server HTTP API
-
-TODO
-
-- fetch list of all documents
-- fetch a particular document (mung / image / thumbnail)
-- upload a new version of a document
-
-
 ## Development
 
 Run php development server from inside the `simple-php-backend` folder and send requests via `curl` or via a properly set up client.
@@ -64,3 +55,60 @@ Run php development server from inside the `simple-php-backend` folder and send 
 ```bash
 php -S localhost:8080
 ```
+
+
+## Server HTTP API
+
+Unauthenticated requests are not allowed.
+
+Users are authenticated via the HTTP `Authorization` header via the bearer token:
+
+```
+Authorization: Bearer 1234567890
+```
+
+All requests are sent as POST requests to the `index.php` file, with a URL query parameter `action` specifying the action that is to be taken.
+
+```
+localhost:8080/?action=fetch-documents
+```
+
+The rest (body present, and its content type and strucure) depends on the chosen action:
+
+
+### `/?action=list-documents` List documents
+
+```bash
+curl -v -X POST -H "Authorization: Bearer 123456789" \
+    localhost:8080/?action=list-documents
+```
+
+Request has no body, response contains all documents on the server:
+
+```json
+{
+    "documents": [
+        "TODO"
+    ]
+}
+```
+
+
+### `/?action=get-document-mung` Get document MuNG file
+
+TODO
+
+
+### `/?action=get-document-image` Get document image file
+
+TODO
+
+
+### `/?action=get-document-thumbnail` Get document thumbnail file
+
+TODO
+
+
+### `/?action=upload-document-mung` Upload updated document MuNG file
+
+TODO
