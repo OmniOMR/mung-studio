@@ -171,6 +171,82 @@ class Document {
     }
 
     /**
+     * Returns true if the given string is a valid document name
+     * (this makes sure the name does not contain relative fs paths etc.)
+     */
+    public static function is_name_valid(string $name): bool {
+        $pattern = "/[a-zA-Z0-9_-]+/";
+        $ret = preg_match($pattern, $name);
+        return $ret === 1;
+    }
+
+    /**
+     * Path to the mung file
+     */
+    public static function mung_path(string $name): string {
+        if (!static::is_name_valid($name)) {
+            throw new Exception("Invalid document name.");
+        }
+        return Document::documents_folder_path() . "/" . $name . "/mung.xml";
+    }
+
+    /**
+     * Path to the image file
+     */
+    public static function image_path(string $name): string {
+        if (!static::is_name_valid($name)) {
+            throw new Exception("Invalid document name.");
+        }
+        return Document::documents_folder_path() . "/" . $name . "/image.jpg";
+    }
+
+    /**
+     * Path to the thumbnail file
+     */
+    public static function thumbnail_path(string $name): string {
+        if (!static::is_name_valid($name)) {
+            throw new Exception("Invalid document name.");
+        }
+        return Document::documents_folder_path() . "/" . $name . "/thumbnail.jpg";
+    }
+
+    /**
+     * Path to the access log file
+     */
+    public static function access_log_path(string $name): string {
+        if (!static::is_name_valid($name)) {
+            throw new Exception("Invalid document name.");
+        }
+        return Document::documents_folder_path()
+            . "/" . $name . "/access_log.txt";
+    }
+
+    /**
+     * Path to the write log file
+     */
+    public static function write_log_path(string $name): string {
+        if (!static::is_name_valid($name)) {
+            throw new Exception("Invalid document name.");
+        }
+        return Document::documents_folder_path()
+            . "/" . $name . "/write_log.txt";
+    }
+
+    /**
+     * Path to the todays mung backup file
+     */
+    public static function todays_backup_mung_path(string $name): string {
+        if (!static::is_name_valid($name)) {
+            throw new Exception("Invalid document name.");
+        }
+
+        $today = date("Y-m-d", time());
+
+        return Document::documents_folder_path()
+            . "/" . $name . "/backups/$today.xml";
+    }
+
+    /**
      * Returns path to the documents folder
      */
     public static function documents_folder_path(): string {
@@ -204,18 +280,24 @@ class Document {
      * If it doesn't exist, or is missing the MuNG file, null is returned.
      */
     public static function try_load(string $name): Document | null {
+        if (!static::is_name_valid($name)) {
+            return null;
+        }
+        
         $path = static::documents_folder_path() . "/" . $name;
+        $mungPath = static::mung_path($name);
+        $imagePath = static::image_path($name);
 
         if (!is_dir($path)) {
             return null;
         }
 
-        if (!is_file($path . "/mung.xml")) {
+        if (!is_file($mungPath)) {
             return null;
         }
 
-        $hasImage = is_file($path . "/image.jpg");
-        $modifiedAt = date("Y-m-d\TH:i:s\Z", filemtime($path . "/mung.xml"));
+        $hasImage = is_file($imagePath);
+        $modifiedAt = date("Y-m-d\TH:i:s\Z", filemtime($mungPath));
 
         $d = new Document();
         $d->name = $name;
@@ -250,6 +332,94 @@ class Document {
     }
 }
 
+/**
+ * Given path to the original image and the desired thumbnail,
+ * it creates an image thumbnail using the GD PHP extension.
+ */
+function generate_thumbnail(string $imagePath, string $thumbnailPath) {
+    $image = imagecreatefromjpeg($imagePath);
+
+    if ($image === false) {
+        throw Exception("Failed to load image when creating a thumbnail.");
+    }
+
+    $imageWidth = imagesx($image);
+    $imageHeight = imagesy($image);
+
+    $thumbWidth = (int) (260);
+    $thumbHeight = (int) (
+        (float)$imageHeight * ((float)$thumbWidth / (float)$imageWidth)
+    );
+    
+    $thumbnail = imagecreatetruecolor($thumbWidth, $thumbHeight);
+    imagecopyresampled(
+        $thumbnail, $image,
+        0,0,0,0,
+        $thumbWidth, $thumbHeight,
+        $imageWidth, $imageHeight
+    );
+
+    imagejpeg($thumbnail, $thumbnailPath);
+}
+
+
+/////////////////////
+// Logs & Auditing //
+/////////////////////
+
+/**
+ * Logs a message with timestamp into a log file at the given path.
+ * Creates the file is missing.
+ */
+function log_to_file(string $message, string $path) {
+    $parentDir = dirname($path);
+    
+    if (!is_dir($parentDir)) {
+        throw new Exception("Parent directory for log $path does not exist.");
+    }
+
+    if (!is_file($path)) {
+        file_put_contents($path, "");
+    }
+
+    if (!is_writable($path)) {
+        throw new Exception("File is not writable: $path");
+    }
+
+    $timestamp = date("Y-m-d\TH:i:s\Z", time());
+
+    file_put_contents(
+        $path,
+        "[$timestamp]: " . $message . PHP_EOL,
+        FILE_APPEND
+    );
+}
+
+/**
+ * Put a message into the global audit log.
+ */
+function log_global_audit_file(string $message) {
+    global $CONFIG;
+    $path = (string) $CONFIG["audit-log-path"];
+    log_to_file($message, $path);
+}
+
+/**
+ * Put a message into the document's write_log.txt file.
+ */
+function log_document_write_file(string $message, Document $document) {
+    $path = Document::write_log_path($document->name);
+    log_to_file($message, $path);
+}
+
+/**
+ * Put a message into the document's access_log.txt file.
+ */
+function log_document_access_file(string $message, Document $document) {
+    $path = Document::access_log_path($document->name);
+    log_to_file($message, $path);
+}
+
 
 /////////////
 // Actions //
@@ -280,7 +450,42 @@ function action_list_documents() {
 function action_get_document_mung() {
     $user = authenticate_and_get_user();
 
-    //
+    if (array_key_exists("document", $_GET)) {
+        $documentName = (string) $_GET["document"];
+    } else {
+        http_response_code(400);
+        echo "Missing document query parameter.";
+        return;
+    }
+
+    $document = Document::try_load($documentName);
+
+    if ($document === null) {
+        http_response_code(404);
+        return;
+    }
+
+    $mungPath = Document::mung_path($document->name);
+
+    if (!is_file($mungPath)) {
+        http_response_code(404);
+        return;
+    }
+
+    // log access
+    log_global_audit_file(
+        "$user->name openned $document->name document."
+    );
+    log_document_access_file(
+        "$user->name openned this document.",
+        $document
+    );
+
+    // send the mung file to the client
+    header("Content-Type: application/mung+xml");
+    header("Content-Length: " . filesize($mungPath));
+    header("Cache-Control: no-store");
+    readfile($mungPath);
 }
 
 /**
@@ -289,7 +494,33 @@ function action_get_document_mung() {
 function action_get_document_image() {
     $user = authenticate_and_get_user();
 
-    //
+    if (array_key_exists("document", $_GET)) {
+        $documentName = (string) $_GET["document"];
+    } else {
+        http_response_code(400);
+        echo "Missing document query parameter.";
+        return;
+    }
+
+    $document = Document::try_load($documentName);
+
+    if ($document === null) {
+        http_response_code(404);
+        return;
+    }
+
+    $imagePath = Document::image_path($document->name);
+
+    if (!is_file($imagePath)) {
+        http_response_code(404);
+        return;
+    }
+
+    // send the jpg file to the client
+    header("Content-Type: image/jpeg");
+    header("Content-Length: " . filesize($imagePath));
+    header("Cache-Control: no-store");
+    readfile($imagePath);
 }
 
 /**
@@ -298,7 +529,40 @@ function action_get_document_image() {
 function action_get_document_thumbnail() {
     $user = authenticate_and_get_user();
 
-    //
+    if (!extension_loaded("gd")) {
+        http_response_code(500);
+        echo "GD PHP extension is not available to generate thumbnails.";
+        return;
+    }
+
+    if (array_key_exists("document", $_GET)) {
+        $documentName = (string) $_GET["document"];
+    } else {
+        http_response_code(400);
+        echo "Missing document query parameter.";
+        return;
+    }
+
+    $document = Document::try_load($documentName);
+
+    if ($document === null) {
+        http_response_code(404);
+        return;
+    }
+
+    $imagePath = Document::image_path($document->name);
+    $thumbnailPath = Document::thumbnail_path($document->name);
+
+    // generate the thumbnail if missing
+    if (!is_file($thumbnailPath)) {
+        generate_thumbnail($imagePath, $thumbnailPath);
+    }
+    
+    // send the jpg file to the client
+    header("Content-Type: image/jpeg");
+    header("Content-Length: " . filesize($thumbnailPath));
+    header("Cache-Control: max-age=604800"); // cache for a week
+    readfile($thumbnailPath);
 }
 
 /**
@@ -307,7 +571,45 @@ function action_get_document_thumbnail() {
 function action_upload_document_mung() {
     $user = authenticate_and_get_user();
 
-    //
+    if (array_key_exists("document", $_GET)) {
+        $documentName = (string) $_GET["document"];
+    } else {
+        http_response_code(400);
+        echo "Missing document query parameter.";
+        return;
+    }
+
+    $document = Document::try_load($documentName);
+
+    if ($document === null) {
+        http_response_code(404);
+        return;
+    }
+
+    $mungPath = Document::mung_path($document->name);
+
+    // log access
+    log_global_audit_file(
+        "$user->name has written $document->name document."
+    );
+    log_document_access_file(
+        "$user->name has written this document.",
+        $document
+    );
+    log_document_write_file(
+        "$user->name has written this document.",
+        $document
+    );
+
+    // store the uploaded file
+    file_put_contents($mungPath, file_get_contents("php://input"));
+
+    // store the corresponding backup snapshot
+    $backupPath = Document::todays_backup_mung_path($document->name);
+    if (!is_dir(dirname($backupPath))) {
+        mkdir(dirname($backupPath));
+    }
+    file_put_contents($backupPath, file_get_contents("php://input"));
 }
 
 
@@ -319,7 +621,13 @@ function action_upload_document_mung() {
  * The routing function itself
  */
 function run_router_and_call_proper_action() {
-    $action = $_GET["action"]; // string or null
+    if (array_key_exists("action", $_GET)) {
+        $action = $_GET["action"]; // string or null
+    } else {
+        http_response_code(400);
+        echo "Missing action query parameter.";
+        return;
+    }
 
     switch ($action) {
         case "list-documents":
@@ -330,8 +638,8 @@ function run_router_and_call_proper_action() {
             action_get_document_mung();
             break;
         
-        case "get-document-mung":
-            action_get_document_mung();
+        case "get-document-image":
+            action_get_document_image();
             break;
         
         case "get-document-thumbnail":

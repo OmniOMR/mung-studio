@@ -35,8 +35,8 @@ TODO
 
 ```
 documents/
-    slug-name-of-a-document/
-        old_versions/
+    name-of-a-document/
+        backups/
             2025-04-05.xml
             2025-04-06.xml
             2025-04-12.xml
@@ -70,7 +70,7 @@ Authorization: Bearer 1234567890
 All requests are sent as POST requests to the `index.php` file, with a URL query parameter `action` specifying the action that is to be taken.
 
 ```
-localhost:8080/?action=fetch-documents
+localhost:8080/?action=list-documents
 ```
 
 The rest (body present, and its content type and strucure) depends on the chosen action:
@@ -88,27 +88,53 @@ Request has no body, response contains all documents on the server:
 ```json
 {
     "documents": [
-        "TODO"
+        {
+            "name": "foobar",
+            "hasImage": true,
+            "modifiedAt": "2024-10-07T14:23:54Z"
+        }
     ]
 }
 ```
 
 
-### `/?action=get-document-mung` Get document MuNG file
+### `/?action=get-document-mung&document=docname` Get document MuNG file
 
-TODO
+```bash
+curl -v -X POST -H "Authorization: Bearer 123456789" \
+    "localhost:8080/?action=get-document-mung&document=docname"
+```
 
-
-### `/?action=get-document-image` Get document image file
-
-TODO
-
-
-### `/?action=get-document-thumbnail` Get document thumbnail file
-
-TODO
+Request has no body, the URL must contain the `document` parameter with the requested document name. The response contains the MuNG XML file.
 
 
-### `/?action=upload-document-mung` Upload updated document MuNG file
+### `/?action=get-document-image&document=docname` Get document image file
 
-TODO
+```bash
+curl -v -X POST -H "Authorization: Bearer 123456789" \
+    "localhost:8080/?action=get-document-image&document=docname"
+```
+
+Request has no body, the URL must contain the `document` parameter with the requested document name. The response contains the JPEG file.
+
+
+### `/?action=get-document-thumbnail&document=docname` Get document thumbnail file
+
+```bash
+curl -v -X POST -H "Authorization: Bearer 123456789" \
+    "localhost:8080/?action=get-document-thumbnail&document=docname"
+```
+
+Request has no body, the URL must contain the `document` parameter with the requested document name. The response contains the JPEG file.
+
+
+### `/?action=upload-document-mung&document=docname` Upload updated document MuNG file
+
+```bash
+    curl -v -X POST --data-binary "@docname.xml" \
+        -H "Content-Type: applicaiton/mung+xml" \
+        -H "Authorization: Bearer 123456789" \
+        "localhost:8080/?action=upload-document-mung&document=docname"
+```
+
+Request body has the MuNG file XML content. The URL must contain the `document` parameter with the uploaded document name. The response is 200 OK and empty body.

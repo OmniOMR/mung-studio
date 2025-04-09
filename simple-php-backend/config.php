@@ -4,6 +4,9 @@ return [
     // path to the folder that stores MuNG documents
     "documents-path" => __DIR__ . "/documents",
 
+    // path to the global audit log file
+    "audit-log-path" => __DIR__ . "/documents/audit_log.txt",
+
     // users that have access to the server
     "users" => [
         [
@@ -11,6 +14,7 @@ return [
             "name" => "Root",
 
             // token that acts as both an ID and a password
+            // (generate a 16-chars random string somewhere)
             "token" => "123456789",
         ],
     ],
