@@ -91,13 +91,13 @@ function parse_bearer_token(): string | null {
 
     $prefix = "Bearer ";
 
-    if (mb_substr($value, 0, mb_strlen($prefix)) !== $prefix) {
+    if (substr($value, 0, strlen($prefix)) !== $prefix) {
         return null;
     }
 
-    $token = trim(mb_substr($value, mb_strlen($prefix)));
+    $token = trim(substr($value, strlen($prefix)));
 
-    if (mb_strlen($token) == 0) {
+    if (strlen($token) == 0) {
         return null;
     }
 
@@ -260,7 +260,7 @@ class Document {
     public static function verify_documents_folder() {
         $path = static::documents_folder_path();
 
-        if (mb_substr($path, mb_strlen($path) - 1) === "/") {
+        if (substr($path, strlen($path) - 1) === "/") {
             throw new Exception(
                 "Documents folder path must not end with slash."
             );
@@ -393,6 +393,9 @@ function log_to_file(string $message, string $path) {
         "[$timestamp]: " . $message . PHP_EOL,
         FILE_APPEND
     );
+
+    // make sure it can be modified and deleted by non-www users
+    chmod($path, 0666);
 }
 
 /**
@@ -603,6 +606,7 @@ function action_upload_document_mung() {
 
     // store the uploaded file
     file_put_contents($mungPath, file_get_contents("php://input"));
+    chmod($mungPath, 0666);
 
     // store the corresponding backup snapshot
     $backupPath = Document::todays_backup_mung_path($document->name);
@@ -610,6 +614,7 @@ function action_upload_document_mung() {
         mkdir(dirname($backupPath));
     }
     file_put_contents($backupPath, file_get_contents("php://input"));
+    chmod($backupPath, 0666);
 }
 
 

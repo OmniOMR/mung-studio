@@ -14,6 +14,46 @@ The backend server consists of two files:
 
 To install the server, simply copy these two files into any PHP-running web hosting, into a folder of your choosing, and modify the config file properly.
 
+When debugging the deployment, you can enable PHP errors forwarding into a log file in the config:
+
+```php
+// config.php
+
+return [
+    // ...
+
+    "forward-php-errors-to-file" => true,
+];
+```
+
+And also, to make sure the script has rights to write to that log file, it's better that you create it manually and set its rights so that anyone can write to it:
+
+```bash
+touch errors.log
+chmod 666 errors.log
+```
+
+Also, create the documents folder and make sure it's writable by the web server:
+
+```bash
+mkdir documents
+chmod 777 documents
+```
+
+If you copy files into documents yourself, you can set their permissions this way:
+
+```bash
+chmod -R a=rwX documents
+```
+
+> **Note:** This automatically skips files that are owned by the www user.
+
+If you have the `docuemnts` folder exposed by the web server and you would like to hide its contents, you can add an `.htaccess` file there with this content:
+
+```
+Deny from all
+```
+
 
 ## Client integration
 
