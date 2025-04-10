@@ -664,9 +664,30 @@ function run_router_and_call_proper_action() {
 
 
 //////////
+// CORS //
+//////////
+
+/**
+ * Handles CORS-related request logic
+ * https://developer.mozilla.org/en-US/docs/Glossary/CORS
+ */
+function cors() {
+    header("Access-Control-Allow-Origin: *");
+
+    if ($_SERVER["REQUEST_METHOD"] == "OPTIONS") {
+        header("Access-Control-Allow-Methods: GET, POST, OPTIONS");
+        header("Access-Control-Allow-Headers: *");
+        exit;
+    }
+}
+
+
+//////////
 // Main //
 //////////
 
 Document::verify_documents_folder();
+
+cors();
 
 run_router_and_call_proper_action();

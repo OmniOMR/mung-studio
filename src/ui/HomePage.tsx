@@ -19,11 +19,11 @@ export function HomePage() {
       <Typography level="body-sm" gutterBottom sx={{ mb: 2 }}>
         Version {VERSION}
       </Typography>
-
       <Typography level="body-md" gutterBottom>
-        This is a viewer for the MuNG format.
+        This is a viewer and editor for the MuNG format.
       </Typography>
 
+      <Typography level="h2">Local Files</Typography>
       <Typography level="body-md" gutterBottom>
         Proceed to the{" "}
         <Link component={RouterLink} to="in-memory">
@@ -32,8 +32,16 @@ export function HomePage() {
         page to start viewing.
       </Typography>
 
-      <Typography level="h2">Development</Typography>
+      <Typography level="h2">Simple PHP Backend</Typography>
+      <Typography level="body-md" gutterBottom>
+        Proceed to the{" "}
+        <Link component={RouterLink} to="simple-backend">
+          simple backend
+        </Link>{" "}
+        page to log-in and edit files in the cloud.
+      </Typography>
 
+      <Typography level="h2">Development</Typography>
       <Typography level="body-md" gutterBottom>
         Open{" "}
         <Link component={RouterLink} to="performance-testing">
