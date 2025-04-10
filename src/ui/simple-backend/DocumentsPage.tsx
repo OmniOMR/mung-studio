@@ -7,6 +7,7 @@ import { Document, SimpleBackendApi } from "./SimpleBackendApi";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { Link as RouterLink } from "react-router-dom";
 import Link from "@mui/joy/Link";
+import { DocumentsList } from "./DocumentsList";
 
 export function DocumentsPage() {
   const connection = useAtomValue(simpleBackendConnectionAtom);
@@ -66,11 +67,7 @@ export function DocumentsPage() {
           You must authenticate (the form above) to get access to documents.
         </Alert>
       )}
-      {documents !== null && (
-        <>
-          <pre>{JSON.stringify(documents, null, 2)}</pre>
-        </>
-      )}
+      {documents !== null && <DocumentsList documents={documents} />}
       {isLoading && <CircularProgress />}
       {error !== null && <Alert color="danger">{error}</Alert>}
     </Box>

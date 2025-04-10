@@ -26,6 +26,7 @@ export class SimpleBackendApi {
 
   public async listDocuments(): Promise<Document[]> {
     const response = await fetch(this.buildUrl("list-documents"), {
+      method: "POST",
       headers: {
         Authorization: "Bearer " + this.connection.userToken,
       },
@@ -38,5 +39,43 @@ export class SimpleBackendApi {
     }
     const data = await response.json();
     return data.documents as Document[];
+  }
+
+  public async getDocumentMung(documentName: string): Promise<string> {
+    const response = await fetch(
+      this.buildUrl("get-document-mung", documentName),
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + this.connection.userToken,
+        },
+      },
+    );
+    if (response.status === 401) {
+      throw new Error("Invalid user token.");
+    }
+    if (!response.ok) {
+      throw new Error("Unexpected response: " + (await response.text()));
+    }
+    return await response.text();
+  }
+
+  public async getDocumentImage(documentName: string): Promise<Blob> {
+    const response = await fetch(
+      this.buildUrl("get-document-image", documentName),
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer " + this.connection.userToken,
+        },
+      },
+    );
+    if (response.status === 401) {
+      throw new Error("Invalid user token.");
+    }
+    if (!response.ok) {
+      throw new Error("Unexpected response: " + (await response.text()));
+    }
+    return await response.blob();
   }
 }
