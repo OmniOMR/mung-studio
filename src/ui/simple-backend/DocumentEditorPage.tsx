@@ -8,6 +8,7 @@ import { simpleBackendConnectionAtom } from "./SimpleBackendConnection";
 import { SimpleBackendApi } from "./SimpleBackendApi";
 import { readMungXmlString } from "../../mung/readMungXmlString";
 import { MungFile } from "../../mung/MungFile";
+import { writeMungXmlString } from "../../mung/writeMungXmlString";
 
 export function DocumentEditorPage() {
   const navigate = useNavigate();
@@ -43,6 +44,9 @@ export function DocumentEditorPage() {
         const imageBlob = await api.getDocumentImage(documentName);
         const downloadedImageUrl =
           imageBlob === null ? null : URL.createObjectURL(imageBlob);
+
+        // TODO: DEBUG:
+        // console.log(writeMungXmlString(parsedMung));
 
         setMung(parsedMung);
         setImageUrl(downloadedImageUrl);
