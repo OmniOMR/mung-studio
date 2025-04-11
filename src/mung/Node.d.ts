@@ -17,6 +17,4 @@ export interface Node {
   readonly precedenceInlinks: number[];
   // mask
   readonly polygon: number[] | null;
-  readonly dataset: string;
-  readonly document: string;
 }

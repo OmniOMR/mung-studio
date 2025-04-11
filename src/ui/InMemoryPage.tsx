@@ -1,5 +1,5 @@
 import { SyntheticEvent, useEffect, useState } from "react";
-import { readNodesFromXmlString } from "../mung/readNodesFromXmlString";
+import { readMungXmlString } from "../mung/readMungXmlString";
 import { Node } from "../mung/Node";
 import { Editor } from "./editor/Editor";
 import Box from "@mui/joy/Box";
@@ -9,12 +9,13 @@ import Link from "@mui/joy/Link";
 import Button from "@mui/joy/Button";
 import Stack from "@mui/joy/Stack";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
+import { MungFile } from "../mung/MungFile";
 
 const STORAGE_NODES_KEY = "MungStudio::InMemory::NODES";
 const STORAGE_IMAGE_KEY = "MungStudio::InMemory::IMAGE";
 
 interface UserData {
-  readonly nodes: Node[];
+  readonly mung: MungFile;
   readonly imageUrl: string | null;
 }
 
@@ -27,7 +28,7 @@ function blobToBase64Url(blob: Blob): Promise<string> {
 }
 
 async function storeUserData(userData: UserData) {
-  localStorage.setItem(STORAGE_NODES_KEY, JSON.stringify(userData.nodes));
+  localStorage.setItem(STORAGE_NODES_KEY, JSON.stringify(userData.mung));
   if (userData.imageUrl === null) {
     localStorage.removeItem(STORAGE_IMAGE_KEY);
   } else {
@@ -38,8 +39,8 @@ async function storeUserData(userData: UserData) {
 }
 
 async function tryLoadingUserData(): Promise<UserData | null> {
-  const nodesJson = localStorage.getItem(STORAGE_NODES_KEY);
-  if (nodesJson === null) return null;
+  const mungJson = localStorage.getItem(STORAGE_NODES_KEY);
+  if (mungJson === null) return null;
 
   const base64Url = localStorage.getItem(STORAGE_IMAGE_KEY);
   let imageUrl: string | null = null;
@@ -49,7 +50,7 @@ async function tryLoadingUserData(): Promise<UserData | null> {
   }
 
   return {
-    nodes: JSON.parse(nodesJson),
+    mung: JSON.parse(mungJson),
     imageUrl: imageUrl,
   };
 }
@@ -84,7 +85,7 @@ export function InMemoryPage() {
     }
 
     const uploadedMungXml = await mungFile.files[0].text();
-    const nodes = readNodesFromXmlString(uploadedMungXml);
+    const mung = readMungXmlString(uploadedMungXml);
 
     const imageUrl =
       imageFile.files.length > 0
@@ -92,7 +93,7 @@ export function InMemoryPage() {
         : null;
 
     const data: UserData = {
-      nodes: nodes,
+      mung: mung,
       imageUrl: imageUrl,
     };
     storeUserData(data);
@@ -119,7 +120,8 @@ export function InMemoryPage() {
         }}
       >
         <Editor
-          initialNodes={userData.nodes}
+          initialMungFileMetadata={userData.mung.metadata}
+          initialNodes={userData.mung.nodes}
           backgroundImageUrl={userData.imageUrl}
           onClose={handleClose}
         />

@@ -1,10 +1,11 @@
+import { MungFile } from "./MungFile";
 import { Node } from "./Node";
 
 /**
- * Parses MuNG nodes from an XML string
+ * Parses MuNG file from an XML string
  * @param xml The XML string containing MuNG
  */
-export function readNodesFromXmlString(xml: string): Node[] {
+export function readMungXmlString(xml: string): MungFile {
   const parser = new DOMParser();
   const xmlDocument = parser.parseFromString(xml, "application/xml");
 
@@ -15,22 +16,23 @@ export function readNodesFromXmlString(xml: string): Node[] {
 
   // extract dataset metadata
   const mungDataset: string = rootElement.getAttribute("dataset") || "unknown";
-
   const mungDocument: string =
     rootElement.getAttribute("document") || "unknown";
 
   // extract all node elements and parse them
-  const nodes = rootElement.querySelectorAll("Node");
-  return [...nodes].map((n) =>
-    readNodeFromXmlElement(n, mungDataset, mungDocument),
-  );
+  const nodeElements = rootElement.querySelectorAll("Node");
+  const nodes = [...nodeElements].map((n) => readNodeFromXmlElement(n));
+
+  return {
+    metadata: {
+      dataset: mungDataset,
+      document: mungDocument,
+    },
+    nodes: nodes,
+  };
 }
 
-function readNodeFromXmlElement(
-  element: Element,
-  dataset: string,
-  document: string,
-): Node {
+function readNodeFromXmlElement(element: Element): Node {
   return {
     id: parseInt(element.querySelector("Id")?.innerHTML || "NaN"),
     className: element.querySelector("ClassName")?.innerHTML || "unknown",
@@ -43,8 +45,6 @@ function readNodeFromXmlElement(
     precedenceOutlinks: [], // TODO
     precedenceInlinks: [], // TODO
     polygon: null,
-    dataset,
-    document,
   };
 }
 

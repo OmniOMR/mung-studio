@@ -17,13 +17,21 @@ import { DisplayModeButtons } from "./DisplayModeButtons";
 import { useUnload } from "../../utils/useUnload";
 import { AutosaveStore } from "./state/AutosaveStore";
 import { AutosaveStatus } from "./AutosaveStatus";
+import { MungFileMetadata } from "../../mung/MungFileMetadata";
+import { MungFile } from "../../mung/MungFile";
 
 export interface EditorProps {
   /**
    * When the <Editor> component is created, it uses this value to
    * initialize its internal state. Then this value is ignored.
    */
-  readonly initialNodes: Node[];
+  readonly initialMungFileMetadata: MungFileMetadata;
+
+  /**
+   * When the <Editor> component is created, it uses this value to
+   * initialize its internal state. Then this value is ignored.
+   */
+  readonly initialNodes: readonly Node[];
 
   /**
    * The scanned music document image URL,
@@ -35,7 +43,7 @@ export interface EditorProps {
    * Called when the file modifications should be persisted
    * (is not called if missing)
    */
-  readonly onSave?: (nodes: readonly Node[]) => void;
+  readonly onSave?: (mung: MungFile) => void;
 
   /**
    * Callback triggered, when the user wants to leave the editor.
@@ -53,7 +61,8 @@ export interface EditorProps {
  */
 export function Editor(props: EditorProps) {
   const [notationGraphStore, _1] = useState<NotationGraphStore>(
-    () => new NotationGraphStore(props.initialNodes, null),
+    () =>
+      new NotationGraphStore(props.initialNodes, props.initialMungFileMetadata),
   );
 
   const [selectedNodeStore, _2] = useState<SelectedNodeStore>(
@@ -76,7 +85,7 @@ export function Editor(props: EditorProps) {
 
   // bind autosave store to the props.onSave method
   useEffect(() => {
-    const _handler = () => props.onSave?.(notationGraphStore.nodes);
+    const _handler = () => props.onSave?.(notationGraphStore.getMungFile());
     autosaveStore.onAutosave.subscribe(_handler);
     return () => {
       autosaveStore.onAutosave.unsubscribe(_handler);
@@ -92,7 +101,7 @@ export function Editor(props: EditorProps) {
 
     // save if dirty
     if (autosaveStore.isDirty) {
-      props.onSave(notationGraphStore.nodes);
+      props.onSave(notationGraphStore.getMungFile());
       autosaveStore.setClean();
     }
   }, [notationGraphStore, autosaveStore]);

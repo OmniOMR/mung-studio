@@ -1,4 +1,4 @@
-import { atom, Atom, getDefaultStore } from "jotai";
+import { atom, Atom, getDefaultStore, WritableAtom } from "jotai";
 import { NodeCollection } from "./NodeCollection";
 import { Node } from "../../../../mung/Node";
 import { BulkActionLayer } from "./BulkActionLayer";
@@ -13,6 +13,9 @@ import { LinkAtomsView } from "./LinkAtomsView";
 import { ClassNameCounts, ClassNamesIndex } from "./ClassNamesIndex";
 import { SignalAtomWrapper } from "../SignalAtomWrapper";
 import { ISignal, SignalDispatcher } from "strongly-typed-events";
+import { MetadataCollection } from "./MetadataCollection";
+import { MungFileMetadata } from "../../../../mung/MungFileMetadata";
+import { MungFile } from "../../../../mung/MungFile";
 
 /**
  * Stores the Music Notation Graph (MuNG) data and provides convenient
@@ -30,6 +33,11 @@ export class NotationGraphStore {
    */
   private nodeCollection: NodeCollection;
 
+  /**
+   * Holds MuNG file metadata
+   */
+  private metadataCollection: MetadataCollection;
+
   // provide access to links as "lists-of-links"
   // (there is no such thing in reality, only nodes and inlink+outlink ids)
   private allLinksIndex: LinksIndex;
@@ -45,12 +53,17 @@ export class NotationGraphStore {
   private nodeAtomsView: NodeAtomsView;
   private linkAtomsView: LinkAtomsView;
 
-  constructor(initialNodes: Node[], jotaiStore: JotaiStore | null = null) {
+  constructor(
+    initialNodes: readonly Node[],
+    initialMetadata: MungFileMetadata,
+    jotaiStore: JotaiStore | null = null,
+  ) {
     this.jotaiStore = jotaiStore ?? getDefaultStore();
 
     // === create all data-handling services ===
 
     this.nodeCollection = new NodeCollection();
+    this.metadataCollection = new MetadataCollection(initialMetadata);
 
     this.allLinksIndex = new LinksIndex(null, this.nodeCollection);
     this.syntaxLinksIndex = new LinksIndex(
@@ -111,6 +124,17 @@ export class NotationGraphStore {
     );
   }
 
+  /**
+   * Builds and returns the MuNG file datastructure.
+   * Used for saving the annotated document.
+   */
+  public getMungFile(): MungFile {
+    return {
+      metadata: this.metadata,
+      nodes: this.nodes,
+    };
+  }
+
   ////////////
   // Events //
   ////////////
@@ -161,7 +185,7 @@ export class NotationGraphStore {
    * Sets all nodes (and thus also links) in the store,
    * completely overwriting its current contents.
    */
-  public setAllNodes(nodes: Node[]) {
+  public setAllNodes(nodes: readonly Node[]) {
     // TODO: this must be more gentle as it is used to navigate through
     // the history and so something faster must be used instead
     // (something that only emits change events for what has actually changed)
@@ -333,4 +357,29 @@ export class NotationGraphStore {
     this.classNamesChangeSignalAtom.subscribe(get);
     return this.classNameCounts;
   });
+
+  //////////////////
+  // Metadata API //
+  //////////////////
+
+  /**
+   * Read-only view of current MuNG metadata
+   */
+  public get metadata(): MungFileMetadata {
+    return this.metadataCollection.getMetadata();
+  }
+
+  /**
+   * Writable atom that exposes the dataset name metadata item
+   */
+  public get datasetAtom(): WritableAtom<string, [string], void> {
+    return this.metadataCollection.datasetAtom;
+  }
+
+  /**
+   * Writable atom that exposes the document name metadata item
+   */
+  public get documentAtom(): WritableAtom<string, [string], void> {
+    return this.metadataCollection.documentAtom;
+  }
 }

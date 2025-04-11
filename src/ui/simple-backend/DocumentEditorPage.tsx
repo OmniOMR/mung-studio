@@ -6,14 +6,15 @@ import { useEffect, useState } from "react";
 import { useAtomValue } from "jotai";
 import { simpleBackendConnectionAtom } from "./SimpleBackendConnection";
 import { SimpleBackendApi } from "./SimpleBackendApi";
-import { readNodesFromXmlString } from "../../mung/readNodesFromXmlString";
+import { readMungXmlString } from "../../mung/readMungXmlString";
+import { MungFile } from "../../mung/MungFile";
 
 export function DocumentEditorPage() {
   const navigate = useNavigate();
   const documentName: string = useParams().documentName || "";
   const connection = useAtomValue(simpleBackendConnectionAtom);
 
-  const [nodes, setNodes] = useState<Node[] | null>(null);
+  const [mung, setMung] = useState<MungFile | null>(null);
   const [imageUrl, setImageUrl] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
@@ -27,7 +28,7 @@ export function DocumentEditorPage() {
 
     (async () => {
       setIsLoading(true);
-      setNodes(null);
+      setMung(null);
       setImageUrl(null);
       setError(null);
 
@@ -36,14 +37,14 @@ export function DocumentEditorPage() {
 
         // download MuNG and parse into nodes
         const mungXmlString = await api.getDocumentMung(documentName);
-        const parsedNodes = readNodesFromXmlString(mungXmlString);
+        const parsedMung = readMungXmlString(mungXmlString);
 
         // download background image
         const imageBlob = await api.getDocumentImage(documentName);
         const downloadedImageUrl =
           imageBlob === null ? null : URL.createObjectURL(imageBlob);
 
-        setNodes(parsedNodes);
+        setMung(parsedMung);
         setImageUrl(downloadedImageUrl);
         setIsLoading(false);
       } catch (e) {
@@ -53,8 +54,8 @@ export function DocumentEditorPage() {
     })();
   }, [connection.userToken]);
 
-  function onSave(nodes: readonly Node[]) {
-    console.log("SAVE", nodes);
+  function onSave(mung: MungFile) {
+    console.log("SAVE", mung);
   }
 
   function onClose() {
@@ -74,9 +75,10 @@ export function DocumentEditorPage() {
       }}
     >
       {isLoading && <CircularProgress />}
-      {nodes !== null && (
+      {mung !== null && (
         <Editor
-          initialNodes={nodes}
+          initialMungFileMetadata={mung.metadata}
+          initialNodes={mung.nodes}
           backgroundImageUrl={imageUrl}
           onSave={onSave}
           onClose={onClose}

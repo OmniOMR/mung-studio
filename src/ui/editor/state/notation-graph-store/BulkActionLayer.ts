@@ -35,7 +35,7 @@ export class BulkActionLayer {
    * Inserts many nodes that have links among each other but not with
    * already inserted nodes. Also, they must have new and distinct IDs.
    */
-  insertManyNodes(nodes: Node[]) {
+  insertManyNodes(nodes: readonly Node[]) {
     // insert nodes without links
     for (let node of nodes) {
       this.nodeCollection.insertNode({

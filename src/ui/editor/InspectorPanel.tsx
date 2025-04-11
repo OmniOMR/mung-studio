@@ -13,10 +13,12 @@ export interface InspectorPanelProps {
  * The right-side panel, showing details about selected nodes.
  */
 export function InspectorPanel(props: InspectorPanelProps) {
+  const dataset = useAtomValue(props.notationGraphStore.datasetAtom);
+  const document = useAtomValue(props.notationGraphStore.documentAtom);
+
   const selectedNodeId = useAtomValue(
     props.selectedNodeStore.selectedNodeIdAtom,
   );
-
   const node = useAtomValue(props.selectedNodeStore.selectedNodeAtom);
 
   return (
@@ -28,6 +30,12 @@ export function InspectorPanel(props: InspectorPanelProps) {
         borderWidth: "0 0 0 1px",
       }}
     >
+      dataset: {dataset}
+      <br />
+      <br />
+      document: {document}
+      <br />
+      <br />
       selected node: {selectedNodeId}
       <pre>{JSON.stringify(node, null, 2)}</pre>
     </Sheet>

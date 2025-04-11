@@ -3,6 +3,7 @@ import { Box } from "@mui/joy";
 import { Editor } from "./editor/Editor";
 import { Node } from "../mung/Node";
 import { useState } from "react";
+import { MungFileMetadata } from "../mung/MungFileMetadata";
 
 export function PerformanceTestingPage() {
   const navigate = useNavigate();
@@ -16,6 +17,10 @@ export function PerformanceTestingPage() {
 
   // Generates 2K random nodes.
   const [nodes, _] = useState<Node[]>(() => generateTestNodes());
+  const metadata: MungFileMetadata = {
+    dataset: "test",
+    document: "test",
+  };
 
   function onClose() {
     navigate("/");
@@ -30,6 +35,7 @@ export function PerformanceTestingPage() {
       }}
     >
       <Editor
+        initialMungFileMetadata={metadata}
         initialNodes={nodes}
         backgroundImageUrl={imageUrl}
         onClose={onClose}
@@ -133,8 +139,6 @@ function generateTestNodes(): Node[] {
       precedenceOutlinks: [],
       precedenceInlinks: [],
       polygon: generatePolygon(top, left, width, height),
-      dataset: "test",
-      document: "test",
     };
     nodes.push(node);
   }
