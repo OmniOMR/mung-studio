@@ -12,6 +12,7 @@ import { NodeAtom, NodeAtomsView } from "./NodeAtomsView";
 import { LinkAtomsView } from "./LinkAtomsView";
 import { ClassNameCounts, ClassNamesIndex } from "./ClassNamesIndex";
 import { SignalAtomWrapper } from "../SignalAtomWrapper";
+import { ISignal, SignalDispatcher } from "strongly-typed-events";
 
 /**
  * Stores the Music Notation Graph (MuNG) data and provides convenient
@@ -44,7 +45,7 @@ export class NotationGraphStore {
   private nodeAtomsView: NodeAtomsView;
   private linkAtomsView: LinkAtomsView;
 
-  constructor(initialNodes: Node[], jotaiStore: JotaiStore | null) {
+  constructor(initialNodes: Node[], jotaiStore: JotaiStore | null = null) {
     this.jotaiStore = jotaiStore ?? getDefaultStore();
 
     // === create all data-handling services ===
@@ -90,6 +91,38 @@ export class NotationGraphStore {
     // === insert initial data ===
 
     this.setAllNodes(initialNodes);
+
+    // === set up events ===
+
+    this.nodeCollection.onNodeInserted.subscribe(() =>
+      this._onChange.dispatch(),
+    );
+    this.nodeCollection.onNodeRemoved.subscribe(() =>
+      this._onChange.dispatch(),
+    );
+    this.nodeCollection.onNodeUpdatedOrLinked.subscribe(() =>
+      this._onChange.dispatch(),
+    );
+    this.nodeCollection.onLinkInserted.subscribe(() =>
+      this._onChange.dispatch(),
+    );
+    this.nodeCollection.onLinkRemoved.subscribe(() =>
+      this._onChange.dispatch(),
+    );
+  }
+
+  ////////////
+  // Events //
+  ////////////
+
+  private _onChange = new SignalDispatcher();
+
+  /**
+   * Fires whenever the notation graph changes in any way,
+   * used to trigger autosaving and history snapshots
+   */
+  public get onChange(): ISignal {
+    return this._onChange.asEvent();
   }
 
   //////////////////////////

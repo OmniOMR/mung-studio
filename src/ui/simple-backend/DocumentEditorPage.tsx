@@ -53,6 +53,10 @@ export function DocumentEditorPage() {
     })();
   }, [connection.userToken]);
 
+  function onSave(nodes: readonly Node[]) {
+    console.log("SAVE", nodes);
+  }
+
   function onClose() {
     if (imageUrl !== null) {
       URL.revokeObjectURL(imageUrl);
@@ -74,6 +78,7 @@ export function DocumentEditorPage() {
         <Editor
           initialNodes={nodes}
           backgroundImageUrl={imageUrl}
+          onSave={onSave}
           onClose={onClose}
         />
       )}

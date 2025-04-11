@@ -5,12 +5,12 @@ import { NodeEditorOverlay } from "./NodeEditorOverlay";
 import { SelectedNodeStore } from "../../state/SelectedNodeStore";
 import { ZoomEventBus } from "../ZoomEventBus";
 import { PointerInteractor } from "./PointerInteractor";
-import { NotationGraphStore } from "../../state/OLD_NotationGraphStore";
 import { PrecedenceLinkEditingOverlay } from "./PrecedenceLinkEditingOverlay";
 import { EditorMode, EditorStateStore } from "../../state/EditorStateStore";
 import { useAtomValue } from "jotai";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 import { DefaultModeOverlay } from "./DefaultModeOverlay";
+import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 
 const IDENTITY_TRANSFORM = new d3.ZoomTransform(1, 0, 0);
 

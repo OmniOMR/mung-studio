@@ -1,5 +1,5 @@
 import { Node } from "../../mung/Node";
-import { useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { SceneView } from "./scene-view/SceneView";
 import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { OverviewPanel } from "./OverviewPanel";
@@ -14,6 +14,9 @@ import Stack from "@mui/joy/Stack";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { EditorStateStore } from "./state/EditorStateStore";
 import { DisplayModeButtons } from "./DisplayModeButtons";
+import { useUnload } from "../../utils/useUnload";
+import { AutosaveStore } from "./state/AutosaveStore";
+import { AutosaveStatus } from "./AutosaveStatus";
 
 export interface EditorProps {
   /**
@@ -27,6 +30,12 @@ export interface EditorProps {
    * if null, then no image is displayed.
    */
   readonly backgroundImageUrl: string | null;
+
+  /**
+   * Called when the file modifications should be persisted
+   * (is not called if missing)
+   */
+  readonly onSave?: (nodes: readonly Node[]) => void;
 
   /**
    * Callback triggered, when the user wants to leave the editor.
@@ -59,6 +68,46 @@ export function Editor(props: EditorProps) {
     () => new EditorStateStore(),
   );
 
+  // TODO: historyStore (for undo/redo)
+
+  const [autosaveStore, _5] = useState<AutosaveStore>(
+    () => new AutosaveStore(notationGraphStore),
+  );
+
+  // bind autosave store to the props.onSave method
+  useEffect(() => {
+    const _handler = () => props.onSave?.(notationGraphStore.nodes);
+    autosaveStore.onAutosave.subscribe(_handler);
+    return () => {
+      autosaveStore.onAutosave.unsubscribe(_handler);
+    };
+  }, [notationGraphStore, autosaveStore, props.onSave]);
+
+  /**
+   * Must be called before the editor is left by the user.
+   * Handles file saving.
+   */
+  const beforeLeavingEditor = useCallback(() => {
+    if (props.onSave === undefined) return; // skip if saving not implemented
+
+    // save if dirty
+    if (autosaveStore.isDirty) {
+      props.onSave(notationGraphStore.nodes);
+      autosaveStore.setClean();
+    }
+  }, [notationGraphStore, autosaveStore]);
+
+  /**
+   * The user wants to leave the editor by clicking the exit button
+   */
+  function handleCloseFileButtonClick() {
+    beforeLeavingEditor();
+    props.onClose();
+  }
+
+  // The user is leaving the editor by closing or reloading the browser tab
+  useUnload(beforeLeavingEditor);
+
   return (
     <Box
       sx={{
@@ -79,13 +128,14 @@ export function Editor(props: EditorProps) {
           <Button
             variant="outlined"
             startDecorator={<ArrowBackIcon />}
-            onClick={() => props.onClose()}
+            onClick={handleCloseFileButtonClick}
           >
             Close File
           </Button>
           <Typography level="body-lg" sx={{ fontWeight: 700 }}>
             MuNG Studio
           </Typography>
+          <AutosaveStatus autosaveStore={autosaveStore} />
           <DisplayModeButtons editorStateStore={editorStateStore} />
         </Stack>
       </Sheet>

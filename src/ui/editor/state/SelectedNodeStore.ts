@@ -1,5 +1,5 @@
 import { atom, PrimitiveAtom, WritableAtom } from "jotai";
-import { NotationGraphStore } from "./OLD_NotationGraphStore";
+import { NotationGraphStore } from "./notation-graph-store/NotationGraphStore";
 
 /**
  * Contains atoms that track the selected node

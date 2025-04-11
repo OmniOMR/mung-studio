@@ -7,6 +7,7 @@ import { useAtomValue } from "jotai";
 import { EditorModeButtons } from "./EditorModeButtons";
 import { EditorStateStore } from "./state/EditorStateStore";
 import { NotationGraphStore } from "./state/notation-graph-store/NotationGraphStore";
+import { Typography } from "@mui/joy";
 
 export interface OverviewPanelProps {
   readonly notationGraphStore: NotationGraphStore;
@@ -36,6 +37,8 @@ export function OverviewPanel(props: OverviewPanelProps) {
     >
       <EditorModeButtons editorStateStore={props.editorStateStore} />
 
+      <StatisticsText notationGraphStore={props.notationGraphStore} />
+
       <ClassToggleGroup
         classNames={classNames}
         classVisibilityStore={props.classVisibilityStore}
@@ -50,5 +53,22 @@ export function OverviewPanel(props: OverviewPanelProps) {
         />
       ))} */}
     </Sheet>
+  );
+}
+
+interface StatisticsTextProps {
+  readonly notationGraphStore: NotationGraphStore;
+}
+
+function StatisticsText(props: StatisticsTextProps) {
+  const nodeIds = useAtomValue(props.notationGraphStore.nodeIdsAtom);
+  const links = useAtomValue(props.notationGraphStore.linksAtom);
+
+  return (
+    <Typography level="body-md">
+      Nodes: {nodeIds.length}
+      <br />
+      Links: {links.length}
+    </Typography>
   );
 }

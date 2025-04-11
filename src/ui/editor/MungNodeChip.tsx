@@ -2,7 +2,7 @@ import Chip from "@mui/joy/Chip";
 import { Node } from "../../mung/Node";
 import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { useAtom, useAtomValue } from "jotai";
-import { NotationGraphStore } from "./state/OLD_NotationGraphStore";
+import { NotationGraphStore } from "./state/notation-graph-store/NotationGraphStore";
 
 export interface MungNodeChipProps {
   readonly nodeId: number;
