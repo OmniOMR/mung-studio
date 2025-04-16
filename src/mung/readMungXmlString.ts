@@ -1,3 +1,4 @@
+import { DataItems } from "./DataItems";
 import { MungFile } from "./MungFile";
 import { Node } from "./Node";
 
@@ -33,6 +34,8 @@ export function readMungXmlString(xml: string): MungFile {
 }
 
 function readNodeFromXmlElement(element: Element): Node {
+  const dataItems = parseDataItems(element);
+
   return {
     id: parseInt(element.querySelector("Id")?.innerHTML || "NaN"),
     className: element.querySelector("ClassName")?.innerHTML || "unknown",
@@ -42,10 +45,30 @@ function readNodeFromXmlElement(element: Element): Node {
     height: parseInt(element.querySelector("Height")?.innerHTML || "NaN"),
     syntaxOutlinks: parseIntList(element.querySelector("Outlinks")?.innerHTML),
     syntaxInlinks: parseIntList(element.querySelector("Inlinks")?.innerHTML),
-    precedenceOutlinks: [], // TODO
-    precedenceInlinks: [], // TODO
+    precedenceOutlinks: parseIntList(dataItems["precedence_outlinks"]?.value),
+    precedenceInlinks: parseIntList(dataItems["precedence_inlinks"]?.value),
+    maskString: element.querySelector("Mask")?.textContent || null,
     polygon: null,
   };
+}
+
+function parseDataItems(nodeElement: Element): DataItems {
+  const dataElement = nodeElement.querySelector("Data");
+  if (dataElement === null) return {};
+
+  const parsedItems: DataItems = {};
+
+  for (let itemElement of dataElement.querySelectorAll("DataItem")) {
+    const key = itemElement.getAttribute("key");
+    if (key === null) continue;
+
+    const type = itemElement.getAttribute("type") || "";
+    const value = itemElement.textContent || "";
+
+    parsedItems[key] = { type, value };
+  }
+
+  return parsedItems;
 }
 
 function parseIntList(value?: string): number[] {

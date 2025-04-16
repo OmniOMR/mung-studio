@@ -45,9 +45,6 @@ export function DocumentEditorPage() {
         const downloadedImageUrl =
           imageBlob === null ? null : URL.createObjectURL(imageBlob);
 
-        // TODO: DEBUG:
-        // console.log(writeMungXmlString(parsedMung));
-
         setMung(parsedMung);
         setImageUrl(downloadedImageUrl);
         setIsLoading(false);
@@ -59,7 +56,7 @@ export function DocumentEditorPage() {
   }, [connection.userToken]);
 
   function onSave(mung: MungFile) {
-    console.log("SAVE", mung);
+    console.log("SAVE", writeMungXmlString(mung));
   }
 
   function onClose() {

@@ -1,3 +1,4 @@
+import { DataItems } from "./DataItems";
 import { MungFile } from "./MungFile";
 import { Node } from "./Node";
 
@@ -75,7 +76,74 @@ function createXmlElementForMungNode(
   heightElement.append(String(node.height));
   nodeElement.append(ONE_INDENT, heightElement, NEWLINE);
 
-  // TODO ...
+  if (node.maskString !== null) {
+    const maskElement = doc.createElement("Mask");
+    maskElement.append(node.maskString);
+    nodeElement.append(ONE_INDENT, maskElement, NEWLINE);
+  }
+
+  if (node.syntaxInlinks.length > 0) {
+    const syntaxInlinksElement = doc.createElement("Inlinks");
+    syntaxInlinksElement.append(intListToString(node.syntaxInlinks));
+    nodeElement.append(ONE_INDENT, syntaxInlinksElement, NEWLINE);
+  }
+
+  if (node.syntaxOutlinks.length > 0) {
+    const syntaxOutlinksElement = doc.createElement("Outlinks");
+    syntaxOutlinksElement.append(intListToString(node.syntaxOutlinks));
+    nodeElement.append(ONE_INDENT, syntaxOutlinksElement, NEWLINE);
+  }
+
+  const dataItems = prepareDataItems(node);
+
+  if (!isEmptyObject(dataItems)) {
+    const dataElement = doc.createElement("Data");
+    dataElement.append(NEWLINE);
+
+    for (const key in dataItems) {
+      const itemElement = doc.createElement("DataItem");
+
+      itemElement.setAttribute("key", key);
+      itemElement.setAttribute("type", dataItems[key].type);
+      itemElement.append(dataItems[key].value);
+
+      dataElement.append(ONE_INDENT + ONE_INDENT, itemElement, NEWLINE);
+    }
+
+    dataElement.append(ONE_INDENT);
+    nodeElement.append(ONE_INDENT, dataElement, NEWLINE);
+  }
 
   return nodeElement;
+}
+
+function prepareDataItems(node: Node): DataItems {
+  const dataItems: DataItems = {};
+
+  if (node.precedenceInlinks.length > 0) {
+    dataItems["precedence_inlinks"] = {
+      type: "list[int]",
+      value: intListToString(node.precedenceInlinks),
+    };
+  }
+
+  if (node.precedenceOutlinks.length > 0) {
+    dataItems["precedence_outlinks"] = {
+      type: "list[int]",
+      value: intListToString(node.precedenceOutlinks),
+    };
+  }
+
+  return dataItems;
+}
+
+function intListToString(values: number[]): string {
+  return values.join(" ");
+}
+
+function isEmptyObject(obj: object): boolean {
+  for (const key in obj) {
+    return false;
+  }
+  return true;
 }
