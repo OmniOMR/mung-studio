@@ -172,7 +172,7 @@ Request has no body, the URL must contain the `document` parameter with the requ
 
 ```bash
     curl -v -X POST --data-binary "@docname.xml" \
-        -H "Content-Type: applicaiton/mung+xml" \
+        -H "Content-Type: application/mung+xml" \
         -H "Authorization: Bearer 123456789" \
         "localhost:8080/?action=upload-document-mung&document=docname"
 ```

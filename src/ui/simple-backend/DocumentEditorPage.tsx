@@ -56,7 +56,9 @@ export function DocumentEditorPage() {
   }, [connection.userToken]);
 
   function onSave(mung: MungFile) {
-    console.log("SAVE", writeMungXmlString(mung));
+    const mungXmlString = writeMungXmlString(mung);
+    const api = new SimpleBackendApi(connection);
+    api.uploadDocumentMung(documentName, mungXmlString); // fire & forget
   }
 
   function onClose() {

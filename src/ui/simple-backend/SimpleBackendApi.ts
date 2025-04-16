@@ -78,4 +78,27 @@ export class SimpleBackendApi {
     }
     return await response.blob();
   }
+
+  public async uploadDocumentMung(
+    documentName: string,
+    mungXmlString: string,
+  ): Promise<void> {
+    const response = await fetch(
+      this.buildUrl("upload-document-mung", documentName),
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/mung+xml",
+          Authorization: "Bearer " + this.connection.userToken,
+        },
+        body: mungXmlString,
+      },
+    );
+    if (response.status === 401) {
+      throw new Error("Invalid user token.");
+    }
+    if (!response.ok) {
+      throw new Error("Unexpected response: " + (await response.text()));
+    }
+  }
 }
