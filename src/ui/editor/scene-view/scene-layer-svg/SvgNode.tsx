@@ -48,7 +48,9 @@ export function SvgNode(props: SvgNodeProps) {
         <path
           d={svgPathFromMungPolygon(node)}
           fill={`hsla(${hue}, 100%, ${lightness}%, 0.2)`}
-          stroke={`hsla(${hue}, 100%, ${lightness}%, 1.0)`}
+          stroke={
+            isSelected ? "white" : `hsla(${hue}, 100%, ${lightness}%, 1.0)`
+          }
           strokeWidth={isSelected ? "var(--scene-screen-pixel)" : "0"}
         />
       )}
@@ -61,7 +63,9 @@ export function SvgNode(props: SvgNodeProps) {
           width={node.width}
           height={node.height}
           fill={`hsla(${hue}, 100%, ${lightness}%, 0.2)`}
-          stroke={`hsla(${hue}, 100%, ${lightness}%, 1.0)`}
+          stroke={
+            isSelected ? "white" : `hsla(${hue}, 100%, ${lightness}%, 1.0)`
+          }
           strokeWidth={isSelected ? "var(--scene-screen-pixel)" : "0"}
         />
       )}

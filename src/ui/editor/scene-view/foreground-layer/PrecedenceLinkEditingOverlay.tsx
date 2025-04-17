@@ -113,6 +113,7 @@ export function PrecedenceLinkEditingOverlay(
         x2={0}
         y2={0}
         stroke="green"
+        strokeWidth="calc(var(--scene-screen-pixel) * 2)"
         markerEnd="url(#mung-link-arrow-head)"
       />
     </g>

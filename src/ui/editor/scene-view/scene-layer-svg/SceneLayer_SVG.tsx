@@ -121,6 +121,8 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
                 key={getLinkId(link)}
                 link={link}
                 notationGraphStore={props.notationGraphStore}
+                selectedNodeStore={props.selectedNodeStore}
+                classVisibilityStore={props.classVisibilityStore}
               />
             ))}
           </g>
