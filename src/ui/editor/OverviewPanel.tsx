@@ -4,7 +4,6 @@ import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { ClassToggleGroup } from "./ClassToggleGroup";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { useAtomValue } from "jotai";
-import { EditorModeButtons } from "./EditorModeButtons";
 import { EditorStateStore } from "./state/EditorStateStore";
 import { NotationGraphStore } from "./state/notation-graph-store/NotationGraphStore";
 import { Typography } from "@mui/joy";
@@ -35,8 +34,6 @@ export function OverviewPanel(props: OverviewPanelProps) {
         overflowY: "scroll",
       }}
     >
-      <EditorModeButtons editorStateStore={props.editorStateStore} />
-
       <StatisticsText notationGraphStore={props.notationGraphStore} />
 
       <ClassToggleGroup

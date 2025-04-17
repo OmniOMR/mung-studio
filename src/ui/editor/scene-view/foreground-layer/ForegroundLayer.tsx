@@ -6,7 +6,7 @@ import { SelectedNodeStore } from "../../state/SelectedNodeStore";
 import { ZoomEventBus } from "../ZoomEventBus";
 import { PointerInteractor } from "./PointerInteractor";
 import { PrecedenceLinkEditingOverlay } from "./PrecedenceLinkEditingOverlay";
-import { EditorMode, EditorStateStore } from "../../state/EditorStateStore";
+import { EditorTool, EditorStateStore } from "../../state/EditorStateStore";
 import { useAtomValue } from "jotai";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 import { DefaultModeOverlay } from "./DefaultModeOverlay";
@@ -26,7 +26,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
   const transformRef = useRef<d3.ZoomTransform>(IDENTITY_TRANSFORM);
 
-  const editorState = useAtomValue(props.editorStateStore.editorModeAtom);
+  const editorState = useAtomValue(props.editorStateStore.currentToolAtom);
 
   useZoom(svgRef, transformRef, props.zoomEventBus);
 
@@ -51,7 +51,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
           classVisibilityStore={props.classVisibilityStore}
         />
 
-        {editorState === EditorMode.Default && (
+        {editorState === EditorTool.Pointer && (
           <DefaultModeOverlay
             svgRef={svgRef}
             editorStateStore={props.editorStateStore}
@@ -59,11 +59,11 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
           />
         )}
 
-        {editorState === EditorMode.NodeEditing && (
+        {editorState === EditorTool.NodeEditing && (
           <NodeEditorOverlay selectedNodeStore={props.selectedNodeStore} />
         )}
 
-        {editorState === EditorMode.PrecedenceLinkEditing && (
+        {editorState === EditorTool.PrecedenceLinks && (
           <PrecedenceLinkEditingOverlay
             svgRef={svgRef}
             transformRef={transformRef}

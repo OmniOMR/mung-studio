@@ -19,6 +19,7 @@ import { AutosaveStore } from "./state/AutosaveStore";
 import { AutosaveStatus } from "./AutosaveStatus";
 import { MungFileMetadata } from "../../mung/MungFileMetadata";
 import { MungFile } from "../../mung/MungFile";
+import { Toolbelt } from "./Toolbelt";
 
 export interface EditorProps {
   /**
@@ -175,6 +176,7 @@ export function Editor(props: EditorProps) {
             classVisibilityStore={classVisibilityStore}
             editorStateStore={editorStateStore}
           />
+          <Toolbelt editorStateStore={editorStateStore} />
         </Box>
         <InspectorPanel
           notationGraphStore={notationGraphStore}

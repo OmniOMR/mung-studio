@@ -13,11 +13,11 @@ export enum NodeDisplayMode {
 /**
  * List of modes the editor as a whole can be in
  */
-export enum EditorMode {
+export enum EditorTool {
   /**
    * The default mode, user can select nodes and view their details.
    */
-  Default = "Default",
+  Pointer = "Pointer",
 
   /**
    * Mode for editing a single selected node
@@ -26,9 +26,14 @@ export enum EditorMode {
   NodeEditing = "NodeEditing",
 
   /**
+   * Specialized mode for editing syntax links
+   */
+  SyntaxLinks = "SyntaxLinks",
+
+  /**
    * Specialized mode for editing precedence links
    */
-  PrecedenceLinkEditing = "PrecedenceLinkEditing",
+  PrecedenceLinks = "PrecedenceLinks",
 }
 
 /**
@@ -43,7 +48,7 @@ export class EditorStateStore {
   public displaySyntaxLinksAtom: PrimitiveAtom<boolean> = atom(true);
   public displayPrecedenceLinksAtom: PrimitiveAtom<boolean> = atom(true);
 
-  public editorModeAtom: PrimitiveAtom<EditorMode> = atom(EditorMode.Default);
+  public currentToolAtom: PrimitiveAtom<EditorTool> = atom(EditorTool.Pointer);
 
   /**
    * Contains the currently highlighted atom.
