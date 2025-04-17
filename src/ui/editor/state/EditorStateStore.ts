@@ -11,14 +11,6 @@ export enum NodeDisplayMode {
 }
 
 /**
- * How should links in the scene view be displayed
- */
-export enum LinkDisplayMode {
-  Arrows = "Arrows",
-  Hidden = "Hidden",
-}
-
-/**
  * List of modes the editor as a whole can be in
  */
 export enum EditorMode {
@@ -48,9 +40,8 @@ export class EditorStateStore {
     NodeDisplayMode.Bboxes,
   );
 
-  public linkDisplayModeAtom: PrimitiveAtom<LinkDisplayMode> = atom(
-    LinkDisplayMode.Arrows,
-  );
+  public displaySyntaxLinksAtom: PrimitiveAtom<boolean> = atom(true);
+  public displayPrecedenceLinksAtom: PrimitiveAtom<boolean> = atom(true);
 
   public editorModeAtom: PrimitiveAtom<EditorMode> = atom(EditorMode.Default);
 

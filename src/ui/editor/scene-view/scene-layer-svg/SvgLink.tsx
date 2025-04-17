@@ -4,17 +4,26 @@ import { NotationGraphStore } from "../../state/notation-graph-store/NotationGra
 import { LinkType } from "../../../../mung/LinkType";
 import { SelectedNodeStore } from "../../state/SelectedNodeStore";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
+import { EditorStateStore } from "../../state/EditorStateStore";
 
 export interface SvgLinkProps {
   readonly link: Link;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectedNodeStore: SelectedNodeStore;
   readonly classVisibilityStore: ClassVisibilityStore;
+  readonly editorStateStore: EditorStateStore;
 }
 
 export function SvgLink(props: SvgLinkProps) {
   const linkWithNodes = useAtomValue(
     props.notationGraphStore.getLinkWithNodesAtom(props.link),
+  );
+
+  // global display options
+  const isDisplayed = useAtomValue(
+    linkWithNodes.type === LinkType.Syntax
+      ? props.editorStateStore.displaySyntaxLinksAtom
+      : props.editorStateStore.displayPrecedenceLinksAtom,
   );
 
   // class visibility
@@ -53,6 +62,11 @@ export function SvgLink(props: SvgLinkProps) {
     : linkWithNodes.type === LinkType.Syntax
       ? "red"
       : "green";
+
+  // hide link if disabled globally
+  if (!isDisplayed) {
+    return null;
+  }
 
   // hide link if terminal nodes are not visible and the link is not selected
   if (!isVisible && !isSelected) {

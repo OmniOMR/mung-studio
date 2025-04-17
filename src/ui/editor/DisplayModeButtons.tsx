@@ -1,14 +1,11 @@
-import { ButtonGroup, IconButton, Tooltip } from "@mui/joy";
+import { ButtonGroup, IconButton, ToggleButtonGroup, Tooltip } from "@mui/joy";
 import PolylineIcon from "@mui/icons-material/Polyline";
+import TimelineIcon from "@mui/icons-material/Timeline";
 import RectangleIcon from "@mui/icons-material/Rectangle";
 import PentagonIcon from "@mui/icons-material/Pentagon";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useAtom } from "jotai";
-import {
-  EditorStateStore,
-  LinkDisplayMode,
-  NodeDisplayMode,
-} from "./state/EditorStateStore";
+import { EditorStateStore, NodeDisplayMode } from "./state/EditorStateStore";
 
 export interface DisplayModeButtonsProps {
   readonly editorStateStore: EditorStateStore;
@@ -18,8 +15,11 @@ export function DisplayModeButtons(props: DisplayModeButtonsProps) {
   const [nodeDisplayMode, setNodeDisplayMode] = useAtom(
     props.editorStateStore.nodeDisplayModeAtom,
   );
-  const [linkDisplayMode, setLinkDisplayMode] = useAtom(
-    props.editorStateStore.linkDisplayModeAtom,
+  const [displaySyntaxLinks, setDisplaySyntaxLinks] = useAtom(
+    props.editorStateStore.displaySyntaxLinksAtom,
+  );
+  const [displayPrecedenceLinks, setDisplayPrecedenceLinks] = useAtom(
+    props.editorStateStore.displayPrecedenceLinksAtom,
   );
 
   return (
@@ -28,7 +28,7 @@ export function DisplayModeButtons(props: DisplayModeButtonsProps) {
       <ButtonGroup size="sm">
         <Tooltip arrow title="Display nodes as bounding boxes">
           <IconButton
-            disabled={nodeDisplayMode === NodeDisplayMode.Bboxes}
+            aria-pressed={nodeDisplayMode === NodeDisplayMode.Bboxes}
             onClick={() => setNodeDisplayMode(NodeDisplayMode.Bboxes)}
           >
             <RectangleIcon />
@@ -36,7 +36,7 @@ export function DisplayModeButtons(props: DisplayModeButtonsProps) {
         </Tooltip>
         <Tooltip arrow title="Display nodes as polygons and masks (slow)">
           <IconButton
-            disabled={nodeDisplayMode === NodeDisplayMode.PolygonsAndMasks}
+            aria-pressed={nodeDisplayMode === NodeDisplayMode.PolygonsAndMasks}
             onClick={() => setNodeDisplayMode(NodeDisplayMode.PolygonsAndMasks)}
           >
             <PentagonIcon />
@@ -44,7 +44,7 @@ export function DisplayModeButtons(props: DisplayModeButtonsProps) {
         </Tooltip>
         <Tooltip arrow title="Hide nodes">
           <IconButton
-            disabled={nodeDisplayMode === NodeDisplayMode.Hidden}
+            aria-pressed={nodeDisplayMode === NodeDisplayMode.Hidden}
             onClick={() => setNodeDisplayMode(NodeDisplayMode.Hidden)}
           >
             <VisibilityOffIcon />
@@ -53,24 +53,37 @@ export function DisplayModeButtons(props: DisplayModeButtonsProps) {
       </ButtonGroup>
 
       {/* Link display mode */}
-      <ButtonGroup size="sm">
-        <Tooltip arrow title="Display links">
+      <ToggleButtonGroup size="sm">
+        <Tooltip arrow title="Display syntax links">
           <IconButton
-            disabled={linkDisplayMode === LinkDisplayMode.Arrows}
-            onClick={() => setLinkDisplayMode(LinkDisplayMode.Arrows)}
+            aria-pressed={displaySyntaxLinks ? "true" : "false"}
+            onClick={() => setDisplaySyntaxLinks(!displaySyntaxLinks)}
           >
             <PolylineIcon />
           </IconButton>
         </Tooltip>
-        <Tooltip arrow title="Hide links">
+        <Tooltip arrow title="Display precedence links">
           <IconButton
-            disabled={linkDisplayMode === LinkDisplayMode.Hidden}
-            onClick={() => setLinkDisplayMode(LinkDisplayMode.Hidden)}
+            aria-pressed={displayPrecedenceLinks ? "true" : "false"}
+            onClick={() => setDisplayPrecedenceLinks(!displayPrecedenceLinks)}
+          >
+            <TimelineIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip arrow title="Hide all links">
+          <IconButton
+            aria-pressed={
+              !displaySyntaxLinks && !displayPrecedenceLinks ? "true" : "false"
+            }
+            onClick={() => {
+              setDisplaySyntaxLinks(false);
+              setDisplayPrecedenceLinks(false);
+            }}
           >
             <VisibilityOffIcon />
           </IconButton>
         </Tooltip>
-      </ButtonGroup>
+      </ToggleButtonGroup>
     </>
   );
 }
