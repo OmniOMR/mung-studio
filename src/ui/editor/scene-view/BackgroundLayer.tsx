@@ -36,21 +36,6 @@ export function BackgroundLayer(props: BackgroundLayerProps) {
         background: "#eee",
       }}
     >
-      <defs>
-        {/* Used by links to render the arrow head */}
-        {/* https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker */}
-        <marker
-          id="mung-link-arrow-head"
-          viewBox="0 0 10 10"
-          refX="5"
-          refY="5"
-          markerWidth="6"
-          markerHeight="6"
-          orient="auto-start-reverse"
-        >
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
-        </marker>
-      </defs>
       <g ref={gRef}>
         <image
           x="0"

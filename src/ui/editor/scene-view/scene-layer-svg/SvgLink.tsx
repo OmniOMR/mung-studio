@@ -28,6 +28,7 @@ export function SvgLink(props: SvgLinkProps) {
       x2={x2}
       y2={y2}
       stroke={color}
+      strokeWidth="calc(var(--scene-screen-pixel) * 2)"
       markerEnd="url(#mung-link-arrow-head)"
     />
   );

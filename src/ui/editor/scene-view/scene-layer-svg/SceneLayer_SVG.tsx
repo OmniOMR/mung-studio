@@ -45,6 +45,7 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
 
     const onZoom = (transform: d3.ZoomTransform) => {
       g.attr("transform", transform.toString());
+      g.style("--scene-screen-pixel", 1.0 / transform.k);
     };
 
     props.zoomEventBus.addListener(onZoom);
@@ -66,17 +67,33 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
     >
       <defs>
         {/* Used by links to render the arrow head */}
-        {/* https://developer.mozilla.org/en-US/docs/Web/SVG/Element/marker */}
         <marker
           id="mung-link-arrow-head"
           viewBox="0 0 10 10"
-          refX="5"
+          refX="8"
           refY="5"
-          markerWidth="6"
-          markerHeight="6"
+          markerWidth="10"
+          markerHeight="10"
           orient="auto-start-reverse"
         >
-          <path d="M 0 0 L 10 5 L 0 10 z" fill="context-stroke" />
+          <line
+            x1="4"
+            y1="1"
+            x2="8"
+            y2="5"
+            stroke="context-stroke"
+            strokeWidth="1"
+            strokeLinecap="square"
+          />
+          <line
+            x1="4"
+            y1="9"
+            x2="8"
+            y2="5"
+            stroke="context-stroke"
+            strokeWidth="1"
+            strokeLinecap="square"
+          />
         </marker>
       </defs>
       <g ref={gRef}>
