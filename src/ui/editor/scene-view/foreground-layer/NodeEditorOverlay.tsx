@@ -1,9 +1,9 @@
-import { useAtom } from "jotai";
-import { SelectedNodeStore } from "../../state/SelectedNodeStore";
+import { useAtomValue } from "jotai";
 import { MouseEvent, useState } from "react";
+import { SelectionStore } from "../../state/selection-store/SelectionStore";
 
 export interface NodeEditorOverlayProps {
-  readonly selectedNodeStore: SelectedNodeStore;
+  readonly selectionStore: SelectionStore;
 }
 
 interface Position {
@@ -14,7 +14,7 @@ interface Position {
 const HANDLE_SIZE = 15;
 
 export function NodeEditorOverlay(props: NodeEditorOverlayProps) {
-  const [node, setNode] = useAtom(props.selectedNodeStore.selectedNodeAtom);
+  const selectedNodes = useAtomValue(props.selectionStore.selectedNodesAtom);
 
   const [mouseDownPosition, setMouseDownPosition] = useState<Position | null>(
     null,
@@ -38,9 +38,10 @@ export function NodeEditorOverlay(props: NodeEditorOverlayProps) {
     console.log(widthDelta);
   }
 
-  if (node === null) {
+  if (selectedNodes.length !== 1) {
     return null;
   }
+  const node = selectedNodes[0];
 
   const bottom = node.top + node.height;
   const right = node.left + node.width;

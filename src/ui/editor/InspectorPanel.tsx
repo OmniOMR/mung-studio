@@ -1,12 +1,11 @@
 import Sheet from "@mui/joy/Sheet";
-import { SelectedNodeStore } from "./state/SelectedNodeStore";
-import { Node } from "../../mung/Node";
 import { useAtomValue } from "jotai";
 import { NotationGraphStore } from "./state/notation-graph-store/NotationGraphStore";
+import { SelectionStore } from "./state/selection-store/SelectionStore";
 
 export interface InspectorPanelProps {
   readonly notationGraphStore: NotationGraphStore;
-  readonly selectedNodeStore: SelectedNodeStore;
+  readonly selectionStore: SelectionStore;
 }
 
 /**
@@ -16,10 +15,10 @@ export function InspectorPanel(props: InspectorPanelProps) {
   const dataset = useAtomValue(props.notationGraphStore.datasetAtom);
   const document = useAtomValue(props.notationGraphStore.documentAtom);
 
-  const selectedNodeId = useAtomValue(
-    props.selectedNodeStore.selectedNodeIdAtom,
+  const selectedNodeIds = useAtomValue(
+    props.selectionStore.selectedNodeIdsAtom,
   );
-  const node = useAtomValue(props.selectedNodeStore.selectedNodeAtom);
+  const selectedNodes = useAtomValue(props.selectionStore.selectedNodesAtom);
 
   return (
     <Sheet
@@ -36,8 +35,8 @@ export function InspectorPanel(props: InspectorPanelProps) {
       document: {document}
       <br />
       <br />
-      selected node: {selectedNodeId}
-      <pre>{JSON.stringify(node, null, 2)}</pre>
+      selected node IDs: {JSON.stringify(selectedNodeIds)}
+      <pre>{JSON.stringify(selectedNodes, null, 2)}</pre>
     </Sheet>
   );
 }

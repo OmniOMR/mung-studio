@@ -1,7 +1,6 @@
 import { Node } from "../../mung/Node";
 import { useCallback, useEffect, useState } from "react";
 import { SceneView } from "./scene-view/SceneView";
-import { SelectedNodeStore } from "./state/SelectedNodeStore";
 import { OverviewPanel } from "./overview-panel/OverviewPanel";
 import { InspectorPanel } from "./InspectorPanel";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
@@ -20,6 +19,7 @@ import { AutosaveStatus } from "./AutosaveStatus";
 import { MungFileMetadata } from "../../mung/MungFileMetadata";
 import { MungFile } from "../../mung/MungFile";
 import { Toolbelt } from "./Toolbelt";
+import { SelectionStore } from "./state/selection-store/SelectionStore";
 
 export interface EditorProps {
   /**
@@ -66,8 +66,8 @@ export function Editor(props: EditorProps) {
       new NotationGraphStore(props.initialNodes, props.initialMungFileMetadata),
   );
 
-  const [selectedNodeStore, _2] = useState<SelectedNodeStore>(
-    () => new SelectedNodeStore(notationGraphStore),
+  const [selectionStore, _2] = useState<SelectionStore>(
+    () => new SelectionStore(notationGraphStore),
   );
 
   const [classVisibilityStore, _3] = useState<ClassVisibilityStore>(
@@ -160,7 +160,7 @@ export function Editor(props: EditorProps) {
       >
         <OverviewPanel
           notationGraphStore={notationGraphStore}
-          selectedNodeStore={selectedNodeStore}
+          selectionStore={selectionStore}
           classVisibilityStore={classVisibilityStore}
           editorStateStore={editorStateStore}
         />
@@ -172,7 +172,7 @@ export function Editor(props: EditorProps) {
           <SceneView
             backgroundImageUrl={props.backgroundImageUrl}
             notationGraphStore={notationGraphStore}
-            selectedNodeStore={selectedNodeStore}
+            selectionStore={selectionStore}
             classVisibilityStore={classVisibilityStore}
             editorStateStore={editorStateStore}
           />
@@ -180,7 +180,7 @@ export function Editor(props: EditorProps) {
         </Box>
         <InspectorPanel
           notationGraphStore={notationGraphStore}
-          selectedNodeStore={selectedNodeStore}
+          selectionStore={selectionStore}
         />
       </Box>
     </Box>

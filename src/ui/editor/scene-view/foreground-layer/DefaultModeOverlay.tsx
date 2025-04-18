@@ -1,13 +1,12 @@
 import { RefObject, useCallback, useEffect } from "react";
-import { Node } from "../../../../mung/Node";
 import { EditorStateStore } from "../../state/EditorStateStore";
-import { useAtom, useAtomValue } from "jotai";
-import { SelectedNodeStore } from "../../state/SelectedNodeStore";
+import { useAtomValue } from "jotai";
+import { SelectionStore } from "../../state/selection-store/SelectionStore";
 
 export interface DefaultModeOverlayProps {
   readonly svgRef: RefObject<SVGSVGElement | null>;
   readonly editorStateStore: EditorStateStore;
-  readonly selectedNodeStore: SelectedNodeStore;
+  readonly selectionStore: SelectionStore;
 }
 
 export function DefaultModeOverlay(props: DefaultModeOverlayProps) {
@@ -15,8 +14,8 @@ export function DefaultModeOverlay(props: DefaultModeOverlayProps) {
     props.editorStateStore.highlightedNodeAtom,
   );
 
-  const [selectedNodeId, setSelectedNodeId] = useAtom(
-    props.selectedNodeStore.selectedNodeIdAtom,
+  const selectedNodeIds = useAtomValue(
+    props.selectionStore.selectedNodeIdsAtom,
   );
 
   /////////////////////
@@ -26,25 +25,29 @@ export function DefaultModeOverlay(props: DefaultModeOverlayProps) {
   const onMouseDown = useCallback(
     (e: MouseEvent) => {
       // click on the backgorund de-selects
-      if (highlightedNode === null && selectedNodeId !== null) {
-        setSelectedNodeId(null);
+      if (highlightedNode === null) {
+        props.selectionStore.clearSelection();
         return;
       }
 
       // click on a node selects that node
       if (highlightedNode !== null) {
         // unless that node is already selected, then it de-selects
-        if (selectedNodeId === highlightedNode.id) {
-          setSelectedNodeId(null);
+        if (selectedNodeIds.includes(highlightedNode.id)) {
+          props.selectionStore.deselectNode(highlightedNode.id);
           return;
         }
 
-        // select that node
-        setSelectedNodeId(highlightedNode.id);
+        // select that node, or add it when holding shift
+        if (e.shiftKey) {
+          props.selectionStore.addNodeToSelection(highlightedNode.id);
+        } else {
+          props.selectionStore.changeSelection([highlightedNode.id]);
+        }
         return;
       }
     },
-    [highlightedNode, selectedNodeId, setSelectedNodeId],
+    [highlightedNode, selectedNodeIds, props.selectionStore],
   );
 
   useEffect(() => {
@@ -55,7 +58,7 @@ export function DefaultModeOverlay(props: DefaultModeOverlayProps) {
     return () => {
       svg.removeEventListener("mousedown", onMouseDown);
     };
-  }, [highlightedNode, selectedNodeId, setSelectedNodeId]);
+  }, [highlightedNode, selectedNodeIds, props.selectionStore]);
 
   /////////
   // SVG //

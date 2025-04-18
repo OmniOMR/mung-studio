@@ -7,16 +7,16 @@ import {
   NodeDisplayMode,
 } from "../../state/EditorStateStore";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
-import { SelectedNodeStore } from "../../state/SelectedNodeStore";
 import { ZoomEventBus } from "../ZoomEventBus";
 import { SvgLink } from "./SvgLink";
 import { SvgNode } from "./SvgNode";
 import { getLinkId } from "../../../../mung/getLinkId";
+import { SelectionStore } from "../../state/selection-store/SelectionStore";
 
 export interface SceneLayerProps {
   readonly zoomEventBus: ZoomEventBus;
   readonly notationGraphStore: NotationGraphStore;
-  readonly selectedNodeStore: SelectedNodeStore;
+  readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
   readonly editorStateStore: EditorStateStore;
 }
@@ -101,7 +101,7 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
                 key={nodeId}
                 nodeId={nodeId}
                 notationGraphStore={props.notationGraphStore}
-                selectedNodeStore={props.selectedNodeStore}
+                selectionStore={props.selectionStore}
                 classVisibilityStore={props.classVisibilityStore}
                 nodeDisplayMode={nodeDisplayMode}
               />
@@ -116,7 +116,7 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
               key={getLinkId(link)}
               link={link}
               notationGraphStore={props.notationGraphStore}
-              selectedNodeStore={props.selectedNodeStore}
+              selectionStore={props.selectionStore}
               classVisibilityStore={props.classVisibilityStore}
               editorStateStore={props.editorStateStore}
             />

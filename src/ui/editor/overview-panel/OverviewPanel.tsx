@@ -1,5 +1,4 @@
 import Sheet from "@mui/joy/Sheet";
-import { SelectedNodeStore } from "../state/SelectedNodeStore";
 import { NodesAccordionPanel } from "./NodesAccordionPanel";
 import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
 import { useAtomValue } from "jotai";
@@ -13,10 +12,11 @@ import {
   Divider,
   Typography,
 } from "@mui/joy";
+import { SelectionStore } from "../state/selection-store/SelectionStore";
 
 export interface OverviewPanelProps {
   readonly notationGraphStore: NotationGraphStore;
-  readonly selectedNodeStore: SelectedNodeStore;
+  readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
   readonly editorStateStore: EditorStateStore;
 }

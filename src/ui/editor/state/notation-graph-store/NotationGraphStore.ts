@@ -1,5 +1,10 @@
 import { atom, Atom, getDefaultStore, WritableAtom } from "jotai";
-import { NodeCollection } from "./NodeCollection";
+import {
+  LinkInsertMetadata,
+  LinkRemoveMetadata,
+  NodeCollection,
+  NodeUpdateMetadata,
+} from "./NodeCollection";
 import { Node } from "../../../../mung/Node";
 import { BulkActionLayer } from "./BulkActionLayer";
 import { Link } from "../../../../mung/Link";
@@ -12,7 +17,7 @@ import { NodeAtom, NodeAtomsView } from "./NodeAtomsView";
 import { LinkAtomsView } from "./LinkAtomsView";
 import { ClassNameCounts, ClassNamesIndex } from "./ClassNamesIndex";
 import { SignalAtomWrapper } from "../SignalAtomWrapper";
-import { ISignal, SignalDispatcher } from "strongly-typed-events";
+import { ISignal, ISimpleEvent, SignalDispatcher } from "strongly-typed-events";
 import { MetadataCollection } from "./MetadataCollection";
 import { MungFileMetadata } from "../../../../mung/MungFileMetadata";
 import { MungFile } from "../../../../mung/MungFile";
@@ -147,6 +152,44 @@ export class NotationGraphStore {
    */
   public get onChange(): ISignal {
     return this._onChange.asEvent();
+  }
+
+  // === expose node collection events ===
+
+  /**
+   * Fires after a new node is inserted into the graph
+   */
+  public get onNodeInserted(): ISimpleEvent<Node> {
+    return this.nodeCollection.onNodeInserted;
+  }
+
+  /**
+   * Fires after a node is modified, INCLUDING link updates.
+   * It fires per-node, so during a link update, this event is fired twice.
+   */
+  public get onNodeUpdatedOrLinked(): ISimpleEvent<NodeUpdateMetadata> {
+    return this.nodeCollection.onNodeUpdatedOrLinked;
+  }
+
+  /**
+   * Fires after a node is removed from the graph
+   */
+  public get onNodeRemoved(): ISimpleEvent<Node> {
+    return this.nodeCollection.onNodeRemoved;
+  }
+
+  /**
+   * Fires after a link is inserted into the graph
+   */
+  public get onLinkInserted(): ISimpleEvent<LinkInsertMetadata> {
+    return this.nodeCollection.onLinkInserted;
+  }
+
+  /**
+   * Fires after a link is removed from the graph
+   */
+  public get onLinkRemoved(): ISimpleEvent<LinkRemoveMetadata> {
+    return this.nodeCollection.onLinkRemoved;
   }
 
   //////////////////////////

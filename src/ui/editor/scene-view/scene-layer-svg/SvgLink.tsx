@@ -2,14 +2,14 @@ import { useAtomValue } from "jotai";
 import { Link } from "../../../../mung/Link";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 import { LinkType } from "../../../../mung/LinkType";
-import { SelectedNodeStore } from "../../state/SelectedNodeStore";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 import { EditorStateStore } from "../../state/EditorStateStore";
+import { SelectionStore } from "../../state/selection-store/SelectionStore";
 
 export interface SvgLinkProps {
   readonly link: Link;
   readonly notationGraphStore: NotationGraphStore;
-  readonly selectedNodeStore: SelectedNodeStore;
+  readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
   readonly editorStateStore: EditorStateStore;
 }
@@ -40,13 +40,9 @@ export function SvgLink(props: SvgLinkProps) {
   const isVisible = isFromClassVisible && isToClassVisible;
 
   // handle node selection
-  const isFromNodeSelected = useAtomValue(
-    props.selectedNodeStore.getNodeIsSelectedAtom(props.link.fromId),
+  const isSelected = useAtomValue(
+    props.selectionStore.getIsLinkPartiallySelectedAtom(props.link),
   );
-  const isToNodeSelected = useAtomValue(
-    props.selectedNodeStore.getNodeIsSelectedAtom(props.link.toId),
-  );
-  const isSelected = isFromNodeSelected || isToNodeSelected;
 
   // line coordinates
   const x1 = linkWithNodes.fromNode.left + linkWithNodes.fromNode.width / 2;

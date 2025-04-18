@@ -1,5 +1,4 @@
 import { useState } from "react";
-import { SelectedNodeStore } from "../state/SelectedNodeStore";
 import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
 import { ZoomEventBus } from "./ZoomEventBus";
 import { ForegroundLayer } from "./foreground-layer/ForegroundLayer";
@@ -8,11 +7,12 @@ import { SceneLayer_SVG } from "./scene-layer-svg/SceneLayer_SVG";
 import { BackgroundLayer } from "./BackgroundLayer";
 import { EditorStateStore } from "../state/EditorStateStore";
 import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
+import { SelectionStore } from "../state/selection-store/SelectionStore";
 
 export interface SceneViewProps {
   readonly backgroundImageUrl: string | null;
   readonly notationGraphStore: NotationGraphStore;
-  readonly selectedNodeStore: SelectedNodeStore;
+  readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
   readonly editorStateStore: EditorStateStore;
 }
@@ -44,7 +44,7 @@ export function SceneView(props: SceneViewProps) {
       <SceneLayer_SVG
         zoomEventBus={zoomEventBus}
         notationGraphStore={props.notationGraphStore}
-        selectedNodeStore={props.selectedNodeStore}
+        selectionStore={props.selectionStore}
         classVisibilityStore={props.classVisibilityStore}
         editorStateStore={props.editorStateStore}
       />
@@ -57,7 +57,7 @@ export function SceneView(props: SceneViewProps) {
       and contains the zoom controlling code */}
       <ForegroundLayer
         zoomEventBus={zoomEventBus}
-        selectedNodeStore={props.selectedNodeStore}
+        selectionStore={props.selectionStore}
         notationGraphStore={props.notationGraphStore}
         editorStateStore={props.editorStateStore}
         classVisibilityStore={props.classVisibilityStore}

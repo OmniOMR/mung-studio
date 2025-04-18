@@ -1,17 +1,15 @@
-import { useState } from "react";
-import { Node } from "../../../../mung/Node";
-import { SelectedNodeStore } from "../../state/SelectedNodeStore";
-import { useAtom, useAtomValue } from "jotai";
+import { useAtomValue } from "jotai";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 import { svgPathFromMungPolygon } from "../../../../mung/svgPathFromMungPolygon";
 import { classNameToHue } from "../../../../mung/classNameToHue";
 import { NodeDisplayMode } from "../../state/EditorStateStore";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
+import { SelectionStore } from "../../state/selection-store/SelectionStore";
 
 export interface SvgNodeProps {
   readonly nodeId: number;
   readonly notationGraphStore: NotationGraphStore;
-  readonly selectedNodeStore: SelectedNodeStore;
+  readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
   readonly nodeDisplayMode: NodeDisplayMode;
 }
@@ -20,7 +18,7 @@ export function SvgNode(props: SvgNodeProps) {
   const node = useAtomValue(props.notationGraphStore.getNodeAtom(props.nodeId));
 
   const isSelected = useAtomValue(
-    props.selectedNodeStore.getNodeIsSelectedAtom(node.id),
+    props.selectionStore.getIsNodeSelectedAtom(props.nodeId),
   );
   const isVisible =
     useAtomValue(

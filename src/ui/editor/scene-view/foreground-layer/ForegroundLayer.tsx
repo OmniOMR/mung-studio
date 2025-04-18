@@ -2,7 +2,6 @@ import * as d3 from "d3";
 import { RefObject, useEffect, useRef } from "react";
 import { customizeD3ZoomBehaviour } from "../customizeD3ZoomBehaviour";
 import { NodeEditorOverlay } from "./NodeEditorOverlay";
-import { SelectedNodeStore } from "../../state/SelectedNodeStore";
 import { ZoomEventBus } from "../ZoomEventBus";
 import { PointerInteractor } from "./PointerInteractor";
 import { PrecedenceLinkEditingOverlay } from "./PrecedenceLinkEditingOverlay";
@@ -11,12 +10,13 @@ import { useAtomValue } from "jotai";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 import { DefaultModeOverlay } from "./DefaultModeOverlay";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
+import { SelectionStore } from "../../state/selection-store/SelectionStore";
 
 const IDENTITY_TRANSFORM = new d3.ZoomTransform(1, 0, 0);
 
 export interface ForegroundLayerProps {
   readonly zoomEventBus: ZoomEventBus;
-  readonly selectedNodeStore: SelectedNodeStore;
+  readonly selectionStore: SelectionStore;
   readonly notationGraphStore: NotationGraphStore;
   readonly editorStateStore: EditorStateStore;
   readonly classVisibilityStore: ClassVisibilityStore;
@@ -55,12 +55,12 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
           <DefaultModeOverlay
             svgRef={svgRef}
             editorStateStore={props.editorStateStore}
-            selectedNodeStore={props.selectedNodeStore}
+            selectionStore={props.selectionStore}
           />
         )}
 
         {editorState === EditorTool.NodeEditing && (
-          <NodeEditorOverlay selectedNodeStore={props.selectedNodeStore} />
+          <NodeEditorOverlay selectionStore={props.selectionStore} />
         )}
 
         {editorState === EditorTool.PrecedenceLinks && (
