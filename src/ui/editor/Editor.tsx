@@ -2,7 +2,7 @@ import { Node } from "../../mung/Node";
 import { useCallback, useEffect, useState } from "react";
 import { SceneView } from "./scene-view/SceneView";
 import { SelectedNodeStore } from "./state/SelectedNodeStore";
-import { OverviewPanel } from "./OverviewPanel";
+import { OverviewPanel } from "./overview-panel/OverviewPanel";
 import { InspectorPanel } from "./InspectorPanel";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { NotationGraphStore } from "./state/notation-graph-store/NotationGraphStore";
