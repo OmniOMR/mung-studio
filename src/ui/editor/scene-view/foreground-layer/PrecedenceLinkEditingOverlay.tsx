@@ -5,10 +5,11 @@ import { EditorStateStore } from "../../state/EditorStateStore";
 import { useAtomValue } from "jotai";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 import { LinkType } from "../../../../mung/LinkType";
+import { Zoomer } from "../Zoomer";
 
 export interface PrecedenceLinkEditingOverlayProps {
   readonly svgRef: RefObject<SVGSVGElement | null>;
-  readonly transformRef: RefObject<d3.ZoomTransform>;
+  readonly zoomer: Zoomer;
   readonly editorStateStore: EditorStateStore;
   readonly notationGraphStore: NotationGraphStore;
 }
@@ -75,7 +76,7 @@ export function PrecedenceLinkEditingOverlay(
       if (lineRef.current === null) return;
       const line = lineRef.current;
 
-      const t = props.transformRef.current;
+      const t = props.zoomer.currentTransform;
       const x = t.invertX(e.offsetX);
       const y = t.invertY(e.offsetY);
 

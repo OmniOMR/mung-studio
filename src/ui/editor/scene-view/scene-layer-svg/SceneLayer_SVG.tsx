@@ -1,20 +1,20 @@
 import * as d3 from "d3";
 import { useAtomValue } from "jotai";
-import { useEffect, useRef } from "react";
+import { useRef } from "react";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 import {
   EditorStateStore,
   NodeDisplayMode,
 } from "../../state/EditorStateStore";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
-import { ZoomEventBus } from "../ZoomEventBus";
+import { Zoomer } from "../Zoomer";
 import { SvgLink } from "./SvgLink";
 import { SvgNode } from "./SvgNode";
 import { getLinkId } from "../../../../mung/getLinkId";
 import { SelectionStore } from "../../state/selection-store/SelectionStore";
 
 export interface SceneLayerProps {
-  readonly zoomEventBus: ZoomEventBus;
+  readonly zoomer: Zoomer;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
@@ -34,20 +34,9 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
 
   const gRef = useRef<SVGGElement | null>(null);
 
-  // listen to zoom events and update the transform property accordingly
-  useEffect(() => {
-    if (gRef === null) return;
-    const g = d3.select(gRef.current);
-
-    const onZoom = (transform: d3.ZoomTransform) => {
-      g.attr("transform", transform.toString());
-      g.style("--scene-screen-pixel", 1.0 / transform.k);
-    };
-
-    props.zoomEventBus.addListener(onZoom);
-    return () => {
-      props.zoomEventBus.removeListener(onZoom);
-    };
+  // move scene objects together with the scene
+  props.zoomer.useOnTransformChange((transform: d3.ZoomTransform) => {
+    gRef.current?.setAttribute("transform", transform.toString());
   }, []);
 
   return (

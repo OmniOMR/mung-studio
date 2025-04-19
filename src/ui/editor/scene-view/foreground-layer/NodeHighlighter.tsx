@@ -5,10 +5,12 @@ import { EditorStateStore } from "../../state/EditorStateStore";
 import { useAtom } from "jotai";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
+import { Zoomer } from "../Zoomer";
 
-export interface PointerInteractorProps {
+export interface NodeHighlighterProps {
   readonly svgRef: RefObject<SVGSVGElement | null>;
-  readonly transformRef: RefObject<d3.ZoomTransform>;
+  readonly zoomer: Zoomer;
+  readonly isEnabled: boolean;
   readonly notationGraphStore: NotationGraphStore;
   readonly editorStateStore: EditorStateStore;
   readonly classVisibilityStore: ClassVisibilityStore;
@@ -18,14 +20,16 @@ export interface PointerInteractorProps {
  * Component that handles interactions with the mouse pointer
  * (highlighting and clicking)
  */
-export function PointerInteractor(props: PointerInteractorProps) {
+export function NodeHighlighter(props: NodeHighlighterProps) {
   const [highlightedNode, setHighlightedNode] = useAtom(
     props.editorStateStore.highlightedNodeAtom,
   );
 
   const onMouseMove = useCallback(
     (e: MouseEvent) => {
-      const t = props.transformRef.current;
+      if (!props.isEnabled) return;
+
+      const t = props.zoomer.currentTransform;
 
       const x = t.invertX(e.offsetX);
       const y = t.invertY(e.offsetY);
@@ -40,18 +44,22 @@ export function PointerInteractor(props: PointerInteractorProps) {
         setHighlightedNode(newHighlightedNode);
       }
     },
-    [highlightedNode, setHighlightedNode],
+    [highlightedNode, setHighlightedNode, props.isEnabled],
   );
 
   useEffect(() => {
     if (props.svgRef.current === null) return;
     const svg = props.svgRef.current;
 
+    if (!props.isEnabled && highlightedNode !== null) {
+      setHighlightedNode(null);
+    }
+
     svg.addEventListener("mousemove", onMouseMove);
     return () => {
       svg.removeEventListener("mousemove", onMouseMove);
     };
-  }, [highlightedNode, setHighlightedNode]);
+  }, [highlightedNode, setHighlightedNode, props.isEnabled]);
 
   return (
     <>

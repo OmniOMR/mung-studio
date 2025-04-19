@@ -1,9 +1,8 @@
 import * as d3 from "d3";
-import { RefObject, useEffect, useRef } from "react";
-import { customizeD3ZoomBehaviour } from "../customizeD3ZoomBehaviour";
+import { useRef } from "react";
 import { NodeEditorOverlay } from "./NodeEditorOverlay";
-import { ZoomEventBus } from "../ZoomEventBus";
-import { PointerInteractor } from "./PointerInteractor";
+import { Zoomer } from "../Zoomer";
+import { NodeHighlighter } from "./NodeHighlighter";
 import { PrecedenceLinkEditingOverlay } from "./PrecedenceLinkEditingOverlay";
 import { EditorTool, EditorStateStore } from "../../state/EditorStateStore";
 import { useAtomValue } from "jotai";
@@ -12,10 +11,8 @@ import { DefaultModeOverlay } from "./DefaultModeOverlay";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 import { SelectionStore } from "../../state/selection-store/SelectionStore";
 
-const IDENTITY_TRANSFORM = new d3.ZoomTransform(1, 0, 0);
-
 export interface ForegroundLayerProps {
-  readonly zoomEventBus: ZoomEventBus;
+  readonly zoomer: Zoomer;
   readonly selectionStore: SelectionStore;
   readonly notationGraphStore: NotationGraphStore;
   readonly editorStateStore: EditorStateStore;
@@ -24,11 +21,24 @@ export interface ForegroundLayerProps {
 
 export function ForegroundLayer(props: ForegroundLayerProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
-  const transformRef = useRef<d3.ZoomTransform>(IDENTITY_TRANSFORM);
 
-  const editorState = useAtomValue(props.editorStateStore.currentToolAtom);
+  const currentTool = useAtomValue(props.editorStateStore.currentToolAtom);
 
-  useZoom(svgRef, transformRef, props.zoomEventBus);
+  // bind zoomer to the SVG element
+  props.zoomer.useZoomer(
+    svgRef,
+    () => props.editorStateStore.currentTool == EditorTool.Hand,
+  );
+
+  // determine the mouse cursor type
+  const isGrabbing = useAtomValue(props.zoomer.isGrabbingAtom);
+  let cursor = "default";
+  if (currentTool === EditorTool.Hand) cursor = "grab";
+  if (isGrabbing) cursor = "grabbing";
+
+  // determine whether the highlighter is enabled
+  let isHighlighterEnabled = true;
+  if (currentTool === EditorTool.Hand) isHighlighterEnabled = false;
 
   return (
     <svg
@@ -40,18 +50,21 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
         width: "100%",
         height: "100%",
         background: "none",
+        cursor: cursor,
       }}
     >
+      {/* This <g> element is what the zoomer applies transform to */}
       <g>
-        <PointerInteractor
+        <NodeHighlighter
           svgRef={svgRef}
-          transformRef={transformRef}
+          zoomer={props.zoomer}
+          isEnabled={isHighlighterEnabled}
           notationGraphStore={props.notationGraphStore}
           editorStateStore={props.editorStateStore}
           classVisibilityStore={props.classVisibilityStore}
         />
 
-        {editorState === EditorTool.Pointer && (
+        {currentTool === EditorTool.Pointer && (
           <DefaultModeOverlay
             svgRef={svgRef}
             editorStateStore={props.editorStateStore}
@@ -59,14 +72,14 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
           />
         )}
 
-        {editorState === EditorTool.NodeEditing && (
+        {currentTool === EditorTool.NodeEditing && (
           <NodeEditorOverlay selectionStore={props.selectionStore} />
         )}
 
-        {editorState === EditorTool.PrecedenceLinks && (
+        {currentTool === EditorTool.PrecedenceLinks && (
           <PrecedenceLinkEditingOverlay
             svgRef={svgRef}
-            transformRef={transformRef}
+            zoomer={props.zoomer}
             editorStateStore={props.editorStateStore}
             notationGraphStore={props.notationGraphStore}
           />
@@ -74,29 +87,4 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
       </g>
     </svg>
   );
-}
-
-function useZoom(
-  svgRef: RefObject<SVGSVGElement | null>,
-  transformRef: RefObject<d3.ZoomTransform>,
-  zoomEventBus: ZoomEventBus,
-) {
-  useEffect(() => {
-    if (svgRef.current === null) return;
-
-    const svgElement = d3.select(svgRef.current);
-    const g = svgElement.select("g");
-    const zoom = d3.zoom().on("zoom", zoomed);
-    svgElement.call(zoom);
-    customizeD3ZoomBehaviour(svgElement, zoom);
-
-    function zoomed(event) {
-      const { transform } = event as d3.D3ZoomEvent<any, any>;
-      g.attr("transform", transform.toString());
-      g.style("--scene-screen-pixel", 1.0 / transform.k);
-
-      transformRef.current = transform;
-      zoomEventBus.emitEvent(transform);
-    }
-  }, []);
 }

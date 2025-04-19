@@ -1,11 +1,12 @@
 import { Card, IconButton, Stack, Tooltip } from "@mui/joy";
 import NearMeIcon from "@mui/icons-material/NearMe";
+import PanToolIcon from "@mui/icons-material/PanTool";
 import PolylineIcon from "@mui/icons-material/Polyline";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import PentagonIcon from "@mui/icons-material/Pentagon";
 import { PropsWithChildren, useCallback, useEffect } from "react";
 import { EditorStateStore, EditorTool } from "./state/EditorStateStore";
-import { useAtom } from "jotai";
+import { useAtomValue } from "jotai";
 
 export interface ToolbeltProps {
   readonly editorStateStore: EditorStateStore;
@@ -15,7 +16,7 @@ export interface ToolbeltProps {
  * The panel at the bottom of the scene view that lets the user select tools.
  */
 export function Toolbelt(props: ToolbeltProps) {
-  const [tool, setTool] = useAtom(props.editorStateStore.currentToolAtom);
+  const tool = useAtomValue(props.editorStateStore.currentToolAtom);
 
   /////////////////////////
   // Equipping functions //
@@ -24,7 +25,13 @@ export function Toolbelt(props: ToolbeltProps) {
   function equipPointerTool() {
     if (tool === EditorTool.Pointer) return;
 
-    setTool(EditorTool.Pointer);
+    props.editorStateStore.setCurrentTool(EditorTool.Pointer);
+  }
+
+  function equipHandTool() {
+    if (tool === EditorTool.Hand) return;
+
+    props.editorStateStore.setCurrentTool(EditorTool.Hand);
   }
 
   function equipPrecedenceLinksTool() {
@@ -32,7 +39,7 @@ export function Toolbelt(props: ToolbeltProps) {
 
     // TODO: deselect all nodes
 
-    setTool(EditorTool.PrecedenceLinks);
+    props.editorStateStore.setCurrentTool(EditorTool.PrecedenceLinks);
   }
 
   ////////////////////////
@@ -43,6 +50,9 @@ export function Toolbelt(props: ToolbeltProps) {
     (e) => {
       if (e.key.toUpperCase() == "V") {
         equipPointerTool();
+      }
+      if (e.key.toUpperCase() == "H") {
+        equipHandTool();
       }
       if (e.key.toUpperCase() == "P") {
         equipPrecedenceLinksTool();
@@ -82,6 +92,13 @@ export function Toolbelt(props: ToolbeltProps) {
           onClick={equipPointerTool}
         >
           <NearMeIcon sx={{ transform: "scaleX(-1.0)" }} />
+        </ToolbeltButton>
+        <ToolbeltButton
+          tooltip="Hand [H]"
+          isSelected={tool === EditorTool.Hand}
+          onClick={equipHandTool}
+        >
+          <PanToolIcon />
         </ToolbeltButton>
         <ToolbeltButton
           tooltip="Polygon Node [N]"

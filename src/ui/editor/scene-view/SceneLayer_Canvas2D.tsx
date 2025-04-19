@@ -1,11 +1,11 @@
 import { useEffect, useRef } from "react";
-import { ZoomEventBus } from "./ZoomEventBus";
+import { Zoomer } from "./Zoomer";
 import { Node } from "../../../mung/Node";
 import { classNameToHue } from "../../../mung/classNameToHue";
 import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
 
 export interface SceneLayerProps {
-  readonly zoomEventBus: ZoomEventBus;
+  readonly zoomEventBus: Zoomer;
   readonly notationGraphStore: NotationGraphStore;
 }
 
