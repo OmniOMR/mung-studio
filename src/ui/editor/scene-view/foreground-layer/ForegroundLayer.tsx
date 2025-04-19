@@ -1,13 +1,13 @@
 import * as d3 from "d3";
-import { useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { NodeEditorOverlay } from "./NodeEditorOverlay";
 import { Zoomer } from "../Zoomer";
-import { NodeHighlighter } from "./NodeHighlighter";
+import { Highlighter, HighlighterComponent } from "./Highlighter";
 import { PrecedenceLinkEditingOverlay } from "./PrecedenceLinkEditingOverlay";
 import { EditorTool, EditorStateStore } from "../../state/EditorStateStore";
 import { useAtomValue } from "jotai";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
-import { DefaultModeOverlay } from "./DefaultModeOverlay";
+import { Selector, SelectorComponent } from "./Selector";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 import { SelectionStore } from "../../state/selection-store/SelectionStore";
 
@@ -21,6 +21,26 @@ export interface ForegroundLayerProps {
 
 export function ForegroundLayer(props: ForegroundLayerProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
+
+  const [highlighter, _1] = useState(
+    () =>
+      new Highlighter(
+        props.notationGraphStore,
+        props.classVisibilityStore,
+        props.zoomer,
+      ),
+  );
+
+  const [selector, _2] = useState(
+    () =>
+      new Selector(
+        props.notationGraphStore,
+        props.classVisibilityStore,
+        props.selectionStore,
+        highlighter,
+        props.zoomer,
+      ),
+  );
 
   const currentTool = useAtomValue(props.editorStateStore.currentToolAtom);
 
@@ -37,8 +57,11 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
   if (isGrabbing) cursor = "grabbing";
 
   // determine whether the highlighter is enabled
-  let isHighlighterEnabled = true;
-  if (currentTool === EditorTool.Hand) isHighlighterEnabled = false;
+  useEffect(() => {
+    let isHighlighterEnabled = true;
+    if (currentTool === EditorTool.Hand) isHighlighterEnabled = false;
+    highlighter.setIsNodeHighlightingEnabled(isHighlighterEnabled);
+  }, [currentTool]);
 
   return (
     <svg
@@ -55,22 +78,9 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
     >
       {/* This <g> element is what the zoomer applies transform to */}
       <g>
-        <NodeHighlighter
-          svgRef={svgRef}
-          zoomer={props.zoomer}
-          isEnabled={isHighlighterEnabled}
-          notationGraphStore={props.notationGraphStore}
-          editorStateStore={props.editorStateStore}
-          classVisibilityStore={props.classVisibilityStore}
-        />
+        <HighlighterComponent svgRef={svgRef} highlighter={highlighter} />
 
-        {currentTool === EditorTool.Pointer && (
-          <DefaultModeOverlay
-            svgRef={svgRef}
-            editorStateStore={props.editorStateStore}
-            selectionStore={props.selectionStore}
-          />
-        )}
+        <SelectorComponent svgRef={svgRef} selector={selector} />
 
         {currentTool === EditorTool.NodeEditing && (
           <NodeEditorOverlay selectionStore={props.selectionStore} />
