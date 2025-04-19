@@ -137,6 +137,10 @@ export class SelectionStore {
       (id) => !newFullLinkSet.includes(id),
     );
 
+    // update links state
+    this._partiallySelectedLinks = newPartialLinkSet;
+    this._fullySelectedLinks = newFullLinkSet;
+
     return {
       oldPartialLinkSet,
       newPartialLinkSet,
