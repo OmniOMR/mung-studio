@@ -56,11 +56,13 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
   if (currentTool === EditorTool.Hand) cursor = "grab";
   if (isGrabbing) cursor = "grabbing";
 
-  // determine whether the highlighter is enabled
+  // determine whether the highlighter and selector is enabled
   useEffect(() => {
-    let isHighlighterEnabled = true;
-    if (currentTool === EditorTool.Hand) isHighlighterEnabled = false;
-    highlighter.setIsNodeHighlightingEnabled(isHighlighterEnabled);
+    let isEnabled = true;
+    if (currentTool === EditorTool.Hand) isEnabled = false;
+
+    highlighter.setIsNodeHighlightingEnabled(isEnabled);
+    selector.isEnabled = isEnabled;
   }, [currentTool]);
 
   return (

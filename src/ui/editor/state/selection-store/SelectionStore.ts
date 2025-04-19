@@ -252,6 +252,13 @@ export class SelectionStore {
     this.changeSelection([...this.selectedNodeIds, nodeId]);
   }
 
+  /**
+   * Adds multiple nodes to the selection
+   */
+  public addNodesToSelection(nodeIds: number[]) {
+    this.changeSelection([...this.selectedNodeIds, ...nodeIds]);
+  }
+
   ////////////
   // Events //
   ////////////

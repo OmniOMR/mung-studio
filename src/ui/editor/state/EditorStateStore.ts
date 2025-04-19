@@ -100,14 +100,4 @@ export class EditorStateStore {
     this._currentTool = tool;
     this.currentToolSignalAtom.signal(this.jotaiStore.set);
   }
-
-  //////////////////////////////////////
-  // Highlighed notation graph object //
-  //////////////////////////////////////
-
-  /**
-   * Contains the currently highlighted atom.
-   * Could be extracted into a store should nodes react by changing color.
-   */
-  public highlightedNodeAtom: PrimitiveAtom<Node | null> = atom(null);
 }
