@@ -13,8 +13,10 @@ import {
   Typography,
 } from "@mui/joy";
 import { SelectionStore } from "../state/selection-store/SelectionStore";
+import { MainMenu } from "./MainMenu";
 
 export interface OverviewPanelProps {
+  readonly onClose: () => void;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
@@ -39,7 +41,12 @@ export function OverviewPanel(props: OverviewPanelProps) {
         overflowY: "scroll",
       }}
     >
-      Main menu, file name, save state.
+      <MainMenu
+        onClose={props.onClose}
+        notationGraphStore={props.notationGraphStore}
+        selectionStore={props.selectionStore}
+      />
+      File name, save state.
       <Divider />
       <AccordionGroup>
         <Accordion defaultExpanded={false}>

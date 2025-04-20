@@ -159,6 +159,7 @@ export function Editor(props: EditorProps) {
         }}
       >
         <OverviewPanel
+          onClose={props.onClose}
           notationGraphStore={notationGraphStore}
           selectionStore={selectionStore}
           classVisibilityStore={classVisibilityStore}
