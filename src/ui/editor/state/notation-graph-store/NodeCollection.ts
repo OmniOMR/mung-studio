@@ -200,6 +200,10 @@ export class NodeCollection {
     }
     const oldToNode = this.getNode(toId);
 
+    if (fromId === toId) {
+      throw new Error(`Cannot create link to itself. Loops are disallowed.`);
+    }
+
     // create modified nodes
     const newFromNode = {
       ...oldFromNode,

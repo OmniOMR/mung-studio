@@ -90,22 +90,14 @@ export function MainMenu(props: MainMenuProps) {
     if (!canToggleLink) return;
     const fromId = props.selectionStore.selectedNodeIds[0];
     const toId = props.selectionStore.selectedNodeIds[1];
-    if (props.notationGraphStore.hasLink(fromId, toId, LinkType.Syntax)) {
-      props.notationGraphStore.removeLink(fromId, toId, LinkType.Syntax);
-    } else {
-      props.notationGraphStore.insertLink(fromId, toId, LinkType.Syntax);
-    }
+    props.notationGraphStore.toggleLink(fromId, toId, LinkType.Syntax);
   }
 
   function togglePrecedenceLink() {
     if (!canToggleLink) return;
     const fromId = props.selectionStore.selectedNodeIds[0];
     const toId = props.selectionStore.selectedNodeIds[1];
-    if (props.notationGraphStore.hasLink(fromId, toId, LinkType.Precedence)) {
-      props.notationGraphStore.removeLink(fromId, toId, LinkType.Precedence);
-    } else {
-      props.notationGraphStore.insertLink(fromId, toId, LinkType.Precedence);
-    }
+    props.notationGraphStore.toggleLink(fromId, toId, LinkType.Precedence);
   }
 
   function removePartiallySelectedLinks() {
@@ -128,12 +120,15 @@ export function MainMenu(props: MainMenuProps) {
   const onKeydown = (e: KeyboardEvent) => {
     if (e.key.toUpperCase() === "E" && !e.shiftKey) {
       toggleSyntaxLink();
+      e.preventDefault();
     }
     if (e.key.toUpperCase() === "E" && e.shiftKey) {
       togglePrecedenceLink();
+      e.preventDefault();
     }
     if (e.key.toUpperCase() === "DELETE" && e.shiftKey) {
       removePartiallySelectedLinks();
+      e.preventDefault();
     }
   };
 

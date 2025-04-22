@@ -2,7 +2,7 @@ import { Node } from "../../mung/Node";
 import { useCallback, useEffect, useMemo } from "react";
 import { SceneView } from "./scene-view/SceneView";
 import { OverviewPanel } from "./overview-panel/OverviewPanel";
-import { InspectorPanel } from "./InspectorPanel";
+import { InspectorPanel } from "./inspector-panel/InspectorPanel";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { NotationGraphStore } from "./state/notation-graph-store/NotationGraphStore";
 import Box from "@mui/joy/Box";
@@ -155,11 +155,15 @@ export function Editor(props: EditorProps) {
             classVisibilityStore={classVisibilityStore}
             editorStateStore={editorStateStore}
           />
-          <Toolbelt editorStateStore={editorStateStore} />
+          <Toolbelt
+            editorStateStore={editorStateStore}
+            selectionStore={selectionStore}
+          />
         </Box>
         <InspectorPanel
           notationGraphStore={notationGraphStore}
           selectionStore={selectionStore}
+          editorStateStore={editorStateStore}
         />
       </Box>
       {/* <Box

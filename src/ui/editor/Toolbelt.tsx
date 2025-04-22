@@ -7,9 +7,11 @@ import PentagonIcon from "@mui/icons-material/Pentagon";
 import { PropsWithChildren, useCallback, useEffect } from "react";
 import { EditorStateStore, EditorTool } from "./state/EditorStateStore";
 import { useAtomValue } from "jotai";
+import { SelectionStore } from "./state/selection-store/SelectionStore";
 
 export interface ToolbeltProps {
   readonly editorStateStore: EditorStateStore;
+  readonly selectionStore: SelectionStore;
 }
 
 /**
@@ -34,10 +36,18 @@ export function Toolbelt(props: ToolbeltProps) {
     props.editorStateStore.setCurrentTool(EditorTool.Hand);
   }
 
+  function equipSyntaxLinksTool() {
+    if (tool === EditorTool.SyntaxLinks) return;
+
+    props.selectionStore.clearSelection();
+
+    props.editorStateStore.setCurrentTool(EditorTool.SyntaxLinks);
+  }
+
   function equipPrecedenceLinksTool() {
     if (tool === EditorTool.PrecedenceLinks) return;
 
-    // TODO: deselect all nodes
+    props.selectionStore.clearSelection();
 
     props.editorStateStore.setCurrentTool(EditorTool.PrecedenceLinks);
   }
@@ -53,6 +63,9 @@ export function Toolbelt(props: ToolbeltProps) {
       }
       if (e.key.toUpperCase() == "H") {
         equipHandTool();
+      }
+      if (e.key.toUpperCase() == "L") {
+        equipSyntaxLinksTool();
       }
       if (e.key.toUpperCase() == "P") {
         equipPrecedenceLinksTool();
@@ -109,8 +122,8 @@ export function Toolbelt(props: ToolbeltProps) {
         </ToolbeltButton>
         <ToolbeltButton
           tooltip="Syntax Links [L]"
-          isSelected={false}
-          isDisabled={true}
+          isSelected={tool == EditorTool.SyntaxLinks}
+          onClick={equipSyntaxLinksTool}
         >
           <PolylineIcon />
         </ToolbeltButton>

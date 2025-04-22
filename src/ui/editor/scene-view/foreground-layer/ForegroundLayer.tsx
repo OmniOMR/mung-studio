@@ -10,6 +10,7 @@ import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 import { Selector, SelectorComponent } from "./Selector";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 import { SelectionStore } from "../../state/selection-store/SelectionStore";
+import { SyntaxLinksToolOverlay } from "./SyntaxLinksToolOverlay";
 
 export interface ForegroundLayerProps {
   readonly zoomer: Zoomer;
@@ -88,6 +89,15 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
 
         {currentTool === EditorTool.NodeEditing && (
           <NodeEditorOverlay selectionStore={props.selectionStore} />
+        )}
+
+        {currentTool === EditorTool.SyntaxLinks && (
+          <SyntaxLinksToolOverlay
+            svgRef={svgRef}
+            zoomer={props.zoomer}
+            notationGraphStore={props.notationGraphStore}
+            selectionStore={props.selectionStore}
+          />
         )}
 
         {currentTool === EditorTool.PrecedenceLinks && (
