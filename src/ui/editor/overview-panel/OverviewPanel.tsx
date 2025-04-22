@@ -9,11 +9,17 @@ import {
   AccordionDetails,
   AccordionGroup,
   AccordionSummary,
+  Box,
   Divider,
+  Stack,
   Typography,
 } from "@mui/joy";
 import { SelectionStore } from "../state/selection-store/SelectionStore";
 import { MainMenu } from "./MainMenu";
+import { AutosaveStatus } from "./AutosaveStatus";
+import { AutosaveStore } from "../state/AutosaveStore";
+import { DocumentAccordionPanel } from "./DocumentAccordionPanel";
+import { ViewAccordionPanel } from "./ViewAccordionPanel";
 
 export interface OverviewPanelProps {
   readonly onClose: () => void;
@@ -21,6 +27,8 @@ export interface OverviewPanelProps {
   readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
   readonly editorStateStore: EditorStateStore;
+  readonly autosaveStore: AutosaveStore;
+  readonly fileName: string;
 }
 
 /**
@@ -35,65 +43,69 @@ export function OverviewPanel(props: OverviewPanelProps) {
     <Sheet
       variant="outlined"
       sx={{
+        display: "flex",
+        flexDirection: "column",
         width: "300px",
         height: "100%",
         borderWidth: "0 1px 0 0",
-        overflowY: "scroll",
       }}
     >
-      <MainMenu
-        onClose={props.onClose}
-        notationGraphStore={props.notationGraphStore}
-        selectionStore={props.selectionStore}
-      />
-      File name, save state.
+      <Stack direction="row" sx={{ p: 1, pr: 2 }}>
+        <MainMenu
+          onClose={props.onClose}
+          notationGraphStore={props.notationGraphStore}
+          selectionStore={props.selectionStore}
+        />
+        <div style={{ flexGrow: 1 }}></div>
+        <AutosaveStatus autosaveStore={props.autosaveStore} />
+      </Stack>
+
+      <Typography level="title-md" sx={{ p: 1 }}>
+        {props.fileName}
+      </Typography>
+
       <Divider />
-      <AccordionGroup>
-        <Accordion defaultExpanded={false}>
-          <AccordionSummary>
-            <Typography level="title-sm">Document</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <StatisticsText notationGraphStore={props.notationGraphStore} />
-          </AccordionDetails>
-        </Accordion>
 
-        <Accordion defaultExpanded={true}>
-          <AccordionSummary>
-            <Typography level="title-sm">View</Typography>
-          </AccordionSummary>
-          <AccordionDetails>...</AccordionDetails>
-        </Accordion>
+      <Box
+        sx={{
+          flexGrow: 1,
+          overflowY: "scroll",
+        }}
+      >
+        <AccordionGroup>
+          <Accordion defaultExpanded={false}>
+            <AccordionSummary>
+              <Typography level="title-sm">Document</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <DocumentAccordionPanel
+                notationGraphStore={props.notationGraphStore}
+              />
+            </AccordionDetails>
+          </Accordion>
 
-        <Accordion defaultExpanded={true}>
-          <AccordionSummary>
-            <Typography level="title-sm">Nodes</Typography>
-          </AccordionSummary>
-          <AccordionDetails>
-            <NodesAccordionPanel
-              notationGraphStore={props.notationGraphStore}
-              classVisibilityStore={props.classVisibilityStore}
-            />
-          </AccordionDetails>
-        </Accordion>
-      </AccordionGroup>
+          <Accordion defaultExpanded={true}>
+            <AccordionSummary>
+              <Typography level="title-sm">View</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <ViewAccordionPanel editorStateStore={props.editorStateStore} />
+            </AccordionDetails>
+          </Accordion>
+
+          <Accordion defaultExpanded={true}>
+            <AccordionSummary>
+              <Typography level="title-sm">Nodes</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <NodesAccordionPanel
+                notationGraphStore={props.notationGraphStore}
+                classVisibilityStore={props.classVisibilityStore}
+              />
+            </AccordionDetails>
+          </Accordion>
+        </AccordionGroup>
+      </Box>
     </Sheet>
-  );
-}
-
-interface StatisticsTextProps {
-  readonly notationGraphStore: NotationGraphStore;
-}
-
-function StatisticsText(props: StatisticsTextProps) {
-  const nodeIds = useAtomValue(props.notationGraphStore.nodeIdsAtom);
-  const links = useAtomValue(props.notationGraphStore.linksAtom);
-
-  return (
-    <Typography level="body-md">
-      Nodes: {nodeIds.length}
-      <br />
-      Links: {links.length}
-    </Typography>
   );
 }

@@ -1,5 +1,5 @@
 import { useAtomValue } from "jotai";
-import { AutosaveStore } from "./state/AutosaveStore";
+import { AutosaveStore } from "../state/AutosaveStore";
 import { Typography } from "@mui/joy";
 import SyncIcon from "@mui/icons-material/Sync";
 import FileDownloadDoneIcon from "@mui/icons-material/FileDownloadDone";

@@ -1,21 +1,14 @@
 import { Node } from "../../mung/Node";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo } from "react";
 import { SceneView } from "./scene-view/SceneView";
 import { OverviewPanel } from "./overview-panel/OverviewPanel";
 import { InspectorPanel } from "./InspectorPanel";
 import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { NotationGraphStore } from "./state/notation-graph-store/NotationGraphStore";
 import Box from "@mui/joy/Box";
-import Button from "@mui/joy/Button";
-import Sheet from "@mui/joy/Sheet";
-import Typography from "@mui/joy/Typography";
-import Stack from "@mui/joy/Stack";
-import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import { EditorStateStore } from "./state/EditorStateStore";
-import { DisplayModeButtons } from "./DisplayModeButtons";
 import { useUnload } from "../../utils/useUnload";
 import { AutosaveStore } from "./state/AutosaveStore";
-import { AutosaveStatus } from "./AutosaveStatus";
 import { MungFileMetadata } from "../../mung/MungFileMetadata";
 import { MungFile } from "../../mung/MungFile";
 import { Toolbelt } from "./Toolbelt";
@@ -50,6 +43,11 @@ export interface EditorProps {
    * Callback triggered, when the user wants to leave the editor.
    */
   readonly onClose: () => void;
+
+  /**
+   * Name of the openned file
+   */
+  readonly fileName: string;
 }
 
 /**
@@ -61,27 +59,26 @@ export interface EditorProps {
  * that could edit two different mung documents.
  */
 export function Editor(props: EditorProps) {
-  const [notationGraphStore, _1] = useState<NotationGraphStore>(
+  const notationGraphStore = useMemo(
     () =>
       new NotationGraphStore(props.initialNodes, props.initialMungFileMetadata),
+    [],
   );
 
-  const [selectionStore, _2] = useState<SelectionStore>(
+  const selectionStore = useMemo(
     () => new SelectionStore(notationGraphStore),
+    [],
   );
 
-  const [classVisibilityStore, _3] = useState<ClassVisibilityStore>(
-    () => new ClassVisibilityStore(),
-  );
+  const classVisibilityStore = useMemo(() => new ClassVisibilityStore(), []);
 
-  const [editorStateStore, _4] = useState<EditorStateStore>(
-    () => new EditorStateStore(),
-  );
+  const editorStateStore = useMemo(() => new EditorStateStore(), []);
 
   // TODO: historyStore (for undo/redo)
 
-  const [autosaveStore, _5] = useState<AutosaveStore>(
+  const autosaveStore = useMemo(
     () => new AutosaveStore(notationGraphStore),
+    [],
   );
 
   // bind autosave store to the props.onSave method
@@ -127,28 +124,6 @@ export function Editor(props: EditorProps) {
         height: "100%",
       }}
     >
-      <Sheet
-        variant="soft"
-        sx={{
-          p: 1,
-          borderBottom: "1px solid var(--joy-palette-neutral-300)",
-        }}
-      >
-        <Stack direction="row" alignItems="center" spacing={2}>
-          <Button
-            variant="outlined"
-            startDecorator={<ArrowBackIcon />}
-            onClick={handleCloseFileButtonClick}
-          >
-            Close File
-          </Button>
-          <Typography level="body-lg" sx={{ fontWeight: 700 }}>
-            MuNG Studio
-          </Typography>
-          <AutosaveStatus autosaveStore={autosaveStore} />
-          <DisplayModeButtons editorStateStore={editorStateStore} />
-        </Stack>
-      </Sheet>
       <Box
         sx={{
           display: "flex",
@@ -159,14 +134,17 @@ export function Editor(props: EditorProps) {
         }}
       >
         <OverviewPanel
-          onClose={props.onClose}
+          onClose={handleCloseFileButtonClick}
           notationGraphStore={notationGraphStore}
           selectionStore={selectionStore}
           classVisibilityStore={classVisibilityStore}
           editorStateStore={editorStateStore}
+          autosaveStore={autosaveStore}
+          fileName={props.fileName}
         />
         <Box
           sx={{
+            position: "relative",
             flexGrow: 1,
           }}
         >
@@ -184,6 +162,18 @@ export function Editor(props: EditorProps) {
           selectionStore={selectionStore}
         />
       </Box>
+      {/* <Box
+        sx={{
+          display: "flex",
+          flexDirection: "row",
+          justifyItems: "stretch",
+          overflow: "hidden",
+          height: "200px",
+          background: "var(--joy-palette-neutral-800)"
+        }}
+      >
+        Keyboard shortcuts / python terminal / whatever
+      </Box> */}
     </Box>
   );
 }

@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { NodeEditorOverlay } from "./NodeEditorOverlay";
 import { Zoomer } from "../Zoomer";
 import { Highlighter, HighlighterComponent } from "./Highlighter";
@@ -22,16 +22,17 @@ export interface ForegroundLayerProps {
 export function ForegroundLayer(props: ForegroundLayerProps) {
   const svgRef = useRef<SVGSVGElement | null>(null);
 
-  const [highlighter, _1] = useState(
+  const highlighter = useMemo(
     () =>
       new Highlighter(
         props.notationGraphStore,
         props.classVisibilityStore,
         props.zoomer,
       ),
+    [],
   );
 
-  const [selector, _2] = useState(
+  const selector = useMemo(
     () =>
       new Selector(
         props.notationGraphStore,
@@ -40,6 +41,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
         highlighter,
         props.zoomer,
       ),
+    [],
   );
 
   const currentTool = useAtomValue(props.editorStateStore.currentToolAtom);
@@ -92,7 +94,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
           <PrecedenceLinkEditingOverlay
             svgRef={svgRef}
             zoomer={props.zoomer}
-            editorStateStore={props.editorStateStore}
+            highlighter={highlighter}
             notationGraphStore={props.notationGraphStore}
           />
         )}

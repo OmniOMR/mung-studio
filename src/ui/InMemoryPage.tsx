@@ -124,6 +124,7 @@ export function InMemoryPage() {
           initialNodes={userData.mung.nodes}
           backgroundImageUrl={userData.imageUrl}
           onClose={handleClose}
+          fileName="In-Memory"
         />
       </Box>
     );

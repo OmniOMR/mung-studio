@@ -5,7 +5,7 @@ import RectangleIcon from "@mui/icons-material/Rectangle";
 import PentagonIcon from "@mui/icons-material/Pentagon";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useAtom } from "jotai";
-import { EditorStateStore, NodeDisplayMode } from "./state/EditorStateStore";
+import { EditorStateStore, NodeDisplayMode } from "../state/EditorStateStore";
 
 export interface DisplayModeButtonsProps {
   readonly editorStateStore: EditorStateStore;

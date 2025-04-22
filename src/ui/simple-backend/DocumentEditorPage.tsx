@@ -85,6 +85,7 @@ export function DocumentEditorPage() {
           backgroundImageUrl={imageUrl}
           onSave={onSave}
           onClose={onClose}
+          fileName={documentName}
         />
       )}
       {error !== null && <Alert color="danger">{error}</Alert>}

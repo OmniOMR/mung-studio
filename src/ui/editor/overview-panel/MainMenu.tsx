@@ -158,43 +158,41 @@ export function MainMenu(props: MainMenuProps) {
   );
 
   return (
-    <Box sx={{ p: 1 }}>
-      <Dropdown>
-        <MenuButton variant="plain" startDecorator={<MenuIcon />}>
-          Menu
-        </MenuButton>
-        <Menu
-          size="sm"
-          placement="bottom-start"
-          variant="solid"
-          // open={true}
+    <Dropdown>
+      <MenuButton variant="plain" startDecorator={<MenuIcon />}>
+        Mung Studio
+      </MenuButton>
+      <Menu
+        size="sm"
+        placement="bottom-start"
+        variant="solid"
+        // open={true}
+      >
+        <MyMenuItem onClick={backToFiles}>Back to files</MyMenuItem>
+
+        <MyListDivider />
+        <MyCategoryTitle>Links</MyCategoryTitle>
+
+        <MyMenuItem disabled={!canToggleLink} onClick={toggleSyntaxLink}>
+          Toggle syntax link {renderShortcut("E")}
+        </MyMenuItem>
+        <MyMenuItem disabled={!canToggleLink} onClick={togglePrecedenceLink}>
+          Toggle precedence link {renderShortcut("Shift + E")}
+        </MyMenuItem>
+        <MyMenuItem
+          disabled={!canRemoveLinks}
+          onClick={removePartiallySelectedLinks}
         >
-          <MyMenuItem onClick={backToFiles}>Back to files</MyMenuItem>
+          Remove partially selected links {renderShortcut("Shift + Del")}
+        </MyMenuItem>
 
-          <MyListDivider />
-          <MyCategoryTitle>Links</MyCategoryTitle>
+        <MyListDivider />
+        <MyCategoryTitle>Select</MyCategoryTitle>
 
-          <MyMenuItem disabled={!canToggleLink} onClick={toggleSyntaxLink}>
-            Toggle syntax link {renderShortcut("E")}
-          </MyMenuItem>
-          <MyMenuItem disabled={!canToggleLink} onClick={togglePrecedenceLink}>
-            Toggle precedence link {renderShortcut("Shift + E")}
-          </MyMenuItem>
-          <MyMenuItem
-            disabled={!canRemoveLinks}
-            onClick={removePartiallySelectedLinks}
-          >
-            Remove partially selected links {renderShortcut("Shift + Del")}
-          </MyMenuItem>
-
-          <MyListDivider />
-          <MyCategoryTitle>Select</MyCategoryTitle>
-
-          <MyMenuItem disabled={!canClearSelection} onClick={clearSelection}>
-            Clear selection
-          </MyMenuItem>
-        </Menu>
-      </Dropdown>
-    </Box>
+        <MyMenuItem disabled={!canClearSelection} onClick={clearSelection}>
+          Clear selection
+        </MyMenuItem>
+      </Menu>
+    </Dropdown>
   );
 }

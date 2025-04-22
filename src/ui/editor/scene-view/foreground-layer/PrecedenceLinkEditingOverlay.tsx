@@ -1,16 +1,16 @@
 import { RefObject, useCallback, useEffect, useRef, useState } from "react";
 import { Node } from "../../../../mung/Node";
 import * as d3 from "d3";
-import { EditorStateStore } from "../../state/EditorStateStore";
 import { useAtomValue } from "jotai";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 import { LinkType } from "../../../../mung/LinkType";
 import { Zoomer } from "../Zoomer";
+import { Highlighter } from "./Highlighter";
 
 export interface PrecedenceLinkEditingOverlayProps {
   readonly svgRef: RefObject<SVGSVGElement | null>;
   readonly zoomer: Zoomer;
-  readonly editorStateStore: EditorStateStore;
+  readonly highlighter: Highlighter;
   readonly notationGraphStore: NotationGraphStore;
 }
 
@@ -20,9 +20,7 @@ export function PrecedenceLinkEditingOverlay(
   const lineRef = useRef<SVGLineElement | null>(null);
   const [sourceNode, setSourceNode] = useState<Node | null>(null);
 
-  const highlightedNode = useAtomValue(
-    props.editorStateStore.highlightedNodeAtom,
-  );
+  const highlightedNode = useAtomValue(props.highlighter.highlightedNodeAtom);
 
   /////////////////////////////////
   // Starting and stopping drags //
