@@ -138,7 +138,7 @@ export class Highlighter {
 
     let highlightedNode: Node | null = null;
 
-    for (let node of this.notationGraphStore.nodes) {
+    for (let node of this.notationGraphStore.nodesInSceneOrder) {
       if (!visibleClasses.has(node.className)) continue;
       if (node.left > pointer_x || node.left + node.width < pointer_x) continue;
       if (node.top > pointer_y || node.top + node.height < pointer_y) continue;

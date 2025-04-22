@@ -29,7 +29,9 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
     props.editorStateStore.nodeDisplayModeAtom,
   );
 
-  const nodeIds = useAtomValue(props.notationGraphStore.nodeIdsAtom);
+  const nodeIds = useAtomValue(
+    props.notationGraphStore.nodeIdsInSceneOrderAtom,
+  );
   const links = useAtomValue(props.notationGraphStore.linksAtom);
 
   const gRef = useRef<SVGGElement | null>(null);

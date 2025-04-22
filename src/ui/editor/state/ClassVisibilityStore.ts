@@ -1,12 +1,6 @@
 import { atom, getDefaultStore, PrimitiveAtom } from "jotai";
 
-const INITIALLY_DISABLED = new Set([
-  "staffLine",
-  "staff",
-  "measureSeparator",
-  "timeSignature",
-  "keySignature",
-]);
+const INITIALLY_DISABLED = new Set(["staffLine", "staff"]);
 
 export class ClassVisibilityStore {
   /**

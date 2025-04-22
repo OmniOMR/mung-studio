@@ -21,6 +21,7 @@ import { ISignal, ISimpleEvent, SignalDispatcher } from "strongly-typed-events";
 import { MetadataCollection } from "./MetadataCollection";
 import { MungFileMetadata } from "../../../../mung/MungFileMetadata";
 import { MungFile } from "../../../../mung/MungFile";
+import { SceneOrderedNodesIndex } from "./SceneOrderedNodesIndex";
 
 /**
  * Stores the Music Notation Graph (MuNG) data and provides convenient
@@ -48,6 +49,8 @@ export class NotationGraphStore {
   private allLinksIndex: LinksIndex;
   private syntaxLinksIndex: LinksIndex;
   private precedenceLinksIndex: LinksIndex;
+
+  private sceneOrderedNodesIndex: SceneOrderedNodesIndex;
 
   private classNamesIndex: ClassNamesIndex;
 
@@ -78,6 +81,11 @@ export class NotationGraphStore {
     this.precedenceLinksIndex = new LinksIndex(
       LinkType.Precedence,
       this.nodeCollection,
+    );
+
+    this.sceneOrderedNodesIndex = new SceneOrderedNodesIndex(
+      this.nodeCollection,
+      this.jotaiStore,
     );
 
     this.classNamesIndex = new ClassNamesIndex(this.nodeCollection);
@@ -424,5 +432,37 @@ export class NotationGraphStore {
    */
   public get documentAtom(): WritableAtom<string, [string], void> {
     return this.metadataCollection.documentAtom;
+  }
+
+  /////////////////////////////
+  // Scene Ordered Nodes API //
+  /////////////////////////////
+
+  /**
+   * Returns nodes sorted in the scene order
+   */
+  public get nodesInSceneOrder(): readonly Node[] {
+    return this.sceneOrderedNodesIndex.nodesInSceneOrder;
+  }
+
+  /**
+   * Returns node IDs in the scene order
+   */
+  public get nodeIdsInSceneOrder(): readonly number[] {
+    return this.sceneOrderedNodesIndex.nodeIdsInSceneOrder;
+  }
+
+  /**
+   * Read-only atom that exposes nodes sorted in the scene order
+   */
+  public get nodesInSceneOrderAtom(): Atom<readonly Node[]> {
+    return this.sceneOrderedNodesIndex.nodesInSceneOrderAtom;
+  }
+
+  /**
+   * Read-only atom that exposes node IDs sorted in the scene order
+   */
+  public get nodeIdsInSceneOrderAtom(): Atom<readonly number[]> {
+    return this.sceneOrderedNodesIndex.nodeIdsInSceneOrderAtom;
   }
 }
