@@ -9,26 +9,26 @@ import { SelectionStore } from "../state/selection-store/SelectionStore";
 import { useAtomValue } from "jotai";
 import { EditorStateStore, EditorTool } from "../state/EditorStateStore";
 
-export interface SyntaxLinksToolPanelProps {
+export interface PrecedenceLinksToolPanelProps {
   readonly editorStateStore: EditorStateStore;
   readonly selectionStore: SelectionStore;
 }
 
-export function SyntaxLinksToolPanel(props: SyntaxLinksToolPanelProps) {
+export function PrecedenceLinksToolPanel(props: PrecedenceLinksToolPanelProps) {
   const tool = useAtomValue(props.editorStateStore.currentToolAtom);
 
   const selectedNodeIds = useAtomValue(
     props.selectionStore.selectedNodeIdsAtom,
   );
 
-  if (tool !== EditorTool.SyntaxLinks) {
+  if (tool !== EditorTool.PrecedenceLinks) {
     return null;
   }
 
   return (
     <Accordion defaultExpanded={true}>
       <AccordionSummary>
-        <Typography level="title-sm">Syntax Links Tool</Typography>
+        <Typography level="title-sm">Precedence Links Tool</Typography>
       </AccordionSummary>
       <AccordionDetails>
         {selectedNodeIds.length === 0 && (

@@ -128,10 +128,8 @@ export class Selector {
     // click on the backgorund de-selects
     // and initiates the sweep select
     if (highlightedNode === null) {
-      // do not deselect if the user is holding shift
-      if (!e.shiftKey) {
-        this.selectionStore.clearSelection();
-      }
+      // Do not deselect here. That happens on mouse up if there's nothing
+      // under the pointer or the sweep rectangle.
 
       this.isSweeping = true;
       this.sweepStartX = x;

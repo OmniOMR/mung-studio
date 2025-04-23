@@ -13,6 +13,7 @@ import {
 } from "@mui/joy";
 import { SyntaxLinksToolPanel } from "./SyntaxLinksToolPanel";
 import { EditorStateStore } from "../state/EditorStateStore";
+import { PrecedenceLinksToolPanel } from "./PrecedenceLinksToolPanel";
 
 export interface InspectorPanelProps {
   readonly notationGraphStore: NotationGraphStore;
@@ -54,6 +55,11 @@ export function InspectorPanel(props: InspectorPanelProps) {
       >
         <AccordionGroup>
           <SyntaxLinksToolPanel
+            selectionStore={props.selectionStore}
+            editorStateStore={props.editorStateStore}
+          />
+
+          <PrecedenceLinksToolPanel
             selectionStore={props.selectionStore}
             editorStateStore={props.editorStateStore}
           />

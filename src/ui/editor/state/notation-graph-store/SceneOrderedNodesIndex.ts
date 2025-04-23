@@ -86,7 +86,7 @@ export class SceneOrderedNodesIndex {
 
   private onNodeInserted(node: Node) {
     this._orderedMutableNodes.push(node);
-    this._orderedMutableNodes.sort();
+    this._orderedMutableNodes.sort(nodeComparator);
     this.rebuildSecondaryStructures();
   }
 
@@ -96,7 +96,7 @@ export class SceneOrderedNodesIndex {
 
       this._orderedMutableNodes[i] = e.newValue;
       if (!e.isLinkUpdate) {
-        this._orderedMutableNodes.sort();
+        this._orderedMutableNodes.sort(nodeComparator);
       }
       this.rebuildSecondaryStructures();
       return;

@@ -39,15 +39,11 @@ export function Toolbelt(props: ToolbeltProps) {
   function equipSyntaxLinksTool() {
     if (tool === EditorTool.SyntaxLinks) return;
 
-    props.selectionStore.clearSelection();
-
     props.editorStateStore.setCurrentTool(EditorTool.SyntaxLinks);
   }
 
   function equipPrecedenceLinksTool() {
     if (tool === EditorTool.PrecedenceLinks) return;
-
-    props.selectionStore.clearSelection();
 
     props.editorStateStore.setCurrentTool(EditorTool.PrecedenceLinks);
   }

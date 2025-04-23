@@ -1,9 +1,9 @@
 import * as d3 from "d3";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef } from "react";
 import { NodeEditorOverlay } from "./NodeEditorOverlay";
 import { Zoomer } from "../Zoomer";
 import { Highlighter, HighlighterComponent } from "./Highlighter";
-import { PrecedenceLinkEditingOverlay } from "./PrecedenceLinkEditingOverlay";
+import { PrecedenceLinksToolOverlay } from "./PrecedenceLinksToolOverlay";
 import { EditorTool, EditorStateStore } from "../../state/EditorStateStore";
 import { useAtomValue } from "jotai";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
@@ -101,11 +101,11 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
         )}
 
         {currentTool === EditorTool.PrecedenceLinks && (
-          <PrecedenceLinkEditingOverlay
+          <PrecedenceLinksToolOverlay
             svgRef={svgRef}
             zoomer={props.zoomer}
-            highlighter={highlighter}
             notationGraphStore={props.notationGraphStore}
+            selectionStore={props.selectionStore}
           />
         )}
       </g>
