@@ -21,8 +21,8 @@ const lookupTable = {
   keySignature: "\u{E269}",
   legerLine: "\u{E022}",
   measureSeparator: "\u{E030}",
-  noteheadFull: "\u{E0A4}", // not a SMuFL class, should be "noteheadBlack"
   noteheadBlack: "\u{E0A4}",
+  noteheadFull: "\u{E0A4}", // not a SMuFL class, should be "noteheadBlack"
   noteheadHalf: "\u{E0A3}",
   noteheadWhole: "\u{E0A2}",
   otherText: "T",

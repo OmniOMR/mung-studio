@@ -1,33 +1,253 @@
-import { atom, getDefaultStore, PrimitiveAtom } from "jotai";
+import { atom, getDefaultStore, WritableAtom } from "jotai";
+import { NotationGraphStore } from "./notation-graph-store/NotationGraphStore";
+import { SignalAtomWrapper } from "./SignalAtomWrapper";
+import { SignalAtomCollection } from "./SignalAtomCollection";
 
-const INITIALLY_DISABLED = new Set(["staffLine", "staff"]);
+/**
+ * Class names that should be hidden in the default visibility state.
+ * Those not listed here are visible by default.
+ */
+export const DEFAULT_HIDDEN_CLASSES = new Set(["staffLine", "staff"]);
+
+/**
+ * Classes that should be visible when doing precedence link annotation
+ */
+export const PRECEDENCE_LINK_ANNOTATION_CLASSES = new Set([
+  "noteheadFull",
+  "noteheadBlack",
+  "noteheadHalf",
+  "noteheadWhole",
+  "rest8th",
+  "restHalf",
+  "restQuarter",
+  "restWhole",
+]);
+
+/**
+ * Classes that should be visible when doing staff link annotation
+ */
+export const STAFF_LINK_ANNOTATION_CLASSES = new Set([
+  "noteheadFull",
+  "noteheadBlack",
+  "noteheadHalf",
+  "noteheadWhole",
+  "rest8th",
+  "restHalf",
+  "restQuarter",
+  "restWhole",
+  // TODO ...
+]);
 
 export class ClassVisibilityStore {
   /**
    * Jotai store used to access atoms from plain JS
    */
-  private store = getDefaultStore();
+  private readonly jotaiStore = getDefaultStore();
 
-  private isClassVisibleAtoms = new Map<string, PrimitiveAtom<boolean>>();
+  private readonly notationGraphStore: NotationGraphStore;
 
-  public getIsClassVisibleAtom(className: string): PrimitiveAtom<boolean> {
+  constructor(notationGraphStore: NotationGraphStore) {
+    this.notationGraphStore = notationGraphStore;
+
+    this.notationGraphStore.onClassNameCountsChange.subscribe(
+      this.onClassNamesCountsChange.bind(this),
+    );
+  }
+
+  private onClassNamesCountsChange() {
+    for (const className of this.notationGraphStore.classNames) {
+      this.ensureHasClass(className);
+    }
+  }
+
+  ///////////
+  // State //
+  ///////////
+
+  // holds true data, must be completely replaced when mutated
+  // because it might be used by react for re-drawing UI
+  //
+  // Class names that are not present in either of these are assumed to be
+  // new, unknown classes which default to the visibility state of the
+  // DEFAULT_HIDDEN_CLASSES constant. The union of these two sets should
+  // match (or be a super set) of class names in the graph.
+  private _visibleClasses: ReadonlySet<string> = new Set<string>();
+  private _hiddenClasses: ReadonlySet<string> = new Set<string>();
+
+  /**
+   * Returns the set of visible class names
+   */
+  public get visibleClasses(): ReadonlySet<string> {
+    return this._visibleClasses;
+  }
+
+  /**
+   * Returns the set of hidden class names
+   */
+  public get hiddenClasses(): ReadonlySet<string> {
+    return this._hiddenClasses;
+  }
+
+  /**
+   * Makes sure that the given class name is present in one of the two sets.
+   * If already present, does nothing. Uses the DEFAULT_HIDDEN_CLASSES to set
+   * the visibility of the class.
+   */
+  private ensureHasClass(className: string) {
+    if (
+      this._visibleClasses.has(className) ||
+      this._hiddenClasses.has(className)
+    ) {
+      return;
+    }
+
+    // modify state
+    if (DEFAULT_HIDDEN_CLASSES.has(className)) {
+      this._hiddenClasses = new Set<string>([
+        ...this._hiddenClasses,
+        className,
+      ]);
+    } else {
+      this._visibleClasses = new Set<string>([
+        ...this._visibleClasses,
+        className,
+      ]);
+    }
+
+    // broadcast change
+    this.globalSignalAtom.signal(this.jotaiStore.set);
+    this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
+  }
+
+  /**
+   * Sets visibility of a class name
+   */
+  public setClassVisibility(className: string, isVisible: boolean) {
+    if (isVisible && this._visibleClasses.has(className)) return;
+    if (!isVisible && this._hiddenClasses.has(className)) return;
+
+    // change state
+    const newVisibleClasses = new Set<string>(this._visibleClasses);
+    const newHiddenClasses = new Set<string>(this._hiddenClasses);
+    if (isVisible) {
+      newVisibleClasses.add(className);
+      newHiddenClasses.delete(className);
+    } else {
+      newVisibleClasses.delete(className);
+      newHiddenClasses.add(className);
+    }
+    this._visibleClasses = newVisibleClasses;
+    this._hiddenClasses = newHiddenClasses;
+
+    // broadcast change
+    this.globalSignalAtom.signal(this.jotaiStore.set);
+    this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
+  }
+
+  /**
+   * Sets all classes to hidden
+   */
+  public hideAllClasses() {
+    // change state
+    this._visibleClasses = new Set<string>([]);
+    this._hiddenClasses = new Set<string>(this.notationGraphStore.classNames);
+
+    // broadcast change
+    this.globalSignalAtom.signal(this.jotaiStore.set);
+    for (const className of this.notationGraphStore.classNames) {
+      this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
+    }
+  }
+
+  /**
+   * Sets all classes to visible
+   */
+  public showAllClasses() {
+    // change state
+    this._visibleClasses = new Set<string>(this.notationGraphStore.classNames);
+    this._hiddenClasses = new Set<string>([]);
+
+    // broadcast change
+    this.globalSignalAtom.signal(this.jotaiStore.set);
+    for (const className of this.notationGraphStore.classNames) {
+      this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
+    }
+  }
+
+  /**
+   * Shows only listed classes and sets others to hidden
+   */
+  public showOnlyTheseClasses(classNames: Iterable<string>) {
+    // change state
+    this._visibleClasses = new Set<string>(classNames);
+    this._hiddenClasses = new Set<string>(
+      this.notationGraphStore.classNames.filter(
+        (className) => !this._visibleClasses.has(className),
+      ),
+    );
+
+    // broadcast change
+    this.globalSignalAtom.signal(this.jotaiStore.set);
+    for (const className of this.notationGraphStore.classNames) {
+      this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
+    }
+  }
+
+  /**
+   * Hides only listed classes and sets others to visible
+   */
+  public hideOnlyTheseClasses(classNames: Iterable<string>) {
+    // change state
+    this._hiddenClasses = new Set<string>(classNames);
+    this._visibleClasses = new Set<string>(
+      this.notationGraphStore.classNames.filter(
+        (className) => !this._hiddenClasses.has(className),
+      ),
+    );
+
+    // broadcast change
+    this.globalSignalAtom.signal(this.jotaiStore.set);
+    for (const className of this.notationGraphStore.classNames) {
+      this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
+    }
+  }
+
+  ///////////////////////
+  // React integration //
+  ///////////////////////
+
+  private readonly globalSignalAtom = new SignalAtomWrapper();
+  private readonly classSignalAtoms = new SignalAtomCollection<string>();
+
+  private isClassVisibleAtoms = new Map<
+    string,
+    WritableAtom<boolean, [boolean], void>
+  >();
+
+  /**
+   * Writable atom that exposes and lets you modify the visibility
+   * of a single class
+   */
+  public getIsClassVisibleAtom(
+    className: string,
+  ): WritableAtom<boolean, [boolean], void> {
+    this.ensureHasClass(className);
+
     if (!this.isClassVisibleAtoms.has(className)) {
-      const initialValue = !INITIALLY_DISABLED.has(className);
-      this.isClassVisibleAtoms.set(className, atom<boolean>(initialValue));
+      this.isClassVisibleAtoms.set(
+        className,
+        atom(
+          (get) => {
+            this.classSignalAtoms.get(className).subscribe(get);
+            return this.visibleClasses.has(className);
+          },
+          (get, set, newValue) => {
+            this.setClassVisibility(className, newValue);
+          },
+        ),
+      );
     }
 
     return this.isClassVisibleAtoms.get(className)!;
-  }
-
-  public getVisibleClasses(): Set<string> {
-    const out = new Set<string>();
-
-    for (let [key, value] of this.isClassVisibleAtoms) {
-      if (this.store.get(value)) {
-        out.add(key);
-      }
-    }
-
-    return out;
   }
 }

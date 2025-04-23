@@ -409,6 +409,13 @@ export class NotationGraphStore {
     return this.classNameCounts;
   });
 
+  /**
+   * Event fires when class name counts change
+   */
+  public get onClassNameCountsChange(): ISignal {
+    return this.classNamesIndex.onChange;
+  }
+
   //////////////////
   // Metadata API //
   //////////////////

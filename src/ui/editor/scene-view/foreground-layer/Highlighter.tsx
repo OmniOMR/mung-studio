@@ -133,13 +133,11 @@ export class Highlighter {
     // This could be improved, either so that it respects polygons, or that
     // it runs faster with some k-d trees or such.
 
-    // TODO: this should be available on-demand, not computed here
-    const visibleClasses = this.classVisibilityStore.getVisibleClasses();
-
     let highlightedNode: Node | null = null;
 
     for (let node of this.notationGraphStore.nodesInSceneOrder) {
-      if (!visibleClasses.has(node.className)) continue;
+      if (!this.classVisibilityStore.visibleClasses.has(node.className))
+        continue;
       if (node.left > pointer_x || node.left + node.width < pointer_x) continue;
       if (node.top > pointer_y || node.top + node.height < pointer_y) continue;
       highlightedNode = node;

@@ -70,7 +70,10 @@ export function Editor(props: EditorProps) {
     [],
   );
 
-  const classVisibilityStore = useMemo(() => new ClassVisibilityStore(), []);
+  const classVisibilityStore = useMemo(
+    () => new ClassVisibilityStore(notationGraphStore),
+    [],
+  );
 
   const editorStateStore = useMemo(() => new EditorStateStore(), []);
 

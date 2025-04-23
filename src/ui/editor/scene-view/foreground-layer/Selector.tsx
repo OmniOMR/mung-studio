@@ -194,13 +194,11 @@ export class Selector {
     const x_max = Math.max(this.sweepStartX, this.sweepEndX);
     const y_max = Math.max(this.sweepStartY, this.sweepEndY);
 
-    // TODO: this should be available on-demand, not computed here
-    const visibleClasses = this.classVisibilityStore.getVisibleClasses();
-
     let nodes: Node[] = [];
 
     for (let node of this.notationGraphStore.nodesInSceneOrder) {
-      if (!visibleClasses.has(node.className)) continue;
+      if (!this.classVisibilityStore.visibleClasses.has(node.className))
+        continue;
       if (node.left < x_min || node.left + node.width > x_max) continue;
       if (node.top < y_min || node.top + node.height > y_max) continue;
       nodes.push(node);

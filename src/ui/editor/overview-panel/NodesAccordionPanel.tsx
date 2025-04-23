@@ -3,13 +3,16 @@ import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
 import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
 import {
   Box,
+  Dropdown,
   IconButton,
   List,
   ListItem,
   ListItemButton,
   ListSubheader,
+  MenuButton,
   Stack,
   SvgIcon,
+  Tooltip,
   Typography,
 } from "@mui/joy";
 import VisibilityIcon from "@mui/icons-material/Visibility";
@@ -17,6 +20,7 @@ import UnfoldLessDoubleIcon from "@mui/icons-material/UnfoldLessDouble";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { classNameToUnicode } from "../../../mung/classNameToUnicode";
+import { VisibilityPresetsMenu } from "./VisibilityPresetsMenu";
 
 export interface NodesAccordionPanelProps {
   readonly notationGraphStore: NotationGraphStore;
@@ -31,20 +35,42 @@ export function NodesAccordionPanel(props: NodesAccordionPanelProps) {
 
   return (
     <>
-      {/* <Stack direction="row">
-        <IconButton size="sm">
+      <Stack direction="row" spacing={1}>
+        <Tooltip arrow title="Show all classes" placement="top">
+          <IconButton
+            size="sm"
+            variant="soft"
+            onClick={() => props.classVisibilityStore.showAllClasses()}
+          >
+            <VisibilityIcon />
+          </IconButton>
+        </Tooltip>
+        <Tooltip arrow title="Hide all classes" placement="top">
+          <IconButton
+            size="sm"
+            variant="soft"
+            onClick={() => props.classVisibilityStore.hideAllClasses()}
+          >
+            <VisibilityOffIcon />
+          </IconButton>
+        </Tooltip>
+        <Dropdown>
+          <Tooltip arrow title="More visibility presets" placement="top">
+            <MenuButton size="sm" variant="soft" sx={{ px: 0, width: 32 }}>
+              <MoreVertIcon />
+            </MenuButton>
+          </Tooltip>
+          <VisibilityPresetsMenu
+            classVisibilityStore={props.classVisibilityStore}
+          />
+        </Dropdown>
+
+        {/* Button that should collapse all expanded node lists */}
+        {/* <div style={{ flexGrow: 1 }}></div>
+        <IconButton size="sm" variant="soft">
           <UnfoldLessDoubleIcon />
-        </IconButton>
-        <IconButton size="sm">
-          <MoreVertIcon />
-        </IconButton>
-        <IconButton size="sm">
-          <VisibilityIcon />
-        </IconButton>
-        <IconButton size="sm">
-          <VisibilityOffIcon />
-        </IconButton>
-      </Stack> */}
+        </IconButton> */}
+      </Stack>
 
       <List size="sm" sx={{ "--ListItem-radius": "5px", mt: 1 }}>
         {/* TODO: For each class names group */}

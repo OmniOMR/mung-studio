@@ -25,11 +25,20 @@ import {
 } from "@mui/material/OverridableComponent";
 import { LinkType } from "../../../mung/LinkType";
 
-const MyListDivider = styled(ListDivider)({
+export const renderShortcut = (text: string) => (
+  <Typography
+    level="body-sm"
+    sx={{ marginLeft: "auto", color: "var(--joy-palette-neutral-300)" }}
+  >
+    {text}
+  </Typography>
+);
+
+export const MyListDivider = styled(ListDivider)({
   background: "var(--joy-palette-neutral-400)",
 });
 
-function MyCategoryTitle(props: React.PropsWithChildren<object>) {
+export function MyCategoryTitle(props: React.PropsWithChildren<object>) {
   return (
     <List>
       <ListItem>
@@ -44,7 +53,7 @@ function MyCategoryTitle(props: React.PropsWithChildren<object>) {
   );
 }
 
-function MyMenuItem(
+export function MyMenuItem(
   props: DefaultComponentProps<
     ExtendMenuItemTypeMap<MenuItemTypeMap<{}, "div">>
   >,
@@ -142,15 +151,6 @@ export function MainMenu(props: MainMenuProps) {
   ///////////////
   // Rendering //
   ///////////////
-
-  const renderShortcut = (text: string) => (
-    <Typography
-      level="body-sm"
-      sx={{ marginLeft: "auto", color: "var(--joy-palette-neutral-300)" }}
-    >
-      {text}
-    </Typography>
-  );
 
   return (
     <Dropdown>
