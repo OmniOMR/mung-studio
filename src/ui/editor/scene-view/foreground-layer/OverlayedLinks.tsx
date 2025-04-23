@@ -3,6 +3,11 @@ import { SelectionStore } from "../../state/selection-store/SelectionStore";
 import { Node } from "../../../../mung/Node";
 import { LinkType } from "../../../../mung/LinkType";
 import { Zoomer } from "../Zoomer";
+import {
+  LINK_STROKE_WIDTH,
+  PRECEDENCE_LINK_COLOR,
+  SYNTAX_LINK_COLOR,
+} from "../../../../mung/linkAppearance";
 
 export interface OverlayedLinksProps {
   readonly linkType: LinkType;
@@ -38,18 +43,22 @@ export function OverlayedLinks(props: OverlayedLinksProps) {
   }, [props.svgRef, props.zoomer, props.sourceNodes, setMouseX, setMouseY]);
 
   // determine the link color
-  let color = props.linkType === LinkType.Syntax ? "red" : "green";
+  let color =
+    props.linkType === LinkType.Syntax
+      ? SYNTAX_LINK_COLOR
+      : PRECEDENCE_LINK_COLOR;
 
   return (
     <g>
       {props.sourceNodes.map((node) => (
         <line
+          key={node.id}
           x1={node.left + node.width / 2}
           y1={node.top + node.height / 2}
           x2={mouseX}
           y2={mouseY}
           stroke={color}
-          strokeWidth="calc(var(--scene-screen-pixel) * 2)"
+          strokeWidth={`calc(var(--scene-screen-pixel) * ${LINK_STROKE_WIDTH})`}
           markerEnd="url(#mung-link-arrow-head)"
         />
       ))}

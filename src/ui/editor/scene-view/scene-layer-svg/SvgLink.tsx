@@ -5,6 +5,12 @@ import { LinkType } from "../../../../mung/LinkType";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 import { EditorStateStore } from "../../state/EditorStateStore";
 import { SelectionStore } from "../../state/selection-store/SelectionStore";
+import {
+  LINK_OUTLINE_STROKE_WIDTH,
+  LINK_STROKE_WIDTH,
+  PRECEDENCE_LINK_COLOR,
+  SYNTAX_LINK_COLOR,
+} from "../../../../mung/linkAppearance";
 
 export interface SvgLinkProps {
   readonly link: Link;
@@ -51,13 +57,10 @@ export function SvgLink(props: SvgLinkProps) {
   const y2 = linkWithNodes.toNode.top + linkWithNodes.toNode.height / 2;
 
   // determine the link color
-  let color = isSelected
-    ? linkWithNodes.type === LinkType.Syntax
-      ? "white"
-      : "lime"
-    : linkWithNodes.type === LinkType.Syntax
-      ? "red"
-      : "green";
+  let color =
+    linkWithNodes.type === LinkType.Syntax
+      ? SYNTAX_LINK_COLOR
+      : PRECEDENCE_LINK_COLOR;
 
   // hide link if disabled globally
   if (!isDisplayed) {
@@ -70,14 +73,30 @@ export function SvgLink(props: SvgLinkProps) {
   }
 
   return (
-    <line
-      x1={x1}
-      y1={y1}
-      x2={x2}
-      y2={y2}
-      stroke={color}
-      strokeWidth="calc(var(--scene-screen-pixel) * 2)"
-      markerEnd="url(#mung-link-arrow-head)"
-    />
+    <>
+      {/* Selection outline (placed behind, 2x thicker) */}
+      {isSelected && (
+        <line
+          x1={x1}
+          y1={y1}
+          x2={x2}
+          y2={y2}
+          stroke="white"
+          strokeWidth={`calc(var(--scene-screen-pixel) * ${LINK_OUTLINE_STROKE_WIDTH})`}
+          markerEnd="url(#mung-link-arrow-head--selection-outline)"
+        />
+      )}
+
+      {/* The arrow itself */}
+      <line
+        x1={x1}
+        y1={y1}
+        x2={x2}
+        y2={y2}
+        stroke={color}
+        strokeWidth={`calc(var(--scene-screen-pixel) * ${LINK_STROKE_WIDTH})`}
+        markerEnd="url(#mung-link-arrow-head)"
+      />
+    </>
   );
 }

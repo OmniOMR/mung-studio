@@ -12,6 +12,10 @@ import { SvgLink } from "./SvgLink";
 import { SvgNode } from "./SvgNode";
 import { getLinkId } from "../../../../mung/getLinkId";
 import { SelectionStore } from "../../state/selection-store/SelectionStore";
+import {
+  LINK_OUTLINE_STROKE_WIDTH,
+  LINK_STROKE_WIDTH,
+} from "../../../../mung/linkAppearance";
 
 export interface SceneLayerProps {
   readonly zoomer: Zoomer;
@@ -40,6 +44,8 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
   props.zoomer.useOnTransformChange((transform: d3.ZoomTransform) => {
     gRef.current?.setAttribute("transform", transform.toString());
   }, []);
+
+  const outlineThickeningRatio = LINK_OUTLINE_STROKE_WIDTH / LINK_STROKE_WIDTH;
 
   return (
     <svg
@@ -79,6 +85,34 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
             y2="5"
             stroke="context-stroke"
             strokeWidth="1"
+            strokeLinecap="square"
+          />
+        </marker>
+        <marker
+          id="mung-link-arrow-head--selection-outline"
+          viewBox="0 0 10 10"
+          refX="8"
+          refY="5"
+          markerWidth={10 / outlineThickeningRatio}
+          markerHeight={10 / outlineThickeningRatio}
+          orient="auto-start-reverse"
+        >
+          <line
+            x1="4"
+            y1="1"
+            x2="8"
+            y2="5"
+            stroke="context-stroke"
+            strokeWidth={outlineThickeningRatio}
+            strokeLinecap="square"
+          />
+          <line
+            x1="4"
+            y1="9"
+            x2="8"
+            y2="5"
+            stroke="context-stroke"
+            strokeWidth={outlineThickeningRatio}
             strokeLinecap="square"
           />
         </marker>
