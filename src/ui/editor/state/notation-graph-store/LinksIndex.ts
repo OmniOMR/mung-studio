@@ -96,17 +96,14 @@ export class LinksIndex {
   private onLinkRemoved(meta: LinkRemoveMetadata) {
     if (!this.acceptsLink(meta.linkType)) return;
 
+    const removedLinkId = getLinkId({
+      fromId: meta.fromNode.id,
+      toId: meta.toNode.id,
+      type: meta.linkType,
+    });
+
     // update state
-    this.links = this.links.filter(
-      (link) =>
-        link.fromId !== meta.fromNode.id || link.toId !== meta.toNode.id,
-    );
-    this.linkIds.delete(
-      getLinkId({
-        fromId: meta.fromNode.id,
-        toId: meta.toNode.id,
-        type: meta.linkType,
-      }),
-    );
+    this.links = this.links.filter((link) => getLinkId(link) !== removedLinkId);
+    this.linkIds.delete(removedLinkId);
   }
 }
