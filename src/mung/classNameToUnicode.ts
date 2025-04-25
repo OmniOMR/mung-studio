@@ -31,7 +31,7 @@ const lookupTable = {
   staffGrouping: "\u{E000}", // Ⓜ️, ⚠️ not a SMuFL class, see "brace" or "bracket"
   brace: "\u{E000}", // Ⓜ️
   bracket: "\u{E002}", // Ⓜ️
-  
+
   // 4.2. Staves
   // https://w3c.github.io/smufl/latest/tables/staves.html
   staffLine: "\u{E016}\u{2800}", // Ⓜ️, ⚠️ not s SMuFL class, see "staff1Line"
@@ -73,7 +73,7 @@ const lookupTable = {
   codaSquare: "\u{E049}",
   segnoSerpent1: "\u{E04A}",
   segnoSerpent2: "\u{E04B}",
-  
+
   // 4.5. Clefs
   // https://w3c.github.io/smufl/latest/tables/clefs.html
   gClef: "\u{E050}", // Ⓜ️
@@ -413,5 +413,4 @@ const lookupTable = {
   numeral7: "7", // Ⓜ️, ⚠️ not a SMuFL class
   numeral8: "8", // Ⓜ️, ⚠️ not a SMuFL class
   numeral9: "9", // Ⓜ️, ⚠️ not a SMuFL class
-
 };

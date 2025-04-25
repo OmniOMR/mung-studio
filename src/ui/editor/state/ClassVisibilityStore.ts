@@ -13,29 +13,114 @@ export const DEFAULT_HIDDEN_CLASSES = new Set(["staffLine", "staff"]);
  * Classes that should be visible when doing precedence link annotation
  */
 export const PRECEDENCE_LINK_ANNOTATION_CLASSES = new Set([
-  "noteheadFull",
-  "noteheadBlack",
-  "noteheadHalf",
+  // https://muscimarker.readthedocs.io/en/latest/instructions.html#precedence-relationships
+  // links go between noteheads and rests
+
+  // noteheads
+  "noteheadDoubleWhole",
+  "noteheadDoubleWholeSquare",
   "noteheadWhole",
-  "rest8th",
+  "noteheadHalf",
+  "noteheadBlack",
+  "noteheadFull",
+  "noteheadXBlack",
+  "noteheadXOrnate",
+  "noteheadSlashVerticalEnds",
+  "noteheadSlashHorizontalEnds",
+  "noteheadSlashWhiteWhole",
+  "noteheadSlashWhiteHalf",
+
+  // rests
+  "multiMeasureRest",
+  "restMaxima",
+  "restLonga",
+  "restDoubleWhole",
+  "restWhole",
   "restHalf",
   "restQuarter",
-  "restWhole",
+  "rest8th",
+  "rest16th",
+  "rest32nd",
+  "rest64th",
+  "rest128th",
+  "rest256th",
+  "rest512th",
+  "rest1024th",
+  "restHBar",
+  "restDoubleWholeLegerLine",
+  "restWholeLegerLine",
+  "restHalfLegerLine",
+  "repeat1Bar",
 ]);
 
 /**
  * Classes that should be visible when doing staff link annotation
  */
 export const STAFF_LINK_ANNOTATION_CLASSES = new Set([
-  "noteheadFull",
-  "noteheadBlack",
-  "noteheadHalf",
+  // see MUSCIMA++ 2.0 "mff-muscima-mlclasses-annot.deprules" file,
+  // which classes can be attached to the "staff" class,
+  // plus noteheads and rests
+
+  // clefs
+  "gClef",
+  "cClef",
+  "fClef",
+  "cClefSquare",
+  "unpitchedPercussionClef1",
+  "unpitchedPercussionClef2",
+  "semipitchedPercussionClef1",
+  "semipitchedPercussionClef2",
+  "6stringTabClef",
+  "4stringTabClef",
+  "gClefChange",
+  "cClefChange",
+  "fClefChange",
+  "clef8",
+  "clef15",
+
+  // signatures
+  "keySignature",
+  "timeSignature",
+
+  // bralines & brackets
+  "measureSeparator",
+  "staffGrouping",
+
+  // noteheads
+  "noteheadDoubleWhole",
+  "noteheadDoubleWholeSquare",
   "noteheadWhole",
-  "rest8th",
+  "noteheadHalf",
+  "noteheadBlack",
+  "noteheadFull",
+  "noteheadXBlack",
+  "noteheadXOrnate",
+  "noteheadSlashVerticalEnds",
+  "noteheadSlashHorizontalEnds",
+  "noteheadSlashWhiteWhole",
+  "noteheadSlashWhiteHalf",
+
+  // rests
+  "multiMeasureRest",
+  "restMaxima",
+  "restLonga",
+  "restDoubleWhole",
+  "restWhole",
   "restHalf",
   "restQuarter",
-  "restWhole",
-  // TODO ...
+  "rest8th",
+  "rest16th",
+  "rest32nd",
+  "rest64th",
+  "rest128th",
+  "rest256th",
+  "rest512th",
+  "rest1024th",
+  "restHBar",
+  "restDoubleWholeLegerLine",
+  "restWholeLegerLine",
+  "restHalfLegerLine",
+  "repeat1Bar",
 ]);
 
 export class ClassVisibilityStore {
