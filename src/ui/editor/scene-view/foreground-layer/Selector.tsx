@@ -7,6 +7,7 @@ import { NotationGraphStore } from "../../state/notation-graph-store/NotationGra
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 import { Zoomer } from "../Zoomer";
 import { Node } from "../../../../mung/Node";
+import { EditorStateStore } from "../../state/EditorStateStore";
 
 /**
  * Contains logic for selecting and deselecting nodes.
@@ -17,6 +18,7 @@ export class Selector {
   private readonly notationGraphStore: NotationGraphStore;
   private readonly classVisibilityStore: ClassVisibilityStore;
   private readonly selectionStore: SelectionStore;
+  private readonly editorStateStore: EditorStateStore;
   private readonly highlighter: Highlighter;
   private readonly zoomer: Zoomer;
 
@@ -24,12 +26,14 @@ export class Selector {
     notationGraphStore: NotationGraphStore,
     classVisibilityStore: ClassVisibilityStore,
     selectionStore: SelectionStore,
+    editorStateStore: EditorStateStore,
     highlighter: Highlighter,
     zoomer: Zoomer,
   ) {
     this.notationGraphStore = notationGraphStore;
     this.classVisibilityStore = classVisibilityStore;
     this.selectionStore = selectionStore;
+    this.editorStateStore = editorStateStore;
     this.highlighter = highlighter;
     this.zoomer = zoomer;
   }
@@ -176,18 +180,22 @@ export class Selector {
     const y = Math.min(this.sweepStartY, this.sweepEndY);
     const width = Math.abs(this.sweepStartX - this.sweepEndX);
     const height = Math.abs(this.sweepStartY - this.sweepEndY);
+    const dashed = !this.editorStateStore.isSelectionLazy;
 
     this.sweepRectangle.style.display = "block";
     this.sweepRectangle.setAttribute("x", String(x));
     this.sweepRectangle.setAttribute("y", String(y));
     this.sweepRectangle.setAttribute("width", String(width));
     this.sweepRectangle.setAttribute("height", String(height));
+    this.sweepRectangle.setAttribute("stroke-dasharray", dashed ? "5" : "none");
   }
 
   private getNodesUnderSweepRectangle(): readonly Node[] {
     // NOTE: this is a simple iteration as there are only 2K rectangle objects;
     // This could be improved, either so that it respects polygons, or that
     // it runs faster with some k-d trees or such.
+
+    const isLazy = this.editorStateStore.isSelectionLazy;
 
     const x_min = Math.min(this.sweepStartX, this.sweepEndX);
     const y_min = Math.min(this.sweepStartY, this.sweepEndY);
@@ -199,8 +207,16 @@ export class Selector {
     for (let node of this.notationGraphStore.nodesInSceneOrder) {
       if (!this.classVisibilityStore.visibleClasses.has(node.className))
         continue;
-      if (node.left < x_min || node.left + node.width > x_max) continue;
-      if (node.top < y_min || node.top + node.height > y_max) continue;
+
+      if (isLazy) {
+        // node mus be fully inside the rectangle
+        if (node.left < x_min || node.left + node.width > x_max) continue;
+        if (node.top < y_min || node.top + node.height > y_max) continue;
+      } else {
+        // node can be just partially under the rectangle
+        if (node.left + node.width < x_min || node.left > x_max) continue;
+        if (node.top + node.height < y_min || node.top > y_max) continue;
+      }
       nodes.push(node);
     }
 

@@ -20,6 +20,7 @@ import { AutosaveStatus } from "./AutosaveStatus";
 import { AutosaveStore } from "../state/AutosaveStore";
 import { DocumentAccordionPanel } from "./DocumentAccordionPanel";
 import { ViewAccordionPanel } from "./ViewAccordionPanel";
+import { SelectionAccordionPanel } from "./SelectionAccordionPanel";
 
 export interface OverviewPanelProps {
   readonly onClose: () => void;
@@ -90,6 +91,17 @@ export function OverviewPanel(props: OverviewPanelProps) {
             </AccordionSummary>
             <AccordionDetails>
               <ViewAccordionPanel editorStateStore={props.editorStateStore} />
+            </AccordionDetails>
+          </Accordion>
+
+          <Accordion defaultExpanded={false}>
+            <AccordionSummary>
+              <Typography level="title-sm">Selection</Typography>
+            </AccordionSummary>
+            <AccordionDetails>
+              <SelectionAccordionPanel
+                editorStateStore={props.editorStateStore}
+              />
             </AccordionDetails>
           </Accordion>
 

@@ -39,6 +39,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
         props.notationGraphStore,
         props.classVisibilityStore,
         props.selectionStore,
+        props.editorStateStore,
         highlighter,
         props.zoomer,
       ),

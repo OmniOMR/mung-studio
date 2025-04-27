@@ -61,22 +61,43 @@ export class EditorStateStore {
   // View options //
   //////////////////
 
-  public nodeDisplayModeAtom: PrimitiveAtom<NodeDisplayMode> = atom(
+  public readonly nodeDisplayModeAtom: PrimitiveAtom<NodeDisplayMode> = atom(
     NodeDisplayMode.Bboxes,
   );
 
-  public displaySyntaxLinksAtom: PrimitiveAtom<boolean> = atom(true);
-  public displayPrecedenceLinksAtom: PrimitiveAtom<boolean> = atom(true);
+  public readonly displaySyntaxLinksAtom: PrimitiveAtom<boolean> = atom(true);
+  public readonly displayPrecedenceLinksAtom: PrimitiveAtom<boolean> =
+    atom(true);
+
+  ///////////////////////
+  // Selection options //
+  ///////////////////////
+
+  /**
+   * Determines the current behaviour of the rectangle selection.
+   * Lazy means a node has to be fully inside the rectangle to be selected.
+   * Eager means a node can just barely touch the rectangle to be selected.
+   */
+  public readonly isSelectionLazyAtom: PrimitiveAtom<boolean> = atom(false);
+
+  /**
+   * Reads out the value of the isSelectionLazyAtom,
+   * Lazy selection means only fully covered nodes by the selection rectangle
+   * will become selected.
+   */
+  public get isSelectionLazy(): boolean {
+    return this.jotaiStore.get(this.isSelectionLazyAtom);
+  }
 
   /////////////////////
   // Tool management //
   /////////////////////
 
   // holds the selected editor tool value
-  public _currentTool: EditorTool = EditorTool.Pointer;
+  private _currentTool: EditorTool = EditorTool.Pointer;
 
   // used to refresh the current tool atom
-  private currentToolSignalAtom = new SignalAtomWrapper();
+  private readonly currentToolSignalAtom = new SignalAtomWrapper();
 
   /**
    * Returns the currently selected editor tool
