@@ -9,3 +9,7 @@ dist
 
 # operating system
 .DS_Store
+
+# dotenv
+.env
+.env.production

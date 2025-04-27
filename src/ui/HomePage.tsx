@@ -6,6 +6,9 @@ import Box from "@mui/joy/Box";
 import packageJson from "../../package.json";
 const VERSION = packageJson.version;
 
+const HAS_SIMPLE_PHP_BACKEND =
+  process.env["SIMPLE_PHP_BACKEND_URL"] !== undefined;
+
 export function HomePage() {
   return (
     <Box
@@ -32,14 +35,18 @@ export function HomePage() {
         page to start viewing.
       </Typography>
 
-      <Typography level="h2">Simple PHP Backend</Typography>
-      <Typography level="body-md" gutterBottom>
-        Proceed to the{" "}
-        <Link component={RouterLink} to="simple-backend">
-          simple backend
-        </Link>{" "}
-        page to log-in and edit files in the cloud.
-      </Typography>
+      {HAS_SIMPLE_PHP_BACKEND && (
+        <>
+          <Typography level="h2">Simple PHP Backend</Typography>
+          <Typography level="body-md" gutterBottom>
+            Proceed to the{" "}
+            <Link component={RouterLink} to="simple-backend">
+              simple backend
+            </Link>{" "}
+            page to log-in and edit files in the cloud.
+          </Typography>
+        </>
+      )}
 
       <Typography level="h2">Development</Typography>
       <Typography level="body-md" gutterBottom>
