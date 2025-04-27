@@ -13,6 +13,7 @@ export function DocumentsPage() {
   const connection = useAtomValue(simpleBackendConnectionAtom);
 
   const [documents, setDocuments] = useState<Document[] | null>(null);
+  const [userName, setUserName] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -26,11 +27,15 @@ export function DocumentsPage() {
     (async () => {
       setIsLoading(true);
       setDocuments(null);
+      setUserName(null);
       setError(null);
 
       try {
         const api = new SimpleBackendApi(connection);
-        setDocuments(await api.listDocuments());
+        const documents = await api.listDocuments();
+        const whoamiResponse = await api.whoami();
+        setDocuments(documents);
+        setUserName(whoamiResponse.name);
         setIsLoading(false);
       } catch (e) {
         setError(String(e));
@@ -57,7 +62,7 @@ export function DocumentsPage() {
       </Typography>
 
       <Typography level="h2">Authentication</Typography>
-      <AuthenticationSection />
+      <AuthenticationSection userName={userName} />
 
       <Typography level="h2" sx={{ mt: 2 }}>
         Documents

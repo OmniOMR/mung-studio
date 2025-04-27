@@ -429,6 +429,18 @@ function log_document_access_file(string $message, Document $document) {
 /////////////
 
 /**
+ * Returns information about the authenticated user
+ */
+function action_whoami() {
+    $user = authenticate_and_get_user();
+
+    header("Content-Type: application/json; charset=utf-8");
+    echo json_encode([
+        "name" => $user->name
+    ], JSON_PRETTY_PRINT);
+}
+
+/**
  * Lists all MuNG documents on the server
  */
 function action_list_documents() {
@@ -635,6 +647,10 @@ function run_router_and_call_proper_action() {
     }
 
     switch ($action) {
+        case "whoami":
+            action_whoami();
+            break;
+
         case "list-documents":
             action_list_documents();
             break;

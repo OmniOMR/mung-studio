@@ -8,7 +8,11 @@ import { useAtomValue, useSetAtom } from "jotai";
 import KeyIcon from "@mui/icons-material/Key";
 import DeleteOutlineIcon from "@mui/icons-material/DeleteOutline";
 
-export function AuthenticationSection() {
+export interface AuthenticationSectionProps {
+  readonly userName: string | null;
+}
+
+export function AuthenticationSection(props: AuthenticationSectionProps) {
   const setPersistentUserToken = useSetAtom(userTokenAtom);
   const connection = useAtomValue(simpleBackendConnectionAtom);
 
@@ -62,7 +66,9 @@ export function AuthenticationSection() {
       ) : (
         <>
           <Alert sx={{ mb: 1 }}>
-            A user access token is stored in this browser:
+            Access token for the user
+            <strong>{props.userName}</strong>
+            is stored in this browser:
             <Chip variant="solid" startDecorator={<KeyIcon />}>
               {connection.userToken.substring(0, 3) +
                 "*".repeat(Math.max(connection.userToken.length - 3, 0))}

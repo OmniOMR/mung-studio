@@ -116,6 +116,22 @@ localhost:8080/?action=list-documents
 The rest (body present, and its content type and strucure) depends on the chosen action:
 
 
+### `/?action=whoami` Who am I
+
+```bash
+curl -v -X POST -H "Authorization: Bearer 123456789" \
+    localhost:8080/?action=whoami
+```
+
+Request has no body, response contains information about the authenticated user:
+
+```json
+{
+    "name": "John Doe"
+}
+```
+
+
 ### `/?action=list-documents` List documents
 
 ```bash

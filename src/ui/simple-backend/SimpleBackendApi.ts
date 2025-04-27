@@ -6,6 +6,13 @@ export interface Document {
   readonly modifiedAt: string;
 }
 
+export interface WhoamiResponse {
+  /**
+   * Name of the authenticated user
+   */
+  readonly name: string;
+}
+
 export class SimpleBackendApi {
   private readonly connection: SimpleBackendConnection;
 
@@ -22,6 +29,23 @@ export class SimpleBackendApi {
     }
 
     return urlWithAction + "&document=" + encodeURIComponent(document);
+  }
+
+  public async whoami(): Promise<WhoamiResponse> {
+    const response = await fetch(this.buildUrl("whoami"), {
+      method: "POST",
+      headers: {
+        Authorization: "Bearer " + this.connection.userToken,
+      },
+    });
+    if (response.status === 401) {
+      throw new Error("Invalid user token.");
+    }
+    if (!response.ok) {
+      throw new Error("Unexpected response: " + (await response.text()));
+    }
+    const data = await response.json();
+    return data as WhoamiResponse;
   }
 
   public async listDocuments(): Promise<Document[]> {
