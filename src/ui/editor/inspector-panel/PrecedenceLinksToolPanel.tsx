@@ -8,10 +8,16 @@ import {
 import { SelectionStore } from "../state/selection-store/SelectionStore";
 import { useAtomValue } from "jotai";
 import { EditorStateStore, EditorTool } from "../state/EditorStateStore";
+import {
+  ClassVisibilityStore,
+  PRECEDENCE_LINK_ANNOTATION_CLASSES,
+} from "../state/ClassVisibilityStore";
+import { useEffect, useRef } from "react";
 
 export interface PrecedenceLinksToolPanelProps {
   readonly editorStateStore: EditorStateStore;
   readonly selectionStore: SelectionStore;
+  readonly classVisibilityStore: ClassVisibilityStore;
 }
 
 export function PrecedenceLinksToolPanel(props: PrecedenceLinksToolPanelProps) {
@@ -20,6 +26,8 @@ export function PrecedenceLinksToolPanel(props: PrecedenceLinksToolPanelProps) {
   const selectedNodeIds = useAtomValue(
     props.selectionStore.selectedNodeIdsAtom,
   );
+
+  useOverrideClassVisibility(tool, props.classVisibilityStore);
 
   if (tool !== EditorTool.PrecedenceLinks) {
     return null;
@@ -44,4 +52,30 @@ export function PrecedenceLinksToolPanel(props: PrecedenceLinksToolPanelProps) {
       </AccordionDetails>
     </Accordion>
   );
+}
+
+/**
+ * Extracted logic that overrides the current class visibility setting
+ * to get them optimized for precedence link annotation
+ */
+function useOverrideClassVisibility(
+  currentTool: EditorTool,
+  classVisibilityStore: ClassVisibilityStore,
+) {
+  const oldVisibleClassesRef = useRef<ReadonlySet<string>>(
+    classVisibilityStore.visibleClasses,
+  );
+
+  useEffect(() => {
+    if (currentTool === EditorTool.PrecedenceLinks) {
+      // tool was just equipped, remember the old settings and set the new
+      oldVisibleClassesRef.current = classVisibilityStore.visibleClasses;
+      classVisibilityStore.showOnlyTheseClasses(
+        PRECEDENCE_LINK_ANNOTATION_CLASSES,
+      );
+    } else {
+      // tool was just dropped, restore the old settings
+      classVisibilityStore.showOnlyTheseClasses(oldVisibleClassesRef.current);
+    }
+  }, [currentTool]);
 }

@@ -167,6 +167,7 @@ export function Editor(props: EditorProps) {
           notationGraphStore={notationGraphStore}
           selectionStore={selectionStore}
           editorStateStore={editorStateStore}
+          classVisibilityStore={classVisibilityStore}
         />
       </Box>
       {/* <Box

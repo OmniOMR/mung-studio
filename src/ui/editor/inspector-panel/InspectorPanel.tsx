@@ -14,11 +14,13 @@ import {
 import { SyntaxLinksToolPanel } from "./SyntaxLinksToolPanel";
 import { EditorStateStore } from "../state/EditorStateStore";
 import { PrecedenceLinksToolPanel } from "./PrecedenceLinksToolPanel";
+import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
 
 export interface InspectorPanelProps {
   readonly notationGraphStore: NotationGraphStore;
   readonly selectionStore: SelectionStore;
   readonly editorStateStore: EditorStateStore;
+  readonly classVisibilityStore: ClassVisibilityStore;
 }
 
 /**
@@ -62,6 +64,7 @@ export function InspectorPanel(props: InspectorPanelProps) {
           <PrecedenceLinksToolPanel
             selectionStore={props.selectionStore}
             editorStateStore={props.editorStateStore}
+            classVisibilityStore={props.classVisibilityStore}
           />
 
           <Accordion defaultExpanded={true}>
