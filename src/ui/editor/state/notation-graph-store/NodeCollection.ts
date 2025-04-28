@@ -205,8 +205,8 @@ export class NodeCollection {
       // them. If that's not the case, then they need to be allowed and checked
       // that they don't break some link rendering or something.
       console.warn(
-        "[NodeCollection]" +
-          `Cannot create link to itself. Loops are disallowed. Node ID: ${fromId}`,
+        `[NodeCollection] Cannot create link to itself. ` +
+          `Loops are disallowed. Node ID: ${fromId}`,
       );
       return;
     }
