@@ -11,20 +11,9 @@ The MUSCIMA++ v2.0 dataset: https://github.com/OMR-Research/muscima-pp/releases/
 
 - [Performance bottlenecks](docs/performance-bottlenecks.md)
 - [Simple PHP backend](docs/simple-php-backend.md)
+- [Development Setup](docs/development-setup.md)
 
 
-## Before comitting changes
+## Development
 
-```bash
-# run linter and formatter
-npm run lint
-npm run prettier-write
-
-# also try building for production,
-# because parcel production is more strict and may fail
-# even if development compiled fine:
-npm run clean
-npm run build
-```
-
-NOTE: Linter needs setting up...
+Read the [Development Setup](docs/development-setup.md) documentation page to see how to develop, debug, and deploy the project.
