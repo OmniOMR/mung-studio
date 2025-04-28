@@ -32,7 +32,7 @@ At the top level, using Model-View-Controller terminology, the code is split bet
 - the state (Model) ... JS variables and Jotai atoms
 - and the UI (View + Controller) ... React components and hooks
 
-The state is encapsulated in set of javascript classes, called *stores* (e.g. `NotationGraphStore`), which are created inside the `<Editor>` component and persisted via `useMemo`. They are passed down to children via props (or React context), but their value never changes (they are the same class instance for the whole lifetime of the `<Editor>` component):
+The state is encapsulated in set of javascript classes, called *stores* (e.g. `NotationGraphStore`), which are created inside the `<Editor>` component and persisted via `useMemo`. They are passed down to children via props (or React context), but their value (react-wise) never changes (they are the same class instance for the whole lifetime of the `<Editor>` component - React does not re-render when their contents change since the instance is the same):
 
 ```tsx
 export function Editor() {
