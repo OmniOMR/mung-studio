@@ -151,6 +151,8 @@ Finally, go back to the backend server folder and recursively set readable permi
 chmod -R a=rwX documents
 ```
 
+> **Note:** This command automatically skips files that are owned by the www user.
+
 
 ## Development
 

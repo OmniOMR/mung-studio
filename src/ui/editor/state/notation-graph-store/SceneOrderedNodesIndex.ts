@@ -37,8 +37,8 @@ export class SceneOrderedNodesIndex {
   // mutable and never exposed. Insert-sort into this structure.
   private _orderedMutableNodes: Node[] = [];
 
-  private _nodes: readonly Node[];
-  private _nodeIds: readonly number[];
+  private _nodes: readonly Node[] = [];
+  private _nodeIds: readonly number[] = [];
 
   /**
    * Returns nodes sorted in the scene order

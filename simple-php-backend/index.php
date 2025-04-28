@@ -197,7 +197,16 @@ class Document {
         if (!static::is_name_valid($name)) {
             throw new Exception("Invalid document name.");
         }
-        return Document::documents_folder_path() . "/" . $name . "/image.jpg";
+        
+        foreach (["jpg", "jpeg", "png"] as $suffix) {
+            $path = Document::documents_folder_path()
+                . "/" . $name . "/image." . $suffix;
+            if (is_file($path)) {
+                return $path;
+            }
+        }
+
+        throw new Exception("Document $name is missing the image file.");
     }
 
     /**
@@ -337,7 +346,18 @@ class Document {
  * it creates an image thumbnail using the GD PHP extension.
  */
 function generate_thumbnail(string $imagePath, string $thumbnailPath) {
-    $image = imagecreatefromjpeg($imagePath);
+    $imageExtension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
+
+    $image = false;
+    if ($imageExtension === "jpg" || $imageExtension === "jpeg") {
+        $image = imagecreatefromjpeg($imagePath);
+    } else if ($imageExtension === "png") {
+        $image = imagecreatefrompng($imagePath);
+    } else {
+        throw new Exception(
+            "Cannot create thumbnail for extension file $imagePath"
+        );
+    }
 
     if ($image === false) {
         throw Exception("Failed to load image when creating a thumbnail.");
@@ -525,14 +545,21 @@ function action_get_document_image() {
     }
 
     $imagePath = Document::image_path($document->name);
+    $imageExtension = strtolower(pathinfo($imagePath, PATHINFO_EXTENSION));
 
     if (!is_file($imagePath)) {
         http_response_code(404);
         return;
     }
 
-    // send the jpg file to the client
-    header("Content-Type: image/jpeg");
+    // send the image file to the client
+    if ($imageExtension === "jpg" || $imageExtension === "jpeg") {
+        header("Content-Type: image/jpeg");
+    } else if ($imageExtension === "png") {
+        header("Content-Type: image/png");
+    } else {
+        header("Content-Type: application/octet-stream");
+    }
     header("Content-Length: " . filesize($imagePath));
     header("Cache-Control: no-store");
     readfile($imagePath);
