@@ -4,6 +4,7 @@ import { Zoomer } from "./Zoomer";
 import { ForegroundLayer } from "./foreground-layer/ForegroundLayer";
 import { SceneLayer_Canvas2D } from "./SceneLayer_Canvas2D";
 import { SceneLayer_SVG } from "./scene-layer-svg/SceneLayer_SVG";
+import { SceneLayer_WebGL } from "./scene-layer-webgl/SceneLayer_WebGL";
 import { BackgroundLayer } from "./BackgroundLayer";
 import { EditorStateStore } from "../state/EditorStateStore";
 import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
@@ -64,6 +65,11 @@ export function SceneView(props: SceneViewProps) {
         zoomEventDispatcher={zoomEventDispatcher}
         notationGraphStore={props.notationGraphStore}
       /> */}
+      {
+        <SceneLayer_WebGL
+          zoomer={zoomer}
+          notationGraphStore={props.notationGraphStore} />
+      }
 
       {/* The editing overlay for the current object, consumes pointer events
       and contains the zoom controlling code */}

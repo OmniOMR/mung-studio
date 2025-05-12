@@ -26,9 +26,9 @@ export function SceneLayer_Canvas2D(props: SceneLayerProps) {
       renderToCanvas(nodes, ctx, transform);
     };
 
-    props.zoomEventBus.addListener(onZoom);
+    props.zoomEventBus.onTransformChange.subscribe(onZoom);
     return () => {
-      props.zoomEventBus.removeListener(onZoom);
+      props.zoomEventBus.onTransformChange.unsubscribe(onZoom);
     };
   }, []);
 

@@ -134,8 +134,8 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
           </g>
         )}
 
-        {/* Links */}
-        <g>
+        {/* Links - currently commented out, rendered with WebGL */}
+        { /*<g>
           {links.map((link) => (
             <SvgLink
               key={getLinkId(link)}
@@ -146,7 +146,7 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
               editorStateStore={props.editorStateStore}
             />
           ))}
-        </g>
+        </g>*/}
       </g>
     </svg>
   );
