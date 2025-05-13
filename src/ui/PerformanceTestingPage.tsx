@@ -143,20 +143,29 @@ function generateTestNodes(): Node[] {
     nodes.push(node);
   }
 
-  // generate links
-  for (let i = 0; i < 2_000; i++) {
-    const a = pick(nodes);
-    const b = pick_nearby_node(nodes, a);
+  function generateLinks(
+    count: number,
+    nodeOutlinksGetter: (Node) => number[],
+    nodeInlinksGetter: (Node) => number[],
+  ) {
+    for (let i = 0; i < count; i++) {
+      const a = pick(nodes);
+      const b = pick_nearby_node(nodes, a);
 
-    // prevent double-links
-    if (a.syntaxOutlinks.indexOf(b.id) !== -1) {
-      i--;
-      continue;
+      // prevent double-links
+      if (nodeOutlinksGetter(a).indexOf(b.id) !== -1) {
+        i--;
+        continue;
+      }
+
+      nodeOutlinksGetter(a).push(b.id);
+      nodeInlinksGetter(b).push(a.id);
     }
-
-    a.syntaxOutlinks.push(b.id);
-    b.syntaxInlinks.push(a.id);
   }
+
+  // generate links
+  generateLinks(1000, (node) => node.syntaxOutlinks, (node) => node.syntaxInlinks);
+  generateLinks(1000, (node) => node.precedenceOutlinks, (node) => node.precedenceInlinks);
 
   return nodes;
 }
