@@ -68,7 +68,8 @@ export function SceneView(props: SceneViewProps) {
       {
         <SceneLayer_WebGL
           zoomer={zoomer}
-          notationGraphStore={props.notationGraphStore} />
+          notationGraphStore={props.notationGraphStore}
+          editorStateStore={props.editorStateStore} />
       }
 
       {/* The editing overlay for the current object, consumes pointer events

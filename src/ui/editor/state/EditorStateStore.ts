@@ -69,6 +69,14 @@ export class EditorStateStore {
   public readonly displayPrecedenceLinksAtom: PrimitiveAtom<boolean> =
     atom(true);
 
+  public get isDisplaySyntaxLinks(): boolean {
+    return this.jotaiStore.get(this.displaySyntaxLinksAtom);
+  }
+
+  public get isDisplayPrecedenceLinks(): boolean {
+    return this.jotaiStore.get(this.displayPrecedenceLinksAtom);
+  }
+
   ///////////////////////
   // Selection options //
   ///////////////////////

@@ -6,10 +6,15 @@ import { Link, link } from "d3";
 import { ISimpleEventHandler } from "strongly-typed-events";
 import { LinkInsertMetadata, LinkRemoveMetadata } from "../../state/notation-graph-store/NodeCollection";
 import * as d3 from "d3";
+import { LinkType } from "../../../../mung/LinkType";
+import { EditorStateStore } from "../../state/EditorStateStore";
+import { useAtom } from "jotai";
+import { useAtomCallback } from "jotai/utils";
 
 export interface SceneLayerProps {
   readonly zoomer: Zoomer;
   readonly notationGraphStore: NotationGraphStore;
+  readonly editorStateStore: EditorStateStore;
 }
 
 class BufferDirtyStateKeeper {
@@ -183,7 +188,7 @@ export class GeometryBuffer {
     }
     else {
       const [startGeom, endGeom] = this.dirtyState.getDirtyRange();
-      
+
       const startVertex = this.getGeomVertexStart(startGeom);
       const endVertex = this.getGeomVertexEnd(endGeom);
 
@@ -197,9 +202,7 @@ export class GeometryBuffer {
   }
 
   public draw(gl: WebGLRenderingContext, program: WebGLProgram) {
-    if (this.glBuffer === null) {
-      return; //not yet flushed
-    }
+    this.flush(gl);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.glBuffer);
     const positionLocation = gl.getAttribLocation(program, "a_position");
@@ -222,24 +225,51 @@ const LINE_VERTEX_SHADER_SOURCE = `
 const LINE_FRAGMENT_SHADER_SOURCE = `
   precision mediump float;
 
+  uniform vec4 u_color;
+
   void main() {
-    gl_FragColor = vec4(1, 0, 0, 1);
+    gl_FragColor = u_color;
   }
 `;
 
+export interface GLDrawable {
+  attach(gl: GLRenderer): void;
+  release(gl: GLRenderer): void;
+
+  draw(gl: GLRenderer): void;
+}
+
 export class GLRenderer {
+  
   private gl: WebGLRenderingContext;
-  private buffers: GeometryBuffer[] = [];
-  private program: WebGLProgram;
+  private drawables: GLDrawable[] = [];
   private transform: d3.ZoomTransform = d3.zoomIdentity;
+
+  private currentProgram: WebGLProgram | null = null;
+  private currentMatrix: number[];
 
   constructor(gl: WebGLRenderingContext) {
     this.gl = gl;
-    this.initShaders();
   }
 
-  public registerGeometryBuffer(buffer: GeometryBuffer) {
-    this.buffers.push(buffer);
+  public release() {
+    for (const drawable of this.drawables) {
+      drawable.release(this);
+    }
+    this.drawables = [];
+  }
+
+  public addDrawable(drawable: GLDrawable) {
+    this.drawables.push(drawable);
+    drawable.attach(this);
+  }
+
+  public removeDrawable(drawable: GLDrawable) {
+    const index = this.drawables.indexOf(drawable);
+    if (index !== -1) {
+      this.drawables.splice(index, 1);
+      drawable.release(this);
+    }
   }
 
   public isCurrent(gl: WebGLRenderingContext): boolean {
@@ -261,12 +291,17 @@ export class GLRenderer {
     return shader;
   }
 
-  private initShaders() {
-    const vertexShader = this.createShader(this.gl.VERTEX_SHADER, LINE_VERTEX_SHADER_SOURCE);
-    const fragmentShader = this.createShader(this.gl.FRAGMENT_SHADER, LINE_FRAGMENT_SHADER_SOURCE);
+  public createVertexShader(source: string): WebGLShader {
+    return this.createShader(this.gl.VERTEX_SHADER, source);
+  }
 
+  public createFragmentShader(source: string): WebGLShader {
+    return this.createShader(this.gl.FRAGMENT_SHADER, source);
+  }
+
+  public createProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
     const program = this.gl.createProgram();
-    if (this.program === null) {
+    if (program === null) {
       throw new Error("Failed to create program");
     }
 
@@ -278,11 +313,63 @@ export class GLRenderer {
       throw new Error("Failed to link program");
     }
 
-    this.program = program;
+    return program;
+  }
+
+  public createProgramFromSource(vertexSource: string, fragmentSource: string): WebGLProgram {
+    const vertexShader = this.createVertexShader(vertexSource);
+    const fragmentShader = this.createFragmentShader(fragmentSource);
+    const program = this.createProgram(vertexShader, fragmentShader);
+    this.gl.deleteShader(vertexShader);
+    this.gl.deleteShader(fragmentShader);
+    return program;
+  }
+
+  public deleteProgram(program: WebGLProgram) {
+    this.gl.deleteProgram(program);
   }
 
   public updateTransform(transform: d3.ZoomTransform) {
     this.transform = transform;
+  }
+
+  public useProgram(program: WebGLProgram): boolean {
+    if (this.currentProgram !== program) {
+      this.gl.useProgram(program);
+      this.currentProgram = program;
+      this.uploadUniforms();
+      return true;
+    }
+    return false;
+  }
+
+  private uploadUniforms() {
+    if (this.currentProgram === null) {
+      return;
+    }
+
+    const mvpMatrixLocation = this.gl.getUniformLocation(this.currentProgram, "u_mvp_matrix");
+    if (mvpMatrixLocation !== null) {
+      this.gl.uniformMatrix4fv(mvpMatrixLocation, false, this.currentMatrix);
+    }
+  }
+
+  public setUniformColor(name: string, r: number, g: number, b: number, a: number) {
+    if (this.currentProgram === null) {
+      return;
+    }
+    const colorLocation = this.gl.getUniformLocation(this.currentProgram, name);
+    if (colorLocation !== null) {
+      this.gl.uniform4f(colorLocation, r, g, b, a);
+    }
+  }
+
+  public setUniformColorInt(name: string, color: number) {
+    const r = ((color >> 16) & 0xFF) / 255;
+    const g = ((color >> 8) & 0xFF) / 255;
+    const b = (color & 0xFF) / 255;
+    const a = ((color >> 24) & 0xFF) / 255;
+    this.setUniformColor(name, r, g, b, a);
   }
 
   public draw() {
@@ -297,7 +384,8 @@ export class GLRenderer {
     this.gl.clearDepth(1);
 
     this.gl.clear(this.gl.COLOR_BUFFER_BIT | this.gl.DEPTH_BUFFER_BIT);
-    this.gl.useProgram(this.program);
+
+    this.currentProgram = null;
 
     const transform = this.transform;
 
@@ -309,14 +397,15 @@ export class GLRenderer {
       -1,
       1
     );
+    this.currentMatrix = projectionMatrix;
 
-    const mvpMatrixLocation = this.gl.getUniformLocation(this.program, "u_mvp_matrix");
-    this.gl.uniformMatrix4fv(mvpMatrixLocation, false, projectionMatrix);
-
-    for (const buffer of this.buffers) {
-      buffer.flush(this.gl);
-      buffer.draw(this.gl, this.program);
+    for (const drawable of this.drawables) {
+      drawable.draw(this);
     }
+  }
+
+  public drawBuffer(buffer: GeometryBuffer) {
+    buffer.draw(this.gl, this.currentProgram!);
   }
 
   private createOrthoMatrix(
@@ -440,8 +529,61 @@ class LinkGeometry {
   }
 }
 
-class LinkGeometryController {
+export class GLDrawableComposite implements GLDrawable {
+
+  private drawables: GLDrawable[] = [];
+
+  constructor(drawables: GLDrawable[] = []) {
+    this.drawables = drawables;
+  }
+
+  public addDrawable(drawable: GLDrawable) {
+    this.drawables.push(drawable);
+  }
+
+  attach(gl: GLRenderer): void {
+    for (const drawable of this.drawables) {
+      drawable.attach(gl);
+    }
+  }
+
+  release(gl: GLRenderer): void {
+    for (const drawable of this.drawables) {
+      drawable.release(gl);
+    }
+  }
+
+  draw(gl: GLRenderer): void {
+    for (const drawable of this.drawables) {
+      drawable.draw(gl);
+    }
+  }
+}
+
+class LinkGeometryMasterDrawable extends GLDrawableComposite {
+  private program: WebGLProgram;
+
+  constructor(linkDrawables: LinkGeometryDrawable[]) {
+    super(linkDrawables);
+  }
+
+  public attach(gl: GLRenderer): void {
+    this.program = gl.createProgramFromSource(LINE_VERTEX_SHADER_SOURCE, LINE_FRAGMENT_SHADER_SOURCE);
+  }
+
+  public release(gl: GLRenderer): void {
+    gl.deleteProgram(this.program);
+  }
+
+  public draw(gl: GLRenderer): void {
+    gl.useProgram(this.program);
+    super.draw(gl);
+  }
+}
+
+class LinkGeometryDrawable implements GLDrawable {
   private notationGraph: NotationGraphStore;
+  private editorState: EditorStateStore;
   private lineBuffer = new GeometryBuffer(WebGLRenderingContext.LINES);
   private triangleBuffer = new GeometryBuffer(WebGLRenderingContext.TRIANGLES);
   private linkInsertSubscription: ISimpleEventHandler<LinkInsertMetadata>;
@@ -449,10 +591,9 @@ class LinkGeometryController {
 
   private linkToIndexMap = new Map<string, number>();
 
-  private externalUpdateCallback: () => void = () => { };
-
-  constructor(notationGraph: NotationGraphStore) {
+  constructor(notationGraph: NotationGraphStore, editorStateStore: EditorStateStore) {
     this.notationGraph = notationGraph;
+    this.editorState = editorStateStore;
 
     this.linkInsertSubscription = (meta) => {
       this.onLinkInserted(meta);
@@ -475,7 +616,18 @@ class LinkGeometryController {
     });
   }
 
+  protected isLayerVisible(editorState: EditorStateStore): boolean {
+    return true;
+  }
+
+  protected isLinkAccepted(type: LinkType): boolean {
+    return true;
+  }
+
   private onLinkInserted(meta: LinkInsertMetadata) {
+    if (!this.isLinkAccepted(meta.linkType)) {
+      return;
+    }
     const key = this.makeLinkKey(meta);
     if (this.linkToIndexMap.has(key)) {
       return;
@@ -484,7 +636,6 @@ class LinkGeometryController {
     const index = this.lineBuffer.addGeometry(geometry.mainLineSource());
     this.triangleBuffer.addGeometry(geometry.arrowHeadTriangleSource());
     this.linkToIndexMap.set(key, index);
-    this.externalUpdateCallback();
     //console.log("link insert", key, index);
   }
 
@@ -498,7 +649,6 @@ class LinkGeometryController {
     this.lineBuffer.removeGeometry(index);
     this.triangleBuffer.removeGeometry(index);
     this.linkToIndexMap.delete(key);
-    this.externalUpdateCallback();
 
     // Shift all indices in linkToIndexMap after the removed one
     this.linkToIndexMap.forEach((value, key) => {
@@ -513,16 +663,56 @@ class LinkGeometryController {
   }
 
   public attach(gl: GLRenderer) {
-    gl.registerGeometryBuffer(this.lineBuffer);
-    gl.registerGeometryBuffer(this.triangleBuffer);
-    this.externalUpdateCallback = () => {
-      gl.draw();
-    };
+    
   }
 
-  public release() {
+  public release(gl: GLRenderer) {
+
+  }
+
+  public draw(gl: GLRenderer): void {
+    if (!this.isLayerVisible(this.editorState)) {
+      return;
+    }
+    gl.drawBuffer(this.lineBuffer);
+    gl.drawBuffer(this.triangleBuffer);
+  }
+
+  public unsubscribeEvents() {
     this.notationGraph.onLinkInserted.unsubscribe(this.linkInsertSubscription);
     this.notationGraph.onLinkRemoved.unsubscribe(this.linkRemoveSubscription);
+  }
+}
+
+class SyntaxLinkGeometryDrawable extends LinkGeometryDrawable {
+
+  protected isLinkAccepted(type: LinkType): boolean {
+    return type === LinkType.Syntax;
+  }
+
+  public draw(gl: GLRenderer): void {
+    gl.setUniformColorInt("u_color", 0xFFFF3333);
+    super.draw(gl);
+  }
+
+  protected isLayerVisible(editorState: EditorStateStore): boolean {
+    return editorState.isDisplaySyntaxLinks;
+  }
+}
+
+class PrecedenceLinkGeometryDrawable extends LinkGeometryDrawable {
+
+  protected isLinkAccepted(type: LinkType): boolean {
+    return type === LinkType.Precedence;
+  }
+
+  public draw(gl: GLRenderer): void {
+    gl.setUniformColorInt("u_color", 0xFF80FF00);
+    super.draw(gl);
+  }
+
+  protected isLayerVisible(editorState: EditorStateStore): boolean {
+    return editorState.isDisplayPrecedenceLinks;
   }
 }
 
@@ -532,6 +722,7 @@ class LinkGeometryController {
 export function SceneLayer_WebGL(props: SceneLayerProps) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const glRef = useRef<GLRenderer | null>(null);
+  const [displaySyntaxLinks] = useAtom(props.editorStateStore.displaySyntaxLinksAtom);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -540,17 +731,20 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
     const gl = canvasRef.current.getContext("webgl");
     if (!gl) return;
     if (glRef.current !== null && glRef.current.isCurrent(gl)) {
+      glRef.current.release();
       glRef.current = null;
     }
     if (glRef.current === null) {
       glRef.current = new GLRenderer(gl);
     }
 
-    const linkGeometry = new LinkGeometryController(props.notationGraphStore);
-    linkGeometry.attach(glRef.current);
+    const syntaxLinks = new SyntaxLinkGeometryDrawable(props.notationGraphStore, props.editorStateStore);
+    const precedenceLinks = new PrecedenceLinkGeometryDrawable(props.notationGraphStore, props.editorStateStore);
+    const masterDrawable = new LinkGeometryMasterDrawable([syntaxLinks, precedenceLinks]);
+    glRef.current.addDrawable(masterDrawable);
 
     const render = () => {
-      glRef.current!.draw();
+      glRef.current?.draw();
     };
 
     glRef.current!.updateTransform(props.zoomer.currentTransform);
@@ -561,20 +755,25 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       render();
     };
 
-    props.zoomer.onTransformChange.subscribe(onZoom);
-
     const onResize = () => {
-      if (canvasRef.current) {
-        render();
-      }
+      render();
     };
+
+    const onGraphUpdate = () => {
+      setTimeout(render); // We need to do this on the next frame so that all the geometry has been updated before rendering is invoked
+    };
+
+    props.zoomer.onTransformChange.subscribe(onZoom);
+    props.notationGraphStore.onNodeUpdatedOrLinked.subscribe(onGraphUpdate);
 
     window.addEventListener("resize", onResize);
 
     // Cleanup
     return () => {
       props.zoomer.onTransformChange.unsubscribe(onZoom);
-      linkGeometry.release();
+      props.notationGraphStore.onNodeUpdatedOrLinked.unsubscribe(onGraphUpdate);
+      syntaxLinks.unsubscribeEvents();
+      precedenceLinks.unsubscribeEvents();
       window.removeEventListener("resize", onResize);
     };
   }, []);
