@@ -73,7 +73,7 @@ export interface Node {
    */
   readonly maskString: string | null;
 
-  // TODO: decoded mask
+  readonly decodedMask: ImageData | null;
 
   readonly polygon: number[] | null;
 }

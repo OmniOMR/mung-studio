@@ -36,18 +36,26 @@ export function readMungXmlString(xml: string): MungFile {
 function readNodeFromXmlElement(element: Element): Node {
   const dataItems = parseDataItems(element);
 
+  const width = parseInt(element.querySelector("Width")?.innerHTML || "NaN");
+  const height = parseInt(element.querySelector("Height")?.innerHTML || "NaN");
+  const maskString = element.querySelector("Mask")?.textContent || null;
+
+  const decodedMask =
+    maskString !== null ? decodeRleMaskString(maskString, width, height) : null;
+
   return {
     id: parseInt(element.querySelector("Id")?.innerHTML || "NaN"),
     className: element.querySelector("ClassName")?.innerHTML || "unknown",
     top: parseInt(element.querySelector("Top")?.innerHTML || "NaN"),
     left: parseInt(element.querySelector("Left")?.innerHTML || "NaN"),
-    width: parseInt(element.querySelector("Width")?.innerHTML || "NaN"),
-    height: parseInt(element.querySelector("Height")?.innerHTML || "NaN"),
+    width: width,
+    height: height,
     syntaxOutlinks: parseIntList(element.querySelector("Outlinks")?.innerHTML),
     syntaxInlinks: parseIntList(element.querySelector("Inlinks")?.innerHTML),
     precedenceOutlinks: parseIntList(dataItems["precedence_outlinks"]?.value),
     precedenceInlinks: parseIntList(dataItems["precedence_inlinks"]?.value),
-    maskString: element.querySelector("Mask")?.textContent || null,
+    maskString: maskString,
+    decodedMask: decodedMask,
     polygon: null,
   };
 }
@@ -75,4 +83,53 @@ function parseIntList(value?: string): number[] {
   if (!value) return [];
   const parts = value.split(" ");
   return parts.map((part) => parseInt(part));
+}
+
+function decodeRleMaskString(
+  maskString: string,
+  width: number,
+  height: number,
+): ImageData {
+  // validate dimensions
+  if (width > 4096 || height > 4096) {
+    throw new Error("Mask too large.");
+  }
+  width = Math.floor(width);
+  height = Math.floor(height);
+
+  // allocate the pixel buffer
+  const data = new Uint8ClampedArray(width * height * 4);
+
+  // process the RLE string
+  let pixelIndex = 0;
+  for (const token of maskString.split(" ")) {
+    const [value, count] = token.split(":").map((x) => parseInt(x));
+
+    // keep black transparent pixels
+    if (value === 0) {
+      pixelIndex += count;
+      continue;
+    }
+
+    // else set RED pixels (not white!)
+    // (red pixels can be hue rotated in CSS filters)
+    for (let i = 0; i < count; i++) {
+      data[pixelIndex * 4 + 0] = 255;
+      data[pixelIndex * 4 + 1] = 0;
+      data[pixelIndex * 4 + 2] = 0;
+      data[pixelIndex * 4 + 3] = 255;
+
+      pixelIndex += 1;
+    }
+  }
+
+  // checks
+  if (pixelIndex !== width * height) {
+    throw new Error("RLE string does not match mask pixel count");
+  }
+
+  // wrap pixels in a meta container
+  const imageData = new ImageData(data, width, height, { colorSpace: "srgb" });
+
+  return imageData;
 }

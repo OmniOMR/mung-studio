@@ -73,7 +73,24 @@ export function InspectorPanel(props: InspectorPanelProps) {
             </AccordionSummary>
             <AccordionDetails>
               selected node IDs: {JSON.stringify(selectedNodeIds)}
-              <pre>{JSON.stringify(selectedNodes, null, 2)}</pre>
+              <pre>
+                {JSON.stringify(
+                  selectedNodes,
+                  [
+                    "id",
+                    "className",
+                    "top",
+                    "left",
+                    "width",
+                    "height",
+                    "syntaxOutlinks",
+                    "syntaxInlinks",
+                    "precedenceOutlinks",
+                    "precedenceInlinks",
+                  ],
+                  2,
+                )}
+              </pre>
             </AccordionDetails>
           </Accordion>
         </AccordionGroup>

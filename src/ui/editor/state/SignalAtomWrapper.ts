@@ -40,4 +40,11 @@ export class SignalAtomWrapper {
   public signal(set: Setter) {
     set(this.atom);
   }
+
+  /**
+   * Returns the signal atom behind this signal atom wrapper
+   */
+  public getSignalAtom(): WritableAtom<number, [], void> {
+    return this.atom;
+  }
 }
