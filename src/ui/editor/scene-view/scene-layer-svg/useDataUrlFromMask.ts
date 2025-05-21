@@ -39,7 +39,10 @@ export function useDataUrlFromMask(node: Node): string | undefined {
 
   // send the new mask to the worker to be decoded whenever the mask changes
   useEffect(() => {
-    maskConvertingWorker.postMessage([node.id, node.decodedMask]);
+    if (node.decodedMask !== undefined) {
+      // only if there is a mask
+      maskConvertingWorker.postMessage([node.id, node.decodedMask]);
+    }
   }, [node.decodedMask]);
 
   // return undefined if no mask is set
