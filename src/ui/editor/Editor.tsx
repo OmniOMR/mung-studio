@@ -11,7 +11,7 @@ import { useUnload } from "../../utils/useUnload";
 import { AutosaveStore } from "./state/AutosaveStore";
 import { MungFileMetadata } from "../../mung/MungFileMetadata";
 import { MungFile } from "../../mung/MungFile";
-import { Toolbelt } from "./Toolbelt";
+import { Toolbelt } from "./toolbelt/Toolbelt";
 import { SelectionStore } from "./state/selection-store/SelectionStore";
 
 export interface EditorProps {

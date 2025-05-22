@@ -11,6 +11,7 @@ import { Selector, SelectorComponent } from "./Selector";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 import { SelectionStore } from "../../state/selection-store/SelectionStore";
 import { SyntaxLinksToolOverlay } from "./SyntaxLinksToolOverlay";
+import { NodeMaskCanvas } from "./NodeMaskCanvas";
 
 export interface ForegroundLayerProps {
   readonly zoomer: Zoomer;
@@ -70,46 +71,58 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
   }, [currentTool]);
 
   return (
-    <svg
-      ref={svgRef}
-      style={{
-        position: "absolute",
-        top: 0,
-        left: 0,
-        width: "100%",
-        height: "100%",
-        background: "none",
-        cursor: cursor,
-      }}
-    >
-      {/* This <g> element is what the zoomer applies transform to */}
-      <g>
-        <HighlighterComponent svgRef={svgRef} highlighter={highlighter} />
+    <>
+      {currentTool === EditorTool.NodeEditing && (
+        <NodeMaskCanvas
+          notationGraphStore={props.notationGraphStore}
+          selectionStore={props.selectionStore}
+          zoomer={props.zoomer}
+        />
+      )}
+      <svg
+        ref={svgRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          background: "none",
+          cursor: cursor,
+        }}
+      >
+        {/* This <g> element is what the zoomer applies transform to */}
+        <g>
+          {currentTool !== EditorTool.NodeEditing && (
+            <>
+              <HighlighterComponent svgRef={svgRef} highlighter={highlighter} />
+              <SelectorComponent svgRef={svgRef} selector={selector} />
+            </>
+          )}
 
-        <SelectorComponent svgRef={svgRef} selector={selector} />
+          {currentTool === EditorTool.NodeEditing && (
+            <NodeEditorOverlay selectionStore={props.selectionStore} />
+          )}
 
-        {currentTool === EditorTool.NodeEditing && (
-          <NodeEditorOverlay selectionStore={props.selectionStore} />
-        )}
+          {currentTool === EditorTool.SyntaxLinks && (
+            <SyntaxLinksToolOverlay
+              svgRef={svgRef}
+              zoomer={props.zoomer}
+              notationGraphStore={props.notationGraphStore}
+              selectionStore={props.selectionStore}
+            />
+          )}
 
-        {currentTool === EditorTool.SyntaxLinks && (
-          <SyntaxLinksToolOverlay
-            svgRef={svgRef}
-            zoomer={props.zoomer}
-            notationGraphStore={props.notationGraphStore}
-            selectionStore={props.selectionStore}
-          />
-        )}
-
-        {currentTool === EditorTool.PrecedenceLinks && (
-          <PrecedenceLinksToolOverlay
-            svgRef={svgRef}
-            zoomer={props.zoomer}
-            notationGraphStore={props.notationGraphStore}
-            selectionStore={props.selectionStore}
-          />
-        )}
-      </g>
-    </svg>
+          {currentTool === EditorTool.PrecedenceLinks && (
+            <PrecedenceLinksToolOverlay
+              svgRef={svgRef}
+              zoomer={props.zoomer}
+              notationGraphStore={props.notationGraphStore}
+              selectionStore={props.selectionStore}
+            />
+          )}
+        </g>
+      </svg>
+    </>
   );
 }
