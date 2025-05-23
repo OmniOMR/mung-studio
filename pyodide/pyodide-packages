@@ -1,0 +1,8 @@
+This file acts as the trigger for Parcel to bundle all python files
+into a .zip archive that will be downloaded by MuNG Studio at runtime.
+The contents of this file will be replaced by the zip archive via
+a some custom parcel plugins.
+
+The exact way in which the zip file is built is coded in the parcel plugin:
+
+    /packages/parcel-packager-ms/pyodide.js

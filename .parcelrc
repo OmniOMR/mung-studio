@@ -5,6 +5,10 @@
       "@parcel/transformer-js",
       "@parcel/transformer-react-refresh-wrap"
     ],
-    "*.{whl,py}": ["@parcel/transformer-raw"]
+    "*.{zip,py}": ["@parcel/transformer-raw"],
+    "*pyodide-packages": ["@mung-studio/parcel-transformer-ms/pyodide"]
+  },
+  "packagers": {
+    "*pyodide-packages": "@mung-studio/parcel-packager-ms/pyodide"
   }
 }

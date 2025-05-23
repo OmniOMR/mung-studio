@@ -1,0 +1,13 @@
+{
+    "name": "@mung-studio/parcel-packager-ms",
+    "private": true,
+    "version": "0.0.0",
+    "engines": {
+        "parcel": "2.x"
+    },
+    "dependencies": {
+        "@parcel/plugin": "^2.8.3",
+        "glob": "^10.2.2",
+        "archiver": "7.0.1"
+    }
+}

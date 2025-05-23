@@ -1,5 +1,5 @@
 {
-    "name": "mung-studio",
+    "name": "@mung-studio/mung-studio",
     "version": "1.1.0-dev",
     "private": true,
     "source": [
@@ -13,8 +13,8 @@
         "clean": "rm -rf .parcel-cache dist",
         "serve": "http-server dist",
         "lint": "eslint src/**/*.tsx",
-        "prettier-check": "prettier src --check",
-        "prettier-write": "prettier src --write",
+        "prettier-check": "prettier src pyodide/*.ts --check",
+        "prettier-write": "prettier src pyodide/*.ts --write",
         "postinstall": "node scripts/postinstall.js"
     },
     "pyodide": {
@@ -23,6 +23,8 @@
         "mung-commit": "c3285c5"
     },
     "devDependencies": {
+        "@mung-studio/parcel-packager-ms": "file:packages/parcel-packager-ms",
+        "@mung-studio/parcel-transformer-ms": "file:packages/parcel-transformer-ms",
         "@babel/core": "^7.23.3",
         "@babel/eslint-parser": "^7.23.3",
         "@babel/preset-env": "^7.23.3",

@@ -53,36 +53,26 @@ export class PythonRuntime {
     `),
     );
 
-    // install dependencies
+    // load built-in pyodide dependencies
     console.log("Loading packages...");
     await pyodide.loadPackage("numpy");
     await pyodide.loadPackage("lxml");
+    await pyodide.loadPackage("scikit-image");
     // await pyodide.loadPackage("opencv-python");
-    // await pyodide.loadPackage("micropip");
 
-    // NOTE: "Can't find a pure python3 wheel for 'mung'"
-    // const micropip = pyodide.pyimport("micropip");
-    // await micropip.install("mung");
-
-    // This installs a wheel package:
-    // const smashcimaWhlUrl = new URL(
-    //   "./smashcima-1.1.2-py3-none-any.whl",
-    //   import.meta.url
-    // );
-    // const smashcimaArchive = await (await fetch(smashcimaWhlUrl)).arrayBuffer();
-    // await pyodide.unpackArchive(smashcimaArchive, "wheel");
-
-    // console.log("Smashcima loaded:");
-    // console.log(pyodide.runPython(`
-    //     from smashcima.scene.visual.Glyph import Glyph
-    //     print(Glyph)
-    // `));
-
-    // NOTE: extend parcel with custom bundler to build a zip that then
-    // gets downloaded here and extracted and loaded by pyodide? Could be...
-    // (zip containing plain .py files)
+    // load custom python-only packages bundled via parcel
+    const pyodidePackagesUrl = new URL("./pyodide-packages", import.meta.url);
+    const packagesArchive = await (
+      await fetch(pyodidePackagesUrl)
+    ).arrayBuffer();
+    await pyodide.unpackArchive(packagesArchive, "zip");
 
     console.log("Pyodide ready!");
+
+    await pyodide.runPythonAsync(`
+      from mstudio.hello import hello
+      hello()
+    `);
   }
 }
 
