@@ -13,7 +13,7 @@ import { MungFileMetadata } from "../../mung/MungFileMetadata";
 import { MungFile } from "../../mung/MungFile";
 import { Toolbelt } from "./toolbelt/Toolbelt";
 import { SelectionStore } from "./state/selection-store/SelectionStore";
-import { PythonRuntime } from "../../pyodide/PythonRuntime";
+import { PythonRuntime } from "../../../pyodide/PythonRuntime";
 
 export interface EditorProps {
   /**

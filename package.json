@@ -14,7 +14,13 @@
         "serve": "http-server dist",
         "lint": "eslint src/**/*.tsx",
         "prettier-check": "prettier src --check",
-        "prettier-write": "prettier src --write"
+        "prettier-write": "prettier src --write",
+        "postinstall": "node scripts/postinstall.js"
+    },
+    "pyodide": {
+        "mung-path": "pyodide/mung",
+        "mung-url": "git@github.com:OmniOMR/mung.git",
+        "mung-commit": "c3285c5"
     },
     "devDependencies": {
         "@babel/core": "^7.23.3",
