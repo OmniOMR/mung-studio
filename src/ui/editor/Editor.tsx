@@ -13,6 +13,7 @@ import { MungFileMetadata } from "../../mung/MungFileMetadata";
 import { MungFile } from "../../mung/MungFile";
 import { Toolbelt } from "./toolbelt/Toolbelt";
 import { SelectionStore } from "./state/selection-store/SelectionStore";
+import { PythonRuntime } from "../../pyodide/PythonRuntime";
 
 export interface EditorProps {
   /**
@@ -83,6 +84,8 @@ export function Editor(props: EditorProps) {
     () => new AutosaveStore(notationGraphStore),
     [],
   );
+
+  const pythonRuntime = useMemo(() => PythonRuntime.resolveInstance(), []);
 
   // bind autosave store to the props.onSave method
   useEffect(() => {
