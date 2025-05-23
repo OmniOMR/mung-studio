@@ -1,4 +1,5 @@
 import { version as pyodideVersion, PyodideInterface } from "pyodide";
+import { PyProxy } from "pyodide/ffi";
 
 /**
  * Wrapper for the python runtime, where the mung package (and others)
@@ -22,73 +23,101 @@ export class PythonRuntime {
   }
 
   constructor() {
-    this.initialize();
+    this.worker = new Worker(
+      new URL("./pyodide-web-worker.ts", import.meta.url),
+    );
+    const pyodidePackagesUrl = new URL(
+      "./pyodide-packages",
+      import.meta.url,
+    ).toString();
+
+    this.worker.onmessage = this.onWorkerMessage.bind(this);
+
+    this.worker.postMessage(["initialize", pyodideVersion, pyodidePackagesUrl]);
   }
 
-  private async initialize() {
-    console.log("Loading pyodide...");
+  private worker: Worker;
 
-    // I'm fusing together plain javascript CDN import with the NPM module
-    // import (for types), because there is no Parcel plugin to get pyodide
-    // through its bundling process safely. So the NPM package is used for
-    // types and the code itself is downloaded during runtime by addding
-    // a <script> tag to the document head.
-    await loadExternalScriptAsync(
-      `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/pyodide.js`,
-    );
-    if (window["loadPyodide"] === undefined) {
-      throw new Error("Pyodide is not available on the window object.");
+  private pendingPythonInvocations = new Map<
+    number,
+    (isSuccess: boolean, resultOrError: any) => void
+  >();
+
+  private nextInvocationId: number = 0;
+
+  private async onWorkerMessage(e: MessageEvent) {
+    const messageName = String(e.data[0]);
+    const messageArgs = (e.data as any[]).slice(1) as any[];
+
+    if (messageName === "initialized") {
+      this.onInitialized.call(this, ...messageArgs);
+    } else if (messageName === "executedPython") {
+      this.onExecutedPython.call(this, ...messageArgs);
+    } else {
+      console.error("Pyodide worker sent an unknown message", event);
+    }
+  }
+
+  private async onInitialized() {
+    // TODO: fire some event that we're ready to be used or something...
+
+    // TODO: call some python
+    // const response = await this.executePython(`5`, {});
+
+    // provide python access to the developer
+    window["executePython"] = this.executePython.bind(this);
+  }
+
+  private onExecutedPython(
+    executionId: number,
+    isSuccess: boolean,
+    resultOrError: any,
+  ) {
+    const finalizer = this.pendingPythonInvocations.get(executionId);
+
+    if (finalizer === undefined) {
+      console.error(
+        `Received pyodide execution response ${executionId} which is ` +
+          `not in pending invocations dictionary`,
+      );
+      return;
     }
 
-    const pyodide = (await window["loadPyodide"]()) as PyodideInterface;
+    this.pendingPythonInvocations.delete(executionId);
 
-    // expose so that we can play with it in the browser
-    window["pyodide"] = pyodide;
-
-    console.log("Pyodide loaded:", pyodide);
-    console.log(
-      pyodide.runPython(`
-        import sys
-        sys.version
-    `),
-    );
-
-    // load built-in pyodide dependencies
-    console.log("Loading packages...");
-    await pyodide.loadPackage("numpy");
-    await pyodide.loadPackage("lxml");
-    await pyodide.loadPackage("scikit-image");
-    // await pyodide.loadPackage("opencv-python");
-
-    // load custom python-only packages bundled via parcel
-    const pyodidePackagesUrl = new URL("./pyodide-packages", import.meta.url);
-    const packagesArchive = await (
-      await fetch(pyodidePackagesUrl)
-    ).arrayBuffer();
-    await pyodide.unpackArchive(packagesArchive, "zip");
-
-    console.log("Pyodide ready!");
-
-    await pyodide.runPythonAsync(`
-      from mstudio.hello import hello
-      hello()
-    `);
+    finalizer(isSuccess, resultOrError);
   }
-}
 
-/**
- * Loads some javascript file by appending a <script> tag to the document head
- */
-function loadExternalScriptAsync(src: string): Promise<void> {
-  return new Promise((resolve, reject) => {
-    const element = document.createElement("script");
-    element.onload = () => {
-      resolve();
-    };
-    element.onerror = (e) => {
-      reject(e);
-    };
-    element.src = src;
-    document.head.appendChild(element);
-  });
+  /**
+   * Executes pyton code asynchronously in the pyodide runtime.
+   * @param pythonCode The python code to execute.
+   * @param context Global variables to be set for the script.
+   * @returns A PyProxy object. You MUST manually dispose of this object!
+   */
+  public executePython(pythonCode: string, context?: object) {
+    const executionId = this.nextInvocationId;
+    this.nextInvocationId += 1;
+
+    return new Promise<PyProxy>((resolve, reject) => {
+      // register a finalizer
+      this.pendingPythonInvocations.set(
+        executionId,
+        (isSuccess: boolean, resultOrError: any) => {
+          if (isSuccess) {
+            resolve(resultOrError);
+          } else {
+            reject(resultOrError);
+          }
+        },
+      );
+
+      // send the request to the worker
+      this.worker.postMessage([
+        "executePython",
+        executionId,
+        pythonCode,
+        context || {},
+      ]);
+    });
+  }
 }
