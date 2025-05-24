@@ -71,8 +71,8 @@ export class PyodideWorkerConnection {
    * Executes pyton code asynchronously in the pyodide runtime.
    * @param pythonCode The python code to execute.
    * @param context Global variables to be set for the script.
-   * @returns A primitive value or PyProxy object. You MUST manually dispose
-   * of PyProxy objects to avoid memory leaks by calling '.destroy()'!
+   * @returns A primitive value or a decoded '.toJs()' PyProxy object.
+   * Proxies are decoded because they cannot be sent outside the web worker.
    */
   public executePython(pythonCode: string, context?: object): Promise<any> {
     // get the next execution ID

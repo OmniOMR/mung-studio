@@ -1,6 +1,7 @@
 import { atom, getDefaultStore } from "jotai";
 import { JotaiStore } from "../src/ui/editor/state/JotaiStore";
 import { PyodideWorkerConnection } from "./PyodideWorkerConnection";
+import { MaskManipulationApi } from "./MaskManipulationApi";
 
 /**
  * Provides user-level APIs for functionality that runs in the python
@@ -24,11 +25,21 @@ export class PythonRuntime {
     this.connection = new PyodideWorkerConnection(
       this.onInitialized.bind(this),
     );
+
+    // create APIs
+    this.maskManipulation = new MaskManipulationApi(this.connection);
   }
 
   //////////
   // APIs //
   //////////
+
+  /**
+   * Python operations for manipulating MuNG node masks
+   */
+  public readonly maskManipulation: MaskManipulationApi;
+
+  // TODO: notation graph validation API
 
   // ...
 
@@ -49,7 +60,17 @@ export class PythonRuntime {
     get(this.isInitializedBaseAtom),
   );
 
+  private _isInitialized = false;
+
+  /**
+   * Becomes true when the worker becomes ready.
+   */
+  public get isInitialized() {
+    return this._isInitialized;
+  }
+
   private onInitialized() {
+    this._isInitialized = true;
     this.jotaiStore.set(this.isInitializedBaseAtom, true);
   }
 

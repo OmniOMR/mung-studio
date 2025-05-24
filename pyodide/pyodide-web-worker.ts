@@ -112,7 +112,15 @@ async function onExecutePython(
 
   // execute the python code and send back the response
   try {
-    const result = await pyodide.runPythonAsync(pythonCode, { globals });
+    let result = await pyodide.runPythonAsync(pythonCode, { globals });
+
+    // convert proxy objects, they cannot be sent outside the web worker
+    if (typeof result === "object") {
+      const proxy = result as _PyProxy;
+      result = proxy.toJs(); // convert
+      proxy.destroy(); // release
+    }
+
     self.postMessage(["executedPython", executionId, true, result]);
   } catch (error) {
     self.postMessage(["executedPython", executionId, false, error]);

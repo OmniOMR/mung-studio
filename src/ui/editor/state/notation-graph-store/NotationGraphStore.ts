@@ -233,6 +233,14 @@ export class NotationGraphStore {
   }
 
   /**
+   * Updates the value of a node. It is looked up by the ID.
+   * Links cannot be changed via this method, use the dedicated one instead.
+   */
+  public updateNode(newValue: Node) {
+    this.nodeCollection.updateNode(newValue);
+  }
+
+  /**
    * Sets all nodes (and thus also links) in the store,
    * completely overwriting its current contents.
    */

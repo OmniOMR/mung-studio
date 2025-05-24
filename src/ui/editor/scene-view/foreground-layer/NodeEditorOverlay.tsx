@@ -1,10 +1,6 @@
 import { useAtomValue } from "jotai";
-import { MouseEvent, useState } from "react";
-import { SelectionStore } from "../../state/selection-store/SelectionStore";
-
-export interface NodeEditorOverlayProps {
-  readonly selectionStore: SelectionStore;
-}
+import { MouseEvent, useContext, useEffect, useState } from "react";
+import { EditorContext } from "../../EditorContext";
 
 interface Position {
   x: number;
@@ -13,8 +9,41 @@ interface Position {
 
 const HANDLE_SIZE = 15;
 
-export function NodeEditorOverlay(props: NodeEditorOverlayProps) {
-  const selectedNodes = useAtomValue(props.selectionStore.selectedNodesAtom);
+export function NodeEditorOverlay() {
+  const { notationGraphStore, selectionStore, pythonRuntime } =
+    useContext(EditorContext);
+
+  const selectedNodes = useAtomValue(selectionStore.selectedNodesAtom);
+
+  // trigger magic with spacebar
+  useEffect(() => {
+    const listener = async (e: KeyboardEvent) => {
+      if (e.code !== "Space") return;
+      if (selectedNodes.length !== 1) return;
+      const node = selectedNodes[0];
+
+      console.log("RUNNING PYTHON MASK MAGIC!");
+      if (node.decodedMask === null) {
+        console.warn("Ignoring! The node does not have a mask!");
+        return;
+      }
+      const out_mask = await pythonRuntime.maskManipulation.randomizeMask(
+        node.decodedMask,
+      );
+      notationGraphStore.updateNode({
+        ...node,
+        decodedMask: out_mask,
+      });
+    };
+
+    window.addEventListener("keydown", listener);
+    return () => {
+      window.removeEventListener("keydown", listener);
+    };
+  }, [selectedNodes]);
+
+  // legacy mouse handle dragging code
+  // vvv
 
   const [mouseDownPosition, setMouseDownPosition] = useState<Position | null>(
     null,

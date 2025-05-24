@@ -96,9 +96,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
             </>
           )}
 
-          {currentTool === EditorTool.NodeEditing && (
-            <NodeEditorOverlay selectionStore={selectionStore} />
-          )}
+          {currentTool === EditorTool.NodeEditing && <NodeEditorOverlay />}
 
           {currentTool === EditorTool.SyntaxLinks && (
             <SyntaxLinksToolOverlay

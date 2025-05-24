@@ -303,7 +303,11 @@ export class SelectionStore {
    */
   public selectedNodesAtom = atom<readonly Node[]>((get) => {
     const nodeIds = get(this.selectedNodeIdsAtom);
-    return nodeIds.map((id) => this.notationGraphStore.getNode(id));
+    return nodeIds.map((id) => {
+      // read the node through its atom to create a dependency and cascade
+      // node updates into this atom
+      return get(this.notationGraphStore.getNodeAtom(id));
+    });
   });
 
   // === atoms that expose selection per-node and per-link ===
