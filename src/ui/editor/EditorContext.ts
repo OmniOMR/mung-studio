@@ -17,6 +17,7 @@ export interface EditorContextState {
   readonly classVisibilityStore: ClassVisibilityStore;
   readonly editorStateStore: EditorStateStore;
   readonly autosaveStore: AutosaveStore;
+  readonly pythonRuntime: PythonRuntime;
 }
 
 /**
@@ -58,6 +59,7 @@ export function useEditorContextState(
     classVisibilityStore,
     editorStateStore,
     autosaveStore,
+    pythonRuntime,
   };
 }
 

@@ -46,7 +46,7 @@ async function onInitialize(
   pyodideVersion: string,
   pyodidePackagesUrl: string,
 ) {
-  console.log("INITIALIZING WORKER...");
+  // console.log("INITIALIZING WORKER...");
 
   // import pyodide from a CDN
   importScripts(
@@ -57,20 +57,20 @@ async function onInitialize(
   pyodide = (await self["loadPyodide"]()) as _PyodideInterface;
 
   // print python version
-  console.log("Pyodide loaded:", pyodide);
-  console.log(
-    await pyodide.runPythonAsync(`
-      import sys
-      sys.version
-    `),
-  );
+  // console.log("Pyodide loaded:", pyodide);
+  // console.log(
+  //   await pyodide.runPythonAsync(`
+  //     import sys
+  //     sys.version
+  //   `),
+  // );
 
   // load built-in pyodide dependencies
   console.log("Loading packages...");
   await pyodide.loadPackage("numpy");
   await pyodide.loadPackage("lxml");
   await pyodide.loadPackage("scikit-image");
-  // await pyodide.loadPackage("opencv-python");
+  await pyodide.loadPackage("opencv-python");
 
   // load custom python-only packages bundled via parcel
   const packagesArchive = await (await fetch(pyodidePackagesUrl)).arrayBuffer();
@@ -78,12 +78,12 @@ async function onInitialize(
 
   console.log("Pyodide ready!");
 
-  await pyodide.runPythonAsync(`
-    from mstudio.hello import hello
-    hello()
-  `);
+  // await pyodide.runPythonAsync(`
+  //   from mstudio.hello import hello
+  //   hello()
+  // `);
 
-  console.log("WORKER INITIALIZED!");
+  // console.log("WORKER INITIALIZED!");
 
   self.postMessage(["initialized"]);
 }
