@@ -7,43 +7,40 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { classNameToUnicode } from "../../../mung/classNameToUnicode";
 import {
-  ClassVisibilityStore,
   DEFAULT_HIDDEN_CLASSES,
   PRECEDENCE_LINK_ANNOTATION_CLASSES,
   STAFF_LINK_ANNOTATION_CLASSES,
 } from "../state/ClassVisibilityStore";
+import { useContext } from "react";
+import { EditorContext } from "../EditorContext";
 
-export interface VisibilityPresetsMenuProps {
-  readonly classVisibilityStore: ClassVisibilityStore;
-}
+export function VisibilityPresetsMenu() {
+  const { classVisibilityStore } = useContext(EditorContext);
 
-export function VisibilityPresetsMenu(props: VisibilityPresetsMenuProps) {
   ////////////////////////////
   // Action implementations //
   ////////////////////////////
 
   function defaultVisibility() {
-    props.classVisibilityStore.hideOnlyTheseClasses(DEFAULT_HIDDEN_CLASSES);
+    classVisibilityStore.hideOnlyTheseClasses(DEFAULT_HIDDEN_CLASSES);
   }
 
   function precedenceLinksAnnotation() {
-    props.classVisibilityStore.showOnlyTheseClasses(
+    classVisibilityStore.showOnlyTheseClasses(
       PRECEDENCE_LINK_ANNOTATION_CLASSES,
     );
   }
 
   function staffLinksAnnotation() {
-    props.classVisibilityStore.showOnlyTheseClasses(
-      STAFF_LINK_ANNOTATION_CLASSES,
-    );
+    classVisibilityStore.showOnlyTheseClasses(STAFF_LINK_ANNOTATION_CLASSES);
   }
 
   function showAllClasses() {
-    props.classVisibilityStore.showAllClasses();
+    classVisibilityStore.showAllClasses();
   }
 
   function hideAllClasses() {
-    props.classVisibilityStore.hideAllClasses();
+    classVisibilityStore.hideAllClasses();
   }
 
   ///////////////

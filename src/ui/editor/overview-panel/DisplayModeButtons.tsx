@@ -5,21 +5,21 @@ import RectangleIcon from "@mui/icons-material/Rectangle";
 import PentagonIcon from "@mui/icons-material/Pentagon";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useAtom } from "jotai";
-import { EditorStateStore, NodeDisplayMode } from "../state/EditorStateStore";
+import { NodeDisplayMode } from "../state/EditorStateStore";
+import { useContext } from "react";
+import { EditorContext } from "../EditorContext";
 
-export interface DisplayModeButtonsProps {
-  readonly editorStateStore: EditorStateStore;
-}
+export function DisplayModeButtons() {
+  const { editorStateStore } = useContext(EditorContext);
 
-export function DisplayModeButtons(props: DisplayModeButtonsProps) {
   const [nodeDisplayMode, setNodeDisplayMode] = useAtom(
-    props.editorStateStore.nodeDisplayModeAtom,
+    editorStateStore.nodeDisplayModeAtom,
   );
   const [displaySyntaxLinks, setDisplaySyntaxLinks] = useAtom(
-    props.editorStateStore.displaySyntaxLinksAtom,
+    editorStateStore.displaySyntaxLinksAtom,
   );
   const [displayPrecedenceLinks, setDisplayPrecedenceLinks] = useAtom(
-    props.editorStateStore.displayPrecedenceLinksAtom,
+    editorStateStore.displayPrecedenceLinksAtom,
   );
 
   return (

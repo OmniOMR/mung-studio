@@ -1,7 +1,5 @@
 import Sheet from "@mui/joy/Sheet";
 import { useAtomValue } from "jotai";
-import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
-import { SelectionStore } from "../state/selection-store/SelectionStore";
 import {
   Accordion,
   AccordionDetails,
@@ -12,25 +10,18 @@ import {
   Typography,
 } from "@mui/joy";
 import { SyntaxLinksToolPanel } from "./SyntaxLinksToolPanel";
-import { EditorStateStore } from "../state/EditorStateStore";
 import { PrecedenceLinksToolPanel } from "./PrecedenceLinksToolPanel";
-import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
-
-export interface InspectorPanelProps {
-  readonly notationGraphStore: NotationGraphStore;
-  readonly selectionStore: SelectionStore;
-  readonly editorStateStore: EditorStateStore;
-  readonly classVisibilityStore: ClassVisibilityStore;
-}
+import { useContext } from "react";
+import { EditorContext } from "../EditorContext";
 
 /**
  * The right-side panel, showing details about selected nodes.
  */
-export function InspectorPanel(props: InspectorPanelProps) {
-  const selectedNodeIds = useAtomValue(
-    props.selectionStore.selectedNodeIdsAtom,
-  );
-  const selectedNodes = useAtomValue(props.selectionStore.selectedNodesAtom);
+export function InspectorPanel() {
+  const { selectionStore } = useContext(EditorContext);
+
+  const selectedNodeIds = useAtomValue(selectionStore.selectedNodeIdsAtom);
+  const selectedNodes = useAtomValue(selectionStore.selectedNodesAtom);
 
   return (
     <Sheet
@@ -56,16 +47,9 @@ export function InspectorPanel(props: InspectorPanelProps) {
         }}
       >
         <AccordionGroup>
-          <SyntaxLinksToolPanel
-            selectionStore={props.selectionStore}
-            editorStateStore={props.editorStateStore}
-          />
+          <SyntaxLinksToolPanel />
 
-          <PrecedenceLinksToolPanel
-            selectionStore={props.selectionStore}
-            editorStateStore={props.editorStateStore}
-            classVisibilityStore={props.classVisibilityStore}
-          />
+          <PrecedenceLinksToolPanel />
 
           <Accordion defaultExpanded={true}>
             <AccordionSummary>

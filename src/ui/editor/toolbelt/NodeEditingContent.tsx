@@ -1,21 +1,18 @@
-import { EditorStateStore, EditorTool } from "../state/EditorStateStore";
-import { SelectionStore } from "../state/selection-store/SelectionStore";
+import { EditorTool } from "../state/EditorStateStore";
 import { ToolbeltButton } from "./ToolbeltButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import BrushIcon from "@mui/icons-material/Brush";
 import FilterCenterFocusIcon from "@mui/icons-material/FilterCenterFocus";
 import EditIcon from "@mui/icons-material/Edit";
 import { Divider } from "@mui/joy";
-import { useCallback, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
+import { EditorContext } from "../EditorContext";
 
-export interface NodeEditingContentProps {
-  readonly editorStateStore: EditorStateStore;
-  readonly selectionStore: SelectionStore;
-}
+export function NodeEditingContent() {
+  const { editorStateStore } = useContext(EditorContext);
 
-export function NodeEditingContent(props: NodeEditingContentProps) {
   function exitNodeEditing() {
-    props.editorStateStore.setCurrentTool(EditorTool.Pointer);
+    editorStateStore.setCurrentTool(EditorTool.Pointer);
   }
 
   ////////////////////////

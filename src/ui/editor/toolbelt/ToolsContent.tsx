@@ -1,22 +1,19 @@
 import { useAtomValue } from "jotai";
-import { EditorStateStore, EditorTool } from "../state/EditorStateStore";
+import { EditorTool } from "../state/EditorStateStore";
 import { ToolbeltButton } from "./ToolbeltButton";
-import { SelectionStore } from "../state/selection-store/SelectionStore";
-import { useCallback, useEffect } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import NearMeIcon from "@mui/icons-material/NearMe";
 import PanToolIcon from "@mui/icons-material/PanTool";
 import PolylineIcon from "@mui/icons-material/Polyline";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import PentagonIcon from "@mui/icons-material/Pentagon";
+import { EditorContext } from "../EditorContext";
 
-export interface ToolsContentProps {
-  readonly editorStateStore: EditorStateStore;
-  readonly selectionStore: SelectionStore;
-}
+export function ToolsContent() {
+  const { editorStateStore, selectionStore } = useContext(EditorContext);
 
-export function ToolsContent(props: ToolsContentProps) {
-  const tool = useAtomValue(props.editorStateStore.currentToolAtom);
-  const selectedNodes = useAtomValue(props.selectionStore.selectedNodesAtom);
+  const tool = useAtomValue(editorStateStore.currentToolAtom);
+  const selectedNodes = useAtomValue(selectionStore.selectedNodesAtom);
 
   /////////////////////////
   // Equipping functions //
@@ -25,32 +22,32 @@ export function ToolsContent(props: ToolsContentProps) {
   function equipPointerTool() {
     if (tool === EditorTool.Pointer) return;
 
-    props.editorStateStore.setCurrentTool(EditorTool.Pointer);
+    editorStateStore.setCurrentTool(EditorTool.Pointer);
   }
 
   function equipHandTool() {
     if (tool === EditorTool.Hand) return;
 
-    props.editorStateStore.setCurrentTool(EditorTool.Hand);
+    editorStateStore.setCurrentTool(EditorTool.Hand);
   }
 
   function equipNodeEditingTool() {
     if (tool === EditorTool.NodeEditing) return;
     if (selectedNodes.length > 1) return;
 
-    props.editorStateStore.setCurrentTool(EditorTool.NodeEditing);
+    editorStateStore.setCurrentTool(EditorTool.NodeEditing);
   }
 
   function equipSyntaxLinksTool() {
     if (tool === EditorTool.SyntaxLinks) return;
 
-    props.editorStateStore.setCurrentTool(EditorTool.SyntaxLinks);
+    editorStateStore.setCurrentTool(EditorTool.SyntaxLinks);
   }
 
   function equipPrecedenceLinksTool() {
     if (tool === EditorTool.PrecedenceLinks) return;
 
-    props.editorStateStore.setCurrentTool(EditorTool.PrecedenceLinks);
+    editorStateStore.setCurrentTool(EditorTool.PrecedenceLinks);
   }
 
   ////////////////////////

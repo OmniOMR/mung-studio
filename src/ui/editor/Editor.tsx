@@ -1,19 +1,14 @@
 import { Node } from "../../mung/Node";
-import { useCallback, useEffect, useMemo } from "react";
+import { useCallback, useEffect } from "react";
 import { SceneView } from "./scene-view/SceneView";
 import { OverviewPanel } from "./overview-panel/OverviewPanel";
 import { InspectorPanel } from "./inspector-panel/InspectorPanel";
-import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
-import { NotationGraphStore } from "./state/notation-graph-store/NotationGraphStore";
 import Box from "@mui/joy/Box";
-import { EditorStateStore } from "./state/EditorStateStore";
 import { useUnload } from "../../utils/useUnload";
-import { AutosaveStore } from "./state/AutosaveStore";
 import { MungFileMetadata } from "../../mung/MungFileMetadata";
 import { MungFile } from "../../mung/MungFile";
 import { Toolbelt } from "./toolbelt/Toolbelt";
-import { SelectionStore } from "./state/selection-store/SelectionStore";
-import { PythonRuntime } from "../../../pyodide/PythonRuntime";
+import { EditorContext, useEditorContextState } from "./EditorContext";
 
 export interface EditorProps {
   /**
@@ -60,32 +55,11 @@ export interface EditorProps {
  * that could edit two different mung documents.
  */
 export function Editor(props: EditorProps) {
-  const notationGraphStore = useMemo(
-    () =>
-      new NotationGraphStore(props.initialNodes, props.initialMungFileMetadata),
-    [],
+  const editorContext = useEditorContextState(
+    props.initialNodes,
+    props.initialMungFileMetadata,
   );
-
-  const selectionStore = useMemo(
-    () => new SelectionStore(notationGraphStore),
-    [],
-  );
-
-  const classVisibilityStore = useMemo(
-    () => new ClassVisibilityStore(notationGraphStore),
-    [],
-  );
-
-  const editorStateStore = useMemo(() => new EditorStateStore(), []);
-
-  // TODO: historyStore (for undo/redo)
-
-  const autosaveStore = useMemo(
-    () => new AutosaveStore(notationGraphStore),
-    [],
-  );
-
-  const pythonRuntime = useMemo(() => PythonRuntime.resolveInstance(), []);
+  const { notationGraphStore, autosaveStore } = editorContext;
 
   // bind autosave store to the props.onSave method
   useEffect(() => {
@@ -122,69 +96,52 @@ export function Editor(props: EditorProps) {
   useUnload(beforeLeavingEditor);
 
   return (
-    <Box
-      sx={{
-        display: "flex",
-        flexDirection: "column",
-        justifyItems: "stretch",
-        height: "100%",
-      }}
-    >
+    <EditorContext.Provider value={editorContext}>
       <Box
         sx={{
           display: "flex",
-          flexDirection: "row",
+          flexDirection: "column",
           justifyItems: "stretch",
-          overflow: "hidden",
-          flexGrow: 1,
+          height: "100%",
         }}
       >
-        <OverviewPanel
-          onClose={handleCloseFileButtonClick}
-          notationGraphStore={notationGraphStore}
-          selectionStore={selectionStore}
-          classVisibilityStore={classVisibilityStore}
-          editorStateStore={editorStateStore}
-          autosaveStore={autosaveStore}
-          fileName={props.fileName}
-        />
         <Box
           sx={{
-            position: "relative",
+            display: "flex",
+            flexDirection: "row",
+            justifyItems: "stretch",
+            overflow: "hidden",
             flexGrow: 1,
           }}
         >
-          <SceneView
-            backgroundImageUrl={props.backgroundImageUrl}
-            notationGraphStore={notationGraphStore}
-            selectionStore={selectionStore}
-            classVisibilityStore={classVisibilityStore}
-            editorStateStore={editorStateStore}
+          <OverviewPanel
+            onClose={handleCloseFileButtonClick}
+            fileName={props.fileName}
           />
-          <Toolbelt
-            editorStateStore={editorStateStore}
-            selectionStore={selectionStore}
-          />
+          <Box
+            sx={{
+              position: "relative",
+              flexGrow: 1,
+            }}
+          >
+            <SceneView backgroundImageUrl={props.backgroundImageUrl} />
+            <Toolbelt />
+          </Box>
+          <InspectorPanel />
         </Box>
-        <InspectorPanel
-          notationGraphStore={notationGraphStore}
-          selectionStore={selectionStore}
-          editorStateStore={editorStateStore}
-          classVisibilityStore={classVisibilityStore}
-        />
+        {/* <Box
+          sx={{
+            display: "flex",
+            flexDirection: "row",
+            justifyItems: "stretch",
+            overflow: "hidden",
+            height: "200px",
+            background: "var(--joy-palette-neutral-800)"
+          }}
+        >
+          Keyboard shortcuts / python terminal / whatever
+        </Box> */}
       </Box>
-      {/* <Box
-        sx={{
-          display: "flex",
-          flexDirection: "row",
-          justifyItems: "stretch",
-          overflow: "hidden",
-          height: "200px",
-          background: "var(--joy-palette-neutral-800)"
-        }}
-      >
-        Keyboard shortcuts / python terminal / whatever
-      </Box> */}
-    </Box>
+    </EditorContext.Provider>
   );
 }

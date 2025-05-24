@@ -1,42 +1,31 @@
 import * as d3 from "d3";
 import { useAtomValue } from "jotai";
-import { useRef } from "react";
-import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
-import {
-  EditorStateStore,
-  NodeDisplayMode,
-} from "../../state/EditorStateStore";
-import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
+import { useContext, useRef } from "react";
+import { NodeDisplayMode } from "../../state/EditorStateStore";
 import { Zoomer } from "../Zoomer";
 import { SvgLink } from "./SvgLink";
 import { SvgNode } from "./SvgNode";
 import { getLinkId } from "../../../../mung/getLinkId";
-import { SelectionStore } from "../../state/selection-store/SelectionStore";
 import {
   LINK_OUTLINE_STROKE_WIDTH,
   LINK_STROKE_WIDTH,
 } from "../../../../mung/linkAppearance";
+import { EditorContext } from "../../EditorContext";
 
 export interface SceneLayerProps {
   readonly zoomer: Zoomer;
-  readonly notationGraphStore: NotationGraphStore;
-  readonly selectionStore: SelectionStore;
-  readonly classVisibilityStore: ClassVisibilityStore;
-  readonly editorStateStore: EditorStateStore;
 }
 
 /**
  * Scene layer, rendered via SVG
  */
 export function SceneLayer_SVG(props: SceneLayerProps) {
-  const nodeDisplayMode = useAtomValue(
-    props.editorStateStore.nodeDisplayModeAtom,
-  );
+  const { notationGraphStore, editorStateStore } = useContext(EditorContext);
 
-  const nodeIds = useAtomValue(
-    props.notationGraphStore.nodeIdsInSceneOrderAtom,
-  );
-  const links = useAtomValue(props.notationGraphStore.linksAtom);
+  const nodeDisplayMode = useAtomValue(editorStateStore.nodeDisplayModeAtom);
+
+  const nodeIds = useAtomValue(notationGraphStore.nodeIdsInSceneOrderAtom);
+  const links = useAtomValue(notationGraphStore.linksAtom);
 
   const gRef = useRef<SVGGElement | null>(null);
 
@@ -125,9 +114,6 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
               <SvgNode
                 key={nodeId}
                 nodeId={nodeId}
-                notationGraphStore={props.notationGraphStore}
-                selectionStore={props.selectionStore}
-                classVisibilityStore={props.classVisibilityStore}
                 nodeDisplayMode={nodeDisplayMode}
               />
             ))}
@@ -137,14 +123,7 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
         {/* Links */}
         <g>
           {links.map((link) => (
-            <SvgLink
-              key={getLinkId(link)}
-              link={link}
-              notationGraphStore={props.notationGraphStore}
-              selectionStore={props.selectionStore}
-              classVisibilityStore={props.classVisibilityStore}
-              editorStateStore={props.editorStateStore}
-            />
+            <SvgLink key={getLinkId(link)} link={link} />
           ))}
         </g>
       </g>

@@ -1,14 +1,13 @@
-import { Alert, Checkbox, Switch } from "@mui/joy";
-import { EditorStateStore } from "../state/EditorStateStore";
+import { Alert, Switch } from "@mui/joy";
 import { useAtom } from "jotai";
+import { useContext } from "react";
+import { EditorContext } from "../EditorContext";
 
-export interface SelectionAccordionPanelProps {
-  readonly editorStateStore: EditorStateStore;
-}
+export function SelectionAccordionPanel() {
+  const { editorStateStore } = useContext(EditorContext);
 
-export function SelectionAccordionPanel(props: SelectionAccordionPanelProps) {
   const [isSelectionLazy, setIsSelectionLazy] = useAtom(
-    props.editorStateStore.isSelectionLazyAtom,
+    editorStateStore.isSelectionLazyAtom,
   );
 
   return (

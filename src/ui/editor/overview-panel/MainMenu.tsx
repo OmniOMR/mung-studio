@@ -14,16 +14,15 @@ import {
   Typography,
 } from "@mui/joy";
 import { ClickAwayListener, MenuItemTypeMap, Popper } from "@mui/material";
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import MenuIcon from "@mui/icons-material/Menu";
-import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
-import { SelectionStore } from "../state/selection-store/SelectionStore";
 import { useAtomValue } from "jotai";
 import {
   DefaultComponentProps,
   OverrideProps,
 } from "@mui/material/OverridableComponent";
 import { LinkType } from "../../../mung/LinkType";
+import { EditorContext } from "../EditorContext";
 
 export const renderShortcut = (text: string) => (
   <Typography
@@ -70,14 +69,12 @@ export function MyMenuItem(
 
 export interface MainMenuProps {
   readonly onClose: () => void;
-  readonly notationGraphStore: NotationGraphStore;
-  readonly selectionStore: SelectionStore;
 }
 
 export function MainMenu(props: MainMenuProps) {
-  const selectedNodeIds = useAtomValue(
-    props.selectionStore.selectedNodeIdsAtom,
-  );
+  const { notationGraphStore, selectionStore } = useContext(EditorContext);
+
+  const selectedNodeIds = useAtomValue(selectionStore.selectedNodeIdsAtom);
 
   //////////////////////////
   // Action preconditions //
@@ -97,29 +94,29 @@ export function MainMenu(props: MainMenuProps) {
 
   function toggleSyntaxLink() {
     if (!canToggleLink) return;
-    const fromId = props.selectionStore.selectedNodeIds[0];
-    const toId = props.selectionStore.selectedNodeIds[1];
-    props.notationGraphStore.toggleLink(fromId, toId, LinkType.Syntax);
+    const fromId = selectionStore.selectedNodeIds[0];
+    const toId = selectionStore.selectedNodeIds[1];
+    notationGraphStore.toggleLink(fromId, toId, LinkType.Syntax);
   }
 
   function togglePrecedenceLink() {
     if (!canToggleLink) return;
-    const fromId = props.selectionStore.selectedNodeIds[0];
-    const toId = props.selectionStore.selectedNodeIds[1];
-    props.notationGraphStore.toggleLink(fromId, toId, LinkType.Precedence);
+    const fromId = selectionStore.selectedNodeIds[0];
+    const toId = selectionStore.selectedNodeIds[1];
+    notationGraphStore.toggleLink(fromId, toId, LinkType.Precedence);
   }
 
   function removePartiallySelectedLinks() {
     if (!canRemoveLinks) return;
-    const links = props.selectionStore.partiallySelectedLinks;
+    const links = selectionStore.partiallySelectedLinks;
     for (const link of links) {
-      props.notationGraphStore.removeLink(link.fromId, link.toId, link.type);
+      notationGraphStore.removeLink(link.fromId, link.toId, link.type);
     }
   }
 
   function clearSelection() {
     if (!canClearSelection) return;
-    props.selectionStore.clearSelection();
+    selectionStore.clearSelection();
   }
 
   ////////////////////////

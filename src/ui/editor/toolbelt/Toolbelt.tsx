@@ -1,20 +1,18 @@
 import { Card, Stack } from "@mui/joy";
-import { EditorStateStore, EditorTool } from "../state/EditorStateStore";
-import { SelectionStore } from "../state/selection-store/SelectionStore";
+import { EditorTool } from "../state/EditorStateStore";
 import { ToolsContent } from "./ToolsContent";
 import { useAtomValue } from "jotai";
 import { NodeEditingContent } from "./NodeEditingContent";
-
-export interface ToolbeltProps {
-  readonly editorStateStore: EditorStateStore;
-  readonly selectionStore: SelectionStore;
-}
+import { useContext } from "react";
+import { EditorContext } from "../EditorContext";
 
 /**
  * The panel at the bottom of the scene view that lets the user select tools.
  */
-export function Toolbelt(props: ToolbeltProps) {
-  const tool = useAtomValue(props.editorStateStore.currentToolAtom);
+export function Toolbelt() {
+  const { editorStateStore } = useContext(EditorContext);
+
+  const tool = useAtomValue(editorStateStore.currentToolAtom);
 
   return (
     <Card
@@ -29,18 +27,8 @@ export function Toolbelt(props: ToolbeltProps) {
       }}
     >
       <Stack direction="row" spacing={1}>
-        {tool !== EditorTool.NodeEditing && (
-          <ToolsContent
-            editorStateStore={props.editorStateStore}
-            selectionStore={props.selectionStore}
-          />
-        )}
-        {tool === EditorTool.NodeEditing && (
-          <NodeEditingContent
-            editorStateStore={props.editorStateStore}
-            selectionStore={props.selectionStore}
-          />
-        )}
+        {tool !== EditorTool.NodeEditing && <ToolsContent />}
+        {tool === EditorTool.NodeEditing && <NodeEditingContent />}
       </Stack>
     </Card>
   );

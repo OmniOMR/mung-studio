@@ -1,6 +1,5 @@
 import { useAtom, useAtomValue } from "jotai";
 import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
-import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
 import {
   Box,
   Dropdown,
@@ -21,17 +20,15 @@ import MoreVertIcon from "@mui/icons-material/MoreVert";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { classNameToUnicode } from "../../../mung/classNameToUnicode";
 import { VisibilityPresetsMenu } from "./VisibilityPresetsMenu";
+import { useContext } from "react";
+import { EditorContext } from "../EditorContext";
 
-export interface NodesAccordionPanelProps {
-  readonly notationGraphStore: NotationGraphStore;
-  readonly classVisibilityStore: ClassVisibilityStore;
-}
+export function NodesAccordionPanel() {
+  const { notationGraphStore, classVisibilityStore } =
+    useContext(EditorContext);
 
-export function NodesAccordionPanel(props: NodesAccordionPanelProps) {
-  const classNames = useAtomValue(props.notationGraphStore.classNamesAtom);
-  const classNameCounts = useAtomValue(
-    props.notationGraphStore.classNameCountsAtom,
-  );
+  const classNames = useAtomValue(notationGraphStore.classNamesAtom);
+  const classNameCounts = useAtomValue(notationGraphStore.classNameCountsAtom);
 
   return (
     <>
@@ -40,7 +37,7 @@ export function NodesAccordionPanel(props: NodesAccordionPanelProps) {
           <IconButton
             size="sm"
             variant="soft"
-            onClick={() => props.classVisibilityStore.showAllClasses()}
+            onClick={() => classVisibilityStore.showAllClasses()}
           >
             <VisibilityIcon />
           </IconButton>
@@ -49,7 +46,7 @@ export function NodesAccordionPanel(props: NodesAccordionPanelProps) {
           <IconButton
             size="sm"
             variant="soft"
-            onClick={() => props.classVisibilityStore.hideAllClasses()}
+            onClick={() => classVisibilityStore.hideAllClasses()}
           >
             <VisibilityOffIcon />
           </IconButton>
@@ -60,9 +57,7 @@ export function NodesAccordionPanel(props: NodesAccordionPanelProps) {
               <MoreVertIcon />
             </MenuButton>
           </Tooltip>
-          <VisibilityPresetsMenu
-            classVisibilityStore={props.classVisibilityStore}
-          />
+          <VisibilityPresetsMenu />
         </Dropdown>
 
         {/* Button that should collapse all expanded node lists */}
@@ -84,7 +79,7 @@ export function NodesAccordionPanel(props: NodesAccordionPanelProps) {
               <ClassNameRow
                 key={className}
                 className={className}
-                classVisibilityStore={props.classVisibilityStore}
+                classVisibilityStore={classVisibilityStore}
                 nodeCount={classNameCounts[className] || 0}
               />
             ))}

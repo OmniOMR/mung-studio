@@ -1,17 +1,16 @@
 import { Typography } from "@mui/joy";
 import { useAtomValue } from "jotai";
-import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
+import { useContext } from "react";
+import { EditorContext } from "../EditorContext";
 
-export interface DocumentAccordionPanelProps {
-  readonly notationGraphStore: NotationGraphStore;
-}
+export function DocumentAccordionPanel() {
+  const { notationGraphStore } = useContext(EditorContext);
 
-export function DocumentAccordionPanel(props: DocumentAccordionPanelProps) {
-  const dataset = useAtomValue(props.notationGraphStore.datasetAtom);
-  const document = useAtomValue(props.notationGraphStore.documentAtom);
+  const dataset = useAtomValue(notationGraphStore.datasetAtom);
+  const document = useAtomValue(notationGraphStore.documentAtom);
 
-  const nodeIds = useAtomValue(props.notationGraphStore.nodeIdsAtom);
-  const links = useAtomValue(props.notationGraphStore.linksAtom);
+  const nodeIds = useAtomValue(notationGraphStore.nodeIdsAtom);
+  const links = useAtomValue(notationGraphStore.linksAtom);
 
   return (
     <>

@@ -1,15 +1,14 @@
 import { useAtomValue } from "jotai";
-import { AutosaveStore } from "../state/AutosaveStore";
 import { Typography } from "@mui/joy";
 import SyncIcon from "@mui/icons-material/Sync";
 import FileDownloadDoneIcon from "@mui/icons-material/FileDownloadDone";
+import { useContext } from "react";
+import { EditorContext } from "../EditorContext";
 
-export interface AutosaveStatusProps {
-  readonly autosaveStore: AutosaveStore;
-}
+export function AutosaveStatus() {
+  const { autosaveStore } = useContext(EditorContext);
 
-export function AutosaveStatus(props: AutosaveStatusProps) {
-  const isDirty = useAtomValue(props.autosaveStore.isDirtyAtom);
+  const isDirty = useAtomValue(autosaveStore.isDirtyAtom);
 
   const icon = isDirty ? (
     <SyncIcon fontSize="small" sx={{ mr: 1 }} />
