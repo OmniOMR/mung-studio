@@ -14,6 +14,7 @@ The MUSCIMA++ v2.0 dataset: https://github.com/OMR-Research/muscima-pp/releases/
 - [Editor component](docs/editor-component.md)
 - [Performance bottlenecks](docs/performance-bottlenecks.md)
 - [Simple PHP backend](docs/simple-php-backend.md)
+- [Pyodide Python Runtime](docs/pyodide-python-runtime.md)
 - [Development setup](docs/development-setup.md)
 
 

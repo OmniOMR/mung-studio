@@ -30,6 +30,15 @@ npm run build
 Commit and push changes to the Github repository.
 
 
+## Developing the pyodide python logic
+
+Parcel is set up to automatically bundle python scripts in the `/pyodide` folder into a ZIP file, which is then downloaded by the MuNG Studio during runtime and is loaded by the python pyodide environment. Parcel is NOT configured to detect file additions and deletions, it must be restarted whenever you do that. Other than that, you can simply modify a python script and Parcel will automarically rebundle. Then you reload the browser and the updated script is ready to be tested.
+
+The `mung` package is just the clone of its repository. It is clonned when running `npm ci` in the `scripts/postinstall.js` script. To develop it withing this project, just delete the folder, git clone it manually and open it in a separate code editor from its root folder. Parcel does not care where the files come from, as long as they are there.
+
+The `mstudio` package is part of this repository, but it's better to open it as a standalone python project in VS Code or Pycharm so that intelisense any mypy all work fine, because they need the proper project root folder. See the [README](../pyodide/mstudio/README.md) there to learn more.
+
+
 ## Deploying new version to Github
 
 - Update the version in `package.json`, remove the `-dev` suffix.

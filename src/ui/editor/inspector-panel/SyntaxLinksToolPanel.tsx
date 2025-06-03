@@ -5,21 +5,17 @@ import {
   Alert,
   Typography,
 } from "@mui/joy";
-import { SelectionStore } from "../state/selection-store/SelectionStore";
 import { useAtomValue } from "jotai";
-import { EditorStateStore, EditorTool } from "../state/EditorStateStore";
+import { EditorTool } from "../state/EditorStateStore";
+import { useContext } from "react";
+import { EditorContext } from "../EditorContext";
 
-export interface SyntaxLinksToolPanelProps {
-  readonly editorStateStore: EditorStateStore;
-  readonly selectionStore: SelectionStore;
-}
+export function SyntaxLinksToolPanel() {
+  const { editorStateStore, selectionStore } = useContext(EditorContext);
 
-export function SyntaxLinksToolPanel(props: SyntaxLinksToolPanelProps) {
-  const tool = useAtomValue(props.editorStateStore.currentToolAtom);
+  const tool = useAtomValue(editorStateStore.currentToolAtom);
 
-  const selectedNodeIds = useAtomValue(
-    props.selectionStore.selectedNodeIdsAtom,
-  );
+  const selectedNodeIds = useAtomValue(selectionStore.selectedNodeIdsAtom);
 
   if (tool !== EditorTool.SyntaxLinks) {
     return null;

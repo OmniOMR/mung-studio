@@ -8,6 +8,7 @@ import {
 import { Node } from "../../../mung/Node";
 import { SignalAtomWrapper } from "./SignalAtomWrapper";
 import { JotaiStore } from "./JotaiStore";
+import { AtomWithEvent } from "./AtomWithEvent";
 
 /**
  * How should nodes in the scene view be displayed
@@ -61,13 +62,29 @@ export class EditorStateStore {
   // View options //
   //////////////////
 
+  // atom that manages display of nodes
   public readonly nodeDisplayModeAtom: PrimitiveAtom<NodeDisplayMode> = atom(
     NodeDisplayMode.Bboxes,
   );
 
-  public readonly displaySyntaxLinksAtom: PrimitiveAtom<boolean> = atom(true);
-  public readonly displayPrecedenceLinksAtom: PrimitiveAtom<boolean> =
-    atom(true);
+  // atom that manages display of syntax links
+  private displaySyntaxLinksAtomWithEvent = AtomWithEvent.primitiveAtom(true);
+  public get displaySyntaxLinksAtom() {
+    return this.displaySyntaxLinksAtomWithEvent.atom;
+  }
+  public get displaySyntaxLinksChangeEvent() {
+    return this.displaySyntaxLinksAtomWithEvent.event;
+  }
+
+  // atom that manages display of syntax links
+  private displayPrecedenceLinksAtomWithEvent =
+    AtomWithEvent.primitiveAtom(true);
+  public get displayPrecedenceLinksAtom() {
+    return this.displayPrecedenceLinksAtomWithEvent.atom;
+  }
+  public get displayPrecedenceLinksChangeEvent() {
+    return this.displayPrecedenceLinksAtomWithEvent.event;
+  }
 
   public get isDisplaySyntaxLinks(): boolean {
     return this.jotaiStore.get(this.displaySyntaxLinksAtom);

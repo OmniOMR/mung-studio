@@ -121,10 +121,10 @@ export class NodeCollection {
 
     // check input data constraints
     if (
-      compareArrays(oldValue.syntaxInlinks, newValue.syntaxInlinks) &&
-      compareArrays(oldValue.syntaxOutlinks, newValue.syntaxOutlinks) &&
-      compareArrays(oldValue.precedenceInlinks, newValue.precedenceInlinks) &&
-      compareArrays(oldValue.precedenceOutlinks, newValue.precedenceOutlinks)
+      !arraysEqual(oldValue.syntaxInlinks, newValue.syntaxInlinks) ||
+      !arraysEqual(oldValue.syntaxOutlinks, newValue.syntaxOutlinks) ||
+      !arraysEqual(oldValue.precedenceInlinks, newValue.precedenceInlinks) ||
+      !arraysEqual(oldValue.precedenceOutlinks, newValue.precedenceOutlinks)
     ) {
       throw new Error("Links cannot be modified this way. Use link methods.");
     }
@@ -406,7 +406,7 @@ export class NodeCollection {
 /**
  * Compares inlink/outlink arrays if they are the same
  */
-function compareArrays(a: number[], b: number[]): boolean {
+function arraysEqual(a: number[], b: number[]): boolean {
   if (a.length !== b.length) return false;
   for (let i = 0; i < a.length; i++) {
     if (a[i] !== b[i]) return false;

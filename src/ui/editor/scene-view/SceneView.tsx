@@ -1,21 +1,13 @@
 import { useRef, useState } from "react";
-import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
 import { Zoomer } from "./Zoomer";
 import { ForegroundLayer } from "./foreground-layer/ForegroundLayer";
 import { SceneLayer_Canvas2D } from "./SceneLayer_Canvas2D";
 import { SceneLayer_SVG } from "./scene-layer-svg/SceneLayer_SVG";
 import { SceneLayer_WebGL } from "./scene-layer-webgl/SceneLayer_WebGL";
 import { BackgroundLayer } from "./BackgroundLayer";
-import { EditorStateStore } from "../state/EditorStateStore";
-import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
-import { SelectionStore } from "../state/selection-store/SelectionStore";
 
 export interface SceneViewProps {
   readonly backgroundImageUrl: string | null;
-  readonly notationGraphStore: NotationGraphStore;
-  readonly selectionStore: SelectionStore;
-  readonly classVisibilityStore: ClassVisibilityStore;
-  readonly editorStateStore: EditorStateStore;
 }
 
 /**
@@ -54,13 +46,7 @@ export function SceneView(props: SceneViewProps) {
 
       {/* Objects that are not being edited, but there is many of them,
       so tricks have to be made to render them fast */}
-      <SceneLayer_SVG
-        zoomer={zoomer}
-        notationGraphStore={props.notationGraphStore}
-        selectionStore={props.selectionStore}
-        classVisibilityStore={props.classVisibilityStore}
-        editorStateStore={props.editorStateStore}
-      />
+      <SceneLayer_SVG zoomer={zoomer} />
       {/* <SceneLayer_Canvas2D
         zoomEventDispatcher={zoomEventDispatcher}
         notationGraphStore={props.notationGraphStore}
@@ -74,13 +60,7 @@ export function SceneView(props: SceneViewProps) {
 
       {/* The editing overlay for the current object, consumes pointer events
       and contains the zoom controlling code */}
-      <ForegroundLayer
-        zoomer={zoomer}
-        selectionStore={props.selectionStore}
-        notationGraphStore={props.notationGraphStore}
-        editorStateStore={props.editorStateStore}
-        classVisibilityStore={props.classVisibilityStore}
-      />
+      <ForegroundLayer zoomer={zoomer} />
     </div>
   );
 }

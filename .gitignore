@@ -2,6 +2,7 @@
 node_modules
 .parcel-cache
 dist
+.mypy_cache
 
 # editors
 .idea

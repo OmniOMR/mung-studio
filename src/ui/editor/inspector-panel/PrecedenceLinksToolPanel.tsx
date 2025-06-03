@@ -5,29 +5,24 @@ import {
   Alert,
   Typography,
 } from "@mui/joy";
-import { SelectionStore } from "../state/selection-store/SelectionStore";
 import { useAtomValue } from "jotai";
-import { EditorStateStore, EditorTool } from "../state/EditorStateStore";
+import { EditorTool } from "../state/EditorStateStore";
 import {
   ClassVisibilityStore,
   PRECEDENCE_LINK_ANNOTATION_CLASSES,
 } from "../state/ClassVisibilityStore";
-import { useEffect, useRef } from "react";
+import { useContext, useEffect, useRef } from "react";
+import { EditorContext } from "../EditorContext";
 
-export interface PrecedenceLinksToolPanelProps {
-  readonly editorStateStore: EditorStateStore;
-  readonly selectionStore: SelectionStore;
-  readonly classVisibilityStore: ClassVisibilityStore;
-}
+export function PrecedenceLinksToolPanel() {
+  const { editorStateStore, selectionStore, classVisibilityStore } =
+    useContext(EditorContext);
 
-export function PrecedenceLinksToolPanel(props: PrecedenceLinksToolPanelProps) {
-  const tool = useAtomValue(props.editorStateStore.currentToolAtom);
+  const tool = useAtomValue(editorStateStore.currentToolAtom);
 
-  const selectedNodeIds = useAtomValue(
-    props.selectionStore.selectedNodeIdsAtom,
-  );
+  const selectedNodeIds = useAtomValue(selectionStore.selectedNodeIdsAtom);
 
-  useOverrideClassVisibility(tool, props.classVisibilityStore);
+  useOverrideClassVisibility(tool, classVisibilityStore);
 
   if (tool !== EditorTool.PrecedenceLinks) {
     return null;
