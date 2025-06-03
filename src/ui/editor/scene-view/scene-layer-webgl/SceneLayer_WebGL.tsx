@@ -1,4 +1,4 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useContext } from "react";
 import { Zoomer } from "../Zoomer";
 import { Node } from "../../../../mung/Node";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
@@ -10,11 +10,10 @@ import { LinkType } from "../../../../mung/LinkType";
 import { EditorStateStore } from "../../state/EditorStateStore";
 import { useAtom } from "jotai";
 import { useAtomCallback } from "jotai/utils";
+import { EditorContext } from "../../EditorContext";
 
 export interface SceneLayerProps {
   readonly zoomer: Zoomer;
-  readonly notationGraphStore: NotationGraphStore;
-  readonly editorStateStore: EditorStateStore;
 }
 
 class BufferDirtyStateKeeper {
@@ -67,7 +66,7 @@ class BufferDirtyStateKeeper {
 export interface GeometrySource {
   readonly VERTEX_COUNT: number;
 
-  generateVertices(consumer: (x: number, y: number) => void): void;
+  generateVertices(consumer: (...data: number[]) => void): void;
 }
 
 interface GeometryLinkRecord {
@@ -76,36 +75,57 @@ interface GeometryLinkRecord {
   vertexCount: number;
 }
 
+interface GeometryBufferConfig {
+  dataType: GLenum; // gl.FLOAT, gl.UNSIGNED_BYTE, etc.
+  elementSizeof: number; // size of each element in bytes
+  elementCount: number; // number of elements per vertex
+}
+
+type BufferDataType = Float32Array | Int32Array | Uint32Array;
+
 export class GeometryBuffer {
   private static readonly INITIAL_BUFFER_SIZE = 65536;
   private static readonly BUFFER_GROWTH_FACTOR = 2;
   private static readonly VERTEX_STRIDE = 2;
 
-  private primitiveType: GLenum;
+  private config: GeometryBufferConfig;
 
   private dirtyState: BufferDirtyStateKeeper;
-  private buffer: Float32Array;
+  private buffer: BufferDataType;
   private vertexTopIndex = 0;
   private geometries: GeometryLinkRecord[];
 
   private glBuffer: WebGLBuffer | null = null;
   private glBufferSize = 0;
 
-  constructor(primitiveType: GLenum) {
+  constructor(config: GeometryBufferConfig) {
+    this.config = config;
     this.dirtyState = new BufferDirtyStateKeeper(() => this.geometries.length);
-    this.primitiveType = primitiveType;
-    this.buffer = new Float32Array(GeometryBuffer.INITIAL_BUFFER_SIZE);
+    this.buffer = GeometryBuffer.newBufferStorage(config.dataType, GeometryBuffer.INITIAL_BUFFER_SIZE);
     this.geometries = [];
   }
 
+  private static newBufferStorage(dataType: GLenum, size: number): BufferDataType {
+    switch (dataType) {
+      case WebGL2RenderingContext.FLOAT:
+        return new Float32Array(size);
+      case WebGL2RenderingContext.UNSIGNED_INT:
+        return new Uint32Array(size);
+      case WebGL2RenderingContext.INT:
+        return new Int32Array(size);
+      default:
+        throw new Error(`Unsupported data type: ${dataType}`);
+    }
+  }
+
   private ensureBufferVertexCount(size: number) {
-    const sizeInFloats = size * GeometryBuffer.VERTEX_STRIDE;
+    const sizeInFloats = size * this.config.elementCount;
     if (sizeInFloats > this.buffer.length) {
       const newSize = Math.max(
         sizeInFloats,
         Math.trunc(this.buffer.length * GeometryBuffer.BUFFER_GROWTH_FACTOR),
       );
-      const newBuffer = new Float32Array(newSize);
+      const newBuffer = GeometryBuffer.newBufferStorage(this.config.dataType, newSize);
       newBuffer.set(this.buffer);
       this.buffer = newBuffer;
     }
@@ -125,10 +145,14 @@ export class GeometryBuffer {
     const start = this.getGeomVertexStart(index);
     let subIndex = 0;
 
-    this.geometries[index].source.generateVertices((x, y) => {
-      const base = (start + subIndex) * GeometryBuffer.VERTEX_STRIDE;
-      this.buffer[base] = x;
-      this.buffer[base + 1] = y;
+    this.geometries[index].source.generateVertices((...coords: number[]) => {
+      if (coords.length !== this.config.elementCount) {
+        throw new Error(`Invalid vertex data length: expected ${this.config.elementCount}, got ${coords.length}`);
+      }
+      const base = (start + subIndex) * this.config.elementCount;
+      for (let i = 0; i < coords.length; i++) {
+        this.buffer[base + i] = coords[i];
+      }
       subIndex++;
     });
 
@@ -171,7 +195,7 @@ export class GeometryBuffer {
     return this.getGeomVertexStart(index) + this.geometries[index].vertexCount;
   }
 
-  public flush(gl: WebGLRenderingContext) {
+  public flush(gl: WebGL2RenderingContext) {
     if (this.glBuffer === null) {
       this.glBuffer = gl.createBuffer();
       this.dirtyState.markAllDirty(this.geometries.length);
@@ -192,43 +216,89 @@ export class GeometryBuffer {
       const startVertex = this.getGeomVertexStart(startGeom);
       const endVertex = this.getGeomVertexEnd(endGeom);
 
+      const vs = this.config.elementCount;
+
       gl.bufferSubData(
         gl.ARRAY_BUFFER,
-        startVertex * GeometryBuffer.VERTEX_STRIDE * Float32Array.BYTES_PER_ELEMENT,
-        this.buffer.subarray(startVertex * GeometryBuffer.VERTEX_STRIDE, endVertex * GeometryBuffer.VERTEX_STRIDE)
+        startVertex * vs * this.config.elementSizeof,
+        this.buffer.subarray(startVertex * vs, endVertex * vs)
       );
     }
     this.dirtyState.clearDirty();
   }
 
-  public draw(gl: WebGLRenderingContext, program: WebGLProgram) {
+  public bind(gl: WebGL2RenderingContext, program: WebGLProgram, location: string) {
     this.flush(gl);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.glBuffer);
-    const positionLocation = gl.getAttribLocation(program, "a_position");
-    gl.enableVertexAttribArray(positionLocation);
-    gl.vertexAttribPointer(positionLocation, GeometryBuffer.VERTEX_STRIDE, gl.FLOAT, false, 0, 0);
+    const shaderLocation = gl.getAttribLocation(program, location);
+    gl.enableVertexAttribArray(shaderLocation);
+    if (!this.isDataTypeInt()) {
+      gl.vertexAttribPointer(shaderLocation, this.config.elementCount, this.config.dataType, false, 0, 0);
+    }
+    else {
+      // For integer types, we need to use vertexAttribIPointer
+      gl.vertexAttribIPointer(shaderLocation, this.config.elementCount, this.config.dataType, 0, 0);
+    }
+  }
 
-    gl.drawArrays(this.primitiveType, 0, this.vertexTopIndex);
+  private isDataTypeInt(): boolean {
+    const dt = this.config.dataType;
+    return dt === WebGL2RenderingContext.INT || dt === WebGL2RenderingContext.UNSIGNED_INT;
+  }
+
+  public numVertices(): number {
+    return this.vertexTopIndex;
   }
 }
 
-const LINE_VERTEX_SHADER_SOURCE = `
-  attribute vec2 a_position;
+const LINE_VERTEX_SHADER_SOURCE =
+`#version 300 es
+
+  const uint FLAG_VISIBLE = (1u << 0);
+
+  in vec2 a_position;
+  in uint a_attributes;
+
   uniform mat4 u_mvp_matrix;
 
+  flat out uint v_attributes;
+
   void main() {
-    gl_Position = u_mvp_matrix * vec4(a_position, 0, 1);
+    v_attributes = a_attributes;
+    //hack: if not visible, set position to zero
+    //this is more efficient than an if/else, as it is branch free
+    //it will also degenerate the triangle to a point, which will either not be rendered,
+    //or will be discarded by the fragment shader (but there will still be way less fragments to process)
+    gl_Position = u_mvp_matrix * vec4(a_position, 0, 1) * float(a_attributes & FLAG_VISIBLE);
   }
 `;
 
-const LINE_FRAGMENT_SHADER_SOURCE = `
+const LINE_FRAGMENT_SHADER_SOURCE =
+`#version 300 es
+
+  const uint FLAG_VISIBLE = (1u << 0);
+  const uint FLAG_HIGHLIGHTED = (1u << 1);
+
   precision mediump float;
 
   uniform vec4 u_color;
 
+  flat in uint v_attributes;
+
+  out vec4 fragColor;
+
   void main() {
-    gl_FragColor = u_color;
+    if ((v_attributes & FLAG_VISIBLE) == 0u) {
+      discard; // Do not render if not visible
+    }
+
+    vec4 color = u_color;
+    if ((v_attributes & FLAG_HIGHLIGHTED) != 0u) {
+      color.xyz *= vec3(1.5, 1.5, 1.5); // Highlight color effect - todo: outline
+    }
+
+    fragColor = color;
   }
 `;
 
@@ -240,15 +310,15 @@ export interface GLDrawable {
 }
 
 export class GLRenderer {
-  
-  private gl: WebGLRenderingContext;
+
+  private gl: WebGL2RenderingContext;
   private drawables: GLDrawable[] = [];
   private transform: d3.ZoomTransform = d3.zoomIdentity;
 
   private currentProgram: WebGLProgram | null = null;
   private currentMatrix: number[];
 
-  constructor(gl: WebGLRenderingContext) {
+  constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
   }
 
@@ -272,7 +342,7 @@ export class GLRenderer {
     }
   }
 
-  public isCurrent(gl: WebGLRenderingContext): boolean {
+  public isCurrent(gl: WebGL2RenderingContext): boolean {
     return this.gl === gl;
   }
 
@@ -286,7 +356,7 @@ export class GLRenderer {
     if (!this.gl.getShaderParameter(shader, this.gl.COMPILE_STATUS)) {
       const error = this.gl.getShaderInfoLog(shader);
       this.gl.deleteShader(shader);
-      throw new Error(`Failed to compile shader: ${error}`);
+      throw new Error(`Failed to compile shader (type ${type}): ${error}`);
     }
     return shader;
   }
@@ -404,8 +474,16 @@ export class GLRenderer {
     }
   }
 
-  public drawBuffer(buffer: GeometryBuffer) {
-    buffer.draw(this.gl, this.currentProgram!);
+  public bindBuffer(buffer: GeometryBuffer, location: string) {
+    buffer.bind(this.gl, this.currentProgram!, location);
+  }
+
+  public drawArray(primitiveType: GLenum, start: number, count: number) {
+    this.gl.drawArrays(primitiveType, start, count);
+  }
+
+  public drawArrayByBuffer(primitiveType: GLenum, buffer: GeometryBuffer) {
+    this.drawArray(primitiveType, 0, buffer.numVertices());
   }
 
   private createOrthoMatrix(
@@ -432,10 +510,14 @@ export class GLRenderer {
 
 class LinkGeometry {
   public readonly VERTEX_COUNT = 6;
+  public readonly FLAG_VISIBLE = (1 << 0);
+  public readonly FLAG_HIGHLIGHTED = (1 << 1);
 
   constructor(
     private fromNode: Node,
     private toNode: Node,
+    private lineThickness: number = 5,
+    private arrowHeadScale: number = 2.0
   ) { }
 
   public mainLineSource(): GeometrySource {
@@ -468,6 +550,56 @@ class LinkGeometry {
     };
   }
 
+  public allTriangleSource(): GeometrySource {
+    return {
+      VERTEX_COUNT: 9,
+      generateVertices: (consumer) => {
+        this.generateArrowAllTris().forEach((coords) => {
+          consumer(...coords);
+        });
+      }
+    };
+  }
+
+  public attributesSourceFor(forGeometry: GeometrySource): GeometrySource {
+    return {
+      //must be repeated for each vertex - no other way to do it in opengl,
+      //see https://stackoverflow.com/questions/11351537/opengl-vertex-attribute-arrays-per-primitive
+      VERTEX_COUNT: forGeometry.VERTEX_COUNT,
+      generateVertices: (consumer) => {
+        const attributeBits = this.generateAttributeBits();
+        for (let i = 0; i < forGeometry.VERTEX_COUNT; i++) {
+          consumer(attributeBits);
+        }
+      }
+    };
+  }
+
+  public isVisible(): boolean {
+    return true; //todo
+  }
+
+  public isHighlighted(): boolean {
+    return false; //todo
+  }
+
+  private generateAttributeBits(): number {
+    return this.bitMask(
+      [this.isVisible(), this.FLAG_VISIBLE],
+      [this.isHighlighted(), this.FLAG_HIGHLIGHTED]
+    );
+  }
+
+  private bitMask(...flagInfos: [boolean, number][]): number {
+    let mask = 0;
+    for (const flag of flagInfos) {
+      if (flag[0]) {
+        mask |= flag[1];
+      }
+    }
+    return mask;
+  }
+
   private addNodeVertex(consumer: (x: number, y: number) => void, node: Node) {
     const [cx, cy] = this.nodeCenter(node);
     consumer(cx, cy);
@@ -481,20 +613,23 @@ class LinkGeometry {
     consumer(...coords[1]);
   }
 
+  private getDirVec(fromCoords: [number, number], toCoords: [number, number]): [number, number] {
+    let dx = toCoords[0] - fromCoords[0];
+    let dy = toCoords[1] - fromCoords[1];
+    if (dx === 0 && dy === 0) {
+      dx = 1;
+      dy = 0; // Arbitrary direction if both nodes are at the same position
+    }
+    return this.normalize(dx, dy);
+  }
+
   private generateArrowHeadCoords(): [number, number][] {
     const [fx, fy] = this.nodeCenter(this.fromNode);
     const [tx, ty] = this.nodeCenter(this.toNode);
 
-    let dx = fx - tx;
-    let dy = fy - ty;
-    if (dx === 0 && dy === 0) {
-      dx = 1;
-      dy = 0;
-    }
+    let [dx, dy] = this.getDirVec([tx, ty], [fx, fy]);
 
-    [dx, dy] = this.normalize(dx, dy);
-
-    const lineSize = 20;
+    const lineSize = this.lineThickness * 2;
     dx *= lineSize;
     dy *= lineSize;
 
@@ -506,6 +641,42 @@ class LinkGeometry {
       [tx + lx, ty + ly],
       [tx + rx, ty + ry]
     ];
+  }
+
+  private generateArrowAllTris(): number[][] {
+    const [fx, fy] = this.nodeCenter(this.fromNode);
+    const [tx, ty] = this.nodeCenter(this.toNode);
+
+    let [tfx, tfy] = this.getDirVec([tx, ty], [fx, fy]);
+
+    const headFrontLength = this.lineThickness * 2 * this.arrowHeadScale;
+    const headSideLength = this.lineThickness * this.arrowHeadScale;
+
+    const [bodyEndX, bodyEndY] = [tx + tfx * headFrontLength, ty + tfy * headFrontLength];
+
+    let [headDispX, headDispY] = this.rotateAround(tfx, tfy, 0, 0, Math.PI / 2);
+    headDispX *= headSideLength;
+    headDispY *= headSideLength;
+
+    const headLeft = [bodyEndX + headDispX, bodyEndY + headDispY];
+    const headRight = [bodyEndX - headDispX, bodyEndY - headDispY];
+    const headTip = [tx, ty];
+
+    const bodySideLength = this.lineThickness * 0.5;
+    let [bodyDispX, bodyDispY] = this.rotateAround(tfx, tfy, 0, 0, Math.PI / 2);
+    bodyDispX *= bodySideLength;
+    bodyDispY *= bodySideLength;
+
+    const bodyBottomLeft: [number, number] = [fx + bodyDispX, fy + bodyDispY];
+    const bodyBottomRight = [fx - bodyDispX, fy - bodyDispY];
+    const bodyTopLeft = [bodyEndX + bodyDispX, bodyEndY + bodyDispY];
+    const bodyTopRight = [bodyEndX - bodyDispX, bodyEndY - bodyDispY];
+
+    return [
+      bodyBottomLeft, bodyBottomRight, bodyTopRight,
+      bodyTopRight, bodyTopLeft, bodyBottomLeft,
+      headTip, headLeft, headRight,
+    ]
   }
 
   private nodeCenter(node: Node): [number, number] {
@@ -584,8 +755,18 @@ class LinkGeometryMasterDrawable extends GLDrawableComposite {
 class LinkGeometryDrawable implements GLDrawable {
   private notationGraph: NotationGraphStore;
   private editorState: EditorStateStore;
-  private lineBuffer = new GeometryBuffer(WebGLRenderingContext.LINES);
-  private triangleBuffer = new GeometryBuffer(WebGLRenderingContext.TRIANGLES);
+
+  private triangleBuffer = new GeometryBuffer({
+    dataType: WebGL2RenderingContext.FLOAT,
+    elementCount: 2, // x, y coordinates
+    elementSizeof: Float32Array.BYTES_PER_ELEMENT
+  });
+  private attributeBuffer = new GeometryBuffer({
+    dataType: WebGL2RenderingContext.UNSIGNED_INT,
+    elementCount: 1, //single bit mask
+    elementSizeof: Uint32Array.BYTES_PER_ELEMENT
+  });
+
   private linkInsertSubscription: ISimpleEventHandler<LinkInsertMetadata>;
   private linkRemoveSubscription: ISimpleEventHandler<LinkRemoveMetadata>;
 
@@ -633,8 +814,9 @@ class LinkGeometryDrawable implements GLDrawable {
       return;
     }
     const geometry = new LinkGeometry(meta.fromNode, meta.toNode);
-    const index = this.lineBuffer.addGeometry(geometry.mainLineSource());
-    this.triangleBuffer.addGeometry(geometry.arrowHeadTriangleSource());
+    const trisSource = geometry.allTriangleSource();
+    const index = this.triangleBuffer.addGeometry(trisSource);
+    this.attributeBuffer.addGeometry(geometry.attributesSourceFor(trisSource));
     this.linkToIndexMap.set(key, index);
     //console.log("link insert", key, index);
   }
@@ -646,8 +828,8 @@ class LinkGeometryDrawable implements GLDrawable {
     if (index === undefined) {
       return;
     }
-    this.lineBuffer.removeGeometry(index);
     this.triangleBuffer.removeGeometry(index);
+    this.attributeBuffer.removeGeometry(index);
     this.linkToIndexMap.delete(key);
 
     // Shift all indices in linkToIndexMap after the removed one
@@ -663,7 +845,7 @@ class LinkGeometryDrawable implements GLDrawable {
   }
 
   public attach(gl: GLRenderer) {
-    
+
   }
 
   public release(gl: GLRenderer) {
@@ -674,8 +856,9 @@ class LinkGeometryDrawable implements GLDrawable {
     if (!this.isLayerVisible(this.editorState)) {
       return;
     }
-    gl.drawBuffer(this.lineBuffer);
-    gl.drawBuffer(this.triangleBuffer);
+    gl.bindBuffer(this.triangleBuffer, "a_position");
+    gl.bindBuffer(this.attributeBuffer, "a_attributes");
+    gl.drawArrayByBuffer(WebGL2RenderingContext.TRIANGLES, this.triangleBuffer);
   }
 
   public unsubscribeEvents() {
@@ -720,15 +903,17 @@ class PrecedenceLinkGeometryDrawable extends LinkGeometryDrawable {
  * Scene layer, rendered via WebGL
  */
 export function SceneLayer_WebGL(props: SceneLayerProps) {
+  const { notationGraphStore, editorStateStore } = useContext(EditorContext);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const glRef = useRef<GLRenderer | null>(null);
-  const [displaySyntaxLinks] = useAtom(props.editorStateStore.displaySyntaxLinksAtom);
+  const [displaySyntaxLinks] = useAtom(editorStateStore.displaySyntaxLinksAtom);
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
     // Get WebGL context
-    const gl = canvasRef.current.getContext("webgl");
+    const gl = canvasRef.current.getContext("webgl2");
     if (!gl) return;
     if (glRef.current !== null && glRef.current.isCurrent(gl)) {
       glRef.current.release();
@@ -738,8 +923,8 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       glRef.current = new GLRenderer(gl);
     }
 
-    const syntaxLinks = new SyntaxLinkGeometryDrawable(props.notationGraphStore, props.editorStateStore);
-    const precedenceLinks = new PrecedenceLinkGeometryDrawable(props.notationGraphStore, props.editorStateStore);
+    const syntaxLinks = new SyntaxLinkGeometryDrawable(notationGraphStore, editorStateStore);
+    const precedenceLinks = new PrecedenceLinkGeometryDrawable(notationGraphStore, editorStateStore);
     const masterDrawable = new LinkGeometryMasterDrawable([syntaxLinks, precedenceLinks]);
     glRef.current.addDrawable(masterDrawable);
 
@@ -764,14 +949,14 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
     };
 
     props.zoomer.onTransformChange.subscribe(onZoom);
-    props.notationGraphStore.onNodeUpdatedOrLinked.subscribe(onGraphUpdate);
+    notationGraphStore.onNodeUpdatedOrLinked.subscribe(onGraphUpdate);
 
     window.addEventListener("resize", onResize);
 
     // Cleanup
     return () => {
       props.zoomer.onTransformChange.unsubscribe(onZoom);
-      props.notationGraphStore.onNodeUpdatedOrLinked.unsubscribe(onGraphUpdate);
+      notationGraphStore.onNodeUpdatedOrLinked.unsubscribe(onGraphUpdate);
       syntaxLinks.unsubscribeEvents();
       precedenceLinks.unsubscribeEvents();
       window.removeEventListener("resize", onResize);
