@@ -2,7 +2,6 @@ import { useEffect, useRef, useContext } from "react";
 import { Zoomer } from "../Zoomer";
 import { Node } from "../../../../mung/Node";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
-import { Link, link } from "d3";
 import { ISimpleEventHandler } from "strongly-typed-events";
 import { LinkInsertMetadata, LinkRemoveMetadata } from "../../state/notation-graph-store/NodeCollection";
 import * as d3 from "d3";
@@ -11,6 +10,9 @@ import { EditorStateStore } from "../../state/EditorStateStore";
 import { useAtom } from "jotai";
 import { useAtomCallback } from "jotai/utils";
 import { EditorContext } from "../../EditorContext";
+import { SelectionLinksChangeMetadata, SelectionStore } from "../../state/selection-store/SelectionStore";
+import { Link } from "../../../../mung/Link";
+import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 
 export interface SceneLayerProps {
   readonly zoomer: Zoomer;
@@ -159,6 +161,8 @@ export class GeometryBuffer {
     if (subIndex != this.geometries[index].vertexCount) {
       throw new Error("Vertex count mismatch");
     }
+
+    this.dirtyState.markDirty(index);
   }
 
   public removeGeometry(index: number) {
@@ -283,6 +287,7 @@ const LINE_FRAGMENT_SHADER_SOURCE =
   precision mediump float;
 
   uniform vec4 u_color;
+  uniform bool u_selecting;
 
   flat in uint v_attributes;
 
@@ -294,8 +299,8 @@ const LINE_FRAGMENT_SHADER_SOURCE =
     }
 
     vec4 color = u_color;
-    if ((v_attributes & FLAG_HIGHLIGHTED) != 0u) {
-      color.xyz *= vec3(1.5, 1.5, 1.5); // Highlight color effect - todo: outline
+    if (u_selecting && (v_attributes & FLAG_HIGHLIGHTED) == 0u) {
+      color.a = 0.15;
     }
 
     fragColor = color;
@@ -413,6 +418,15 @@ export class GLRenderer {
     return false;
   }
 
+  public setAlphaBlend(enable: boolean) {
+    if (enable) {
+      this.gl.enable(this.gl.BLEND);
+      this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+    } else {
+      this.gl.disable(this.gl.BLEND);
+    }
+  }
+
   private uploadUniforms() {
     if (this.currentProgram === null) {
       return;
@@ -440,6 +454,16 @@ export class GLRenderer {
     const b = (color & 0xFF) / 255;
     const a = ((color >> 24) & 0xFF) / 255;
     this.setUniformColor(name, r, g, b, a);
+  }
+
+  public setUniformInt(name: string, value: number) {
+    if (this.currentProgram === null) {
+      return;
+    }
+    const location = this.gl.getUniformLocation(this.currentProgram, name);
+    if (location !== null) {
+      this.gl.uniform1i(location, value);
+    }
   }
 
   public draw() {
@@ -508,6 +532,11 @@ export class GLRenderer {
   }
 }
 
+interface LinkGeometryStateProvider {
+  isVisible(): boolean;
+  isHighlighted(): boolean;
+}
+
 class LinkGeometry {
   public readonly VERTEX_COUNT = 6;
   public readonly FLAG_VISIBLE = (1 << 0);
@@ -516,6 +545,7 @@ class LinkGeometry {
   constructor(
     private fromNode: Node,
     private toNode: Node,
+    private stateProvider: LinkGeometryStateProvider,
     private lineThickness: number = 5,
     private arrowHeadScale: number = 2.0
   ) { }
@@ -576,11 +606,11 @@ class LinkGeometry {
   }
 
   public isVisible(): boolean {
-    return true; //todo
+    return this.stateProvider.isVisible();
   }
 
   public isHighlighted(): boolean {
-    return false; //todo
+    return this.stateProvider.isHighlighted();
   }
 
   private generateAttributeBits(): number {
@@ -748,6 +778,7 @@ class LinkGeometryMasterDrawable extends GLDrawableComposite {
 
   public draw(gl: GLRenderer): void {
     gl.useProgram(this.program);
+    gl.setAlphaBlend(true);
     super.draw(gl);
   }
 }
@@ -755,6 +786,8 @@ class LinkGeometryMasterDrawable extends GLDrawableComposite {
 class LinkGeometryDrawable implements GLDrawable {
   private notationGraph: NotationGraphStore;
   private editorState: EditorStateStore;
+  private selectionStore: SelectionStore;
+  private classVisibilityStore: ClassVisibilityStore;
 
   private triangleBuffer = new GeometryBuffer({
     dataType: WebGL2RenderingContext.FLOAT,
@@ -769,12 +802,16 @@ class LinkGeometryDrawable implements GLDrawable {
 
   private linkInsertSubscription: ISimpleEventHandler<LinkInsertMetadata>;
   private linkRemoveSubscription: ISimpleEventHandler<LinkRemoveMetadata>;
+  private linkSelectionSubscription: ISimpleEventHandler<SelectionLinksChangeMetadata>;
 
   private linkToIndexMap = new Map<string, number>();
+  private selectedLinks: Set<string> = new Set();
 
-  constructor(notationGraph: NotationGraphStore, editorStateStore: EditorStateStore) {
+  constructor(notationGraph: NotationGraphStore, editorStateStore: EditorStateStore, selectionStore: SelectionStore, classVisibilityStore: ClassVisibilityStore) {
     this.notationGraph = notationGraph;
     this.editorState = editorStateStore;
+    this.selectionStore = selectionStore;
+    this.classVisibilityStore = classVisibilityStore;
 
     this.linkInsertSubscription = (meta) => {
       this.onLinkInserted(meta);
@@ -795,6 +832,52 @@ class LinkGeometryDrawable implements GLDrawable {
       };
       this.onLinkInserted(linkInsertMeta);
     });
+
+    this.linkSelectionSubscription = (meta) => {
+      meta.fullLinkSetRemovals.forEach(this.onLinkDeselected.bind(this));
+      meta.fullLinkSetAdditions.forEach(this.onLinkSelected.bind(this));
+    };
+
+    selectionStore.onLinksChange.subscribe(this.linkSelectionSubscription);
+
+    selectionStore.fullySelectedLinks.forEach((link) => {
+      this.onLinkSelected(link);
+    });
+  }
+
+  private onLinkSelected(Link: Link): void {
+    //selectedLinks has to be kept despite the link type,
+    //so that u_selected is global and not per-type
+    const key = this.makeLinkKeyFromLink(Link);
+    this.selectedLinks.add(key);
+    if (!this.isLinkAccepted(Link.type)) {
+      return;
+    }
+    this.updateAttributeData(key);
+  }
+
+  private onLinkDeselected(Link: Link): void {
+    const key = this.makeLinkKeyFromLink(Link);
+    this.selectedLinks.delete(key);
+    if (!this.isLinkAccepted(Link.type)) {
+      return;
+    }
+    this.updateAttributeData(key);
+  }
+
+  private updateAttributeData(key: string) {
+    const index = this.linkToIndexMap.get(key);
+    if (index !== undefined) {
+      this.attributeBuffer.updateGeometry(index);
+    }
+  }
+
+  private makeLinkKeyFromLink(link: Link): string {
+    return this.makeLinkKey({
+      fromNode: this.notationGraph.getNode(link.fromId),
+      toNode: this.notationGraph.getNode(link.toId),
+      linkType: link.type
+    });
   }
 
   protected isLayerVisible(editorState: EditorStateStore): boolean {
@@ -813,7 +896,16 @@ class LinkGeometryDrawable implements GLDrawable {
     if (this.linkToIndexMap.has(key)) {
       return;
     }
-    const geometry = new LinkGeometry(meta.fromNode, meta.toNode);
+    const selectedLinks = this.selectedLinks;
+    const geometry = new LinkGeometry(meta.fromNode, meta.toNode, new class implements LinkGeometryStateProvider {
+      isVisible(): boolean {
+        return true;
+      }
+
+      isHighlighted(): boolean {
+        return selectedLinks.has(key);
+      }
+    });
     const trisSource = geometry.allTriangleSource();
     const index = this.triangleBuffer.addGeometry(trisSource);
     this.attributeBuffer.addGeometry(geometry.attributesSourceFor(trisSource));
@@ -856,6 +948,7 @@ class LinkGeometryDrawable implements GLDrawable {
     if (!this.isLayerVisible(this.editorState)) {
       return;
     }
+    gl.setUniformInt("u_selecting", this.selectedLinks.size > 0 ? 1 : 0);
     gl.bindBuffer(this.triangleBuffer, "a_position");
     gl.bindBuffer(this.attributeBuffer, "a_attributes");
     gl.drawArrayByBuffer(WebGL2RenderingContext.TRIANGLES, this.triangleBuffer);
@@ -864,6 +957,7 @@ class LinkGeometryDrawable implements GLDrawable {
   public unsubscribeEvents() {
     this.notationGraph.onLinkInserted.unsubscribe(this.linkInsertSubscription);
     this.notationGraph.onLinkRemoved.unsubscribe(this.linkRemoveSubscription);
+    this.selectionStore.onLinksChange.unsubscribe(this.linkSelectionSubscription);
   }
 }
 
@@ -903,7 +997,7 @@ class PrecedenceLinkGeometryDrawable extends LinkGeometryDrawable {
  * Scene layer, rendered via WebGL
  */
 export function SceneLayer_WebGL(props: SceneLayerProps) {
-  const { notationGraphStore, editorStateStore } = useContext(EditorContext);
+  const { notationGraphStore, selectionStore, classVisibilityStore, editorStateStore } = useContext(EditorContext);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const glRef = useRef<GLRenderer | null>(null);
@@ -923,8 +1017,8 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       glRef.current = new GLRenderer(gl);
     }
 
-    const syntaxLinks = new SyntaxLinkGeometryDrawable(notationGraphStore, editorStateStore);
-    const precedenceLinks = new PrecedenceLinkGeometryDrawable(notationGraphStore, editorStateStore);
+    const syntaxLinks = new SyntaxLinkGeometryDrawable(notationGraphStore, editorStateStore, selectionStore, classVisibilityStore);
+    const precedenceLinks = new PrecedenceLinkGeometryDrawable(notationGraphStore, editorStateStore, selectionStore, classVisibilityStore);
     const masterDrawable = new LinkGeometryMasterDrawable([syntaxLinks, precedenceLinks]);
     glRef.current.addDrawable(masterDrawable);
 
@@ -950,6 +1044,7 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
 
     props.zoomer.onTransformChange.subscribe(onZoom);
     notationGraphStore.onNodeUpdatedOrLinked.subscribe(onGraphUpdate);
+    selectionStore.onLinksChange.subscribe(onGraphUpdate);
 
     window.addEventListener("resize", onResize);
 
@@ -957,6 +1052,7 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
     return () => {
       props.zoomer.onTransformChange.unsubscribe(onZoom);
       notationGraphStore.onNodeUpdatedOrLinked.unsubscribe(onGraphUpdate);
+      selectionStore.onLinksChange.unsubscribe(onGraphUpdate);
       syntaxLinks.unsubscribeEvents();
       precedenceLinks.unsubscribeEvents();
       window.removeEventListener("resize", onResize);
