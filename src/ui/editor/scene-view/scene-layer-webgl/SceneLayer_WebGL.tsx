@@ -1059,7 +1059,6 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const glRef = useRef<GLRenderer | null>(null);
-  const [displaySyntaxLinks] = useAtom(editorStateStore.displaySyntaxLinksAtom);
 
   useEffect(() => {
     if (!canvasRef.current) return;
@@ -1104,6 +1103,8 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
     notationGraphStore.onNodeUpdatedOrLinked.subscribe(onGraphUpdate);
     selectionStore.onLinksChange.subscribe(onGraphUpdate);
     classVisibilityStore.onChange.subscribe(onGraphUpdate);
+    editorStateStore.displayPrecedenceLinksChangeEvent.subscribe(onGraphUpdate);
+    editorStateStore.displaySyntaxLinksChangeEvent.subscribe(onGraphUpdate);
 
     window.addEventListener("resize", onResize);
 
@@ -1113,6 +1114,8 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       notationGraphStore.onNodeUpdatedOrLinked.unsubscribe(onGraphUpdate);
       selectionStore.onLinksChange.unsubscribe(onGraphUpdate);
       classVisibilityStore.onChange.unsubscribe(onGraphUpdate);
+      editorStateStore.displayPrecedenceLinksChangeEvent.unsubscribe(onGraphUpdate);
+      editorStateStore.displaySyntaxLinksChangeEvent.unsubscribe(onGraphUpdate);
       syntaxLinks.unsubscribeEvents();
       precedenceLinks.unsubscribeEvents();
       window.removeEventListener("resize", onResize);
