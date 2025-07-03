@@ -730,7 +730,7 @@ class LinkGeometry {
 
 export class GLDrawableComposite implements GLDrawable {
 
-  private drawables: GLDrawable[] = [];
+  protected drawables: GLDrawable[] = [];
 
   constructor(drawables: GLDrawable[] = []) {
     this.drawables = drawables;
@@ -761,9 +761,11 @@ export class GLDrawableComposite implements GLDrawable {
 
 class LinkGeometryMasterDrawable extends GLDrawableComposite {
   private program: WebGLProgram;
+  private linkDrawables: LinkGeometryDrawable[];
 
   constructor(linkDrawables: LinkGeometryDrawable[]) {
     super(linkDrawables);
+    this.linkDrawables = linkDrawables;
   }
 
   public attach(gl: GLRenderer): void {
@@ -777,7 +779,19 @@ class LinkGeometryMasterDrawable extends GLDrawableComposite {
   public draw(gl: GLRenderer): void {
     gl.useProgram(this.program);
     gl.setAlphaBlend(true);
-    super.draw(gl);
+    
+    let selecting = false;
+    this.linkDrawables.forEach((drawable) => {
+      selecting ||= drawable.hasSelectedLinks();
+    });
+
+    gl.setUniformBool("u_selecting", selecting);
+
+    let maxPass = selecting ? LinkGeometry.PASS_SELECTION : LinkGeometry.PASS_NORMAL;
+    for (let pass = LinkGeometry.PASS_NORMAL; pass <= maxPass; pass++) {
+      gl.setUniformUInt("u_pass", pass);
+      super.draw(gl);
+    }
   }
 }
 
@@ -992,22 +1006,17 @@ class LinkGeometryDrawable implements GLDrawable {
 
   }
 
+  public hasSelectedLinks(): boolean {
+    return this.selectedLinks.size > 0;
+  }
+
   public draw(gl: GLRenderer): void {
     if (!this.isLayerVisible(this.editorState)) {
       return;
     }
-    const selecting = this.selectedLinks.size > 0;
-    gl.setUniformBool("u_selecting", selecting);
     gl.bindBuffer(this.triangleBuffer, "a_position");
     gl.bindBuffer(this.attributeBuffer, "a_attributes");
-    gl.setUniformUInt("u_pass", LinkGeometry.PASS_NORMAL);
     gl.drawArrayByBuffer(WebGL2RenderingContext.TRIANGLES, this.triangleBuffer);
-    if (selecting) {
-      gl.setUniformUInt("u_pass", LinkGeometry.PASS_OUTLINE);
-      gl.drawArrayByBuffer(WebGL2RenderingContext.TRIANGLES, this.triangleBuffer);
-      gl.setUniformUInt("u_pass", LinkGeometry.PASS_SELECTION);
-      gl.drawArrayByBuffer(WebGL2RenderingContext.TRIANGLES, this.triangleBuffer);
-    }
   }
 
   public unsubscribeEvents() {
