@@ -2,6 +2,7 @@ import { atom, getDefaultStore, WritableAtom } from "jotai";
 import { NotationGraphStore } from "./notation-graph-store/NotationGraphStore";
 import { SignalAtomWrapper } from "./SignalAtomWrapper";
 import { SignalAtomCollection } from "./SignalAtomCollection";
+import { ISignal, ISimpleEvent, SignalDispatcher, SimpleEventDispatcher } from "strongly-typed-events";
 
 /**
  * Class names that should be hidden in the default visibility state.
@@ -200,6 +201,7 @@ export class ClassVisibilityStore {
     }
 
     // broadcast change
+    this._onChange.dispatch([className]);
     this.globalSignalAtom.signal(this.jotaiStore.set);
     this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
   }
@@ -225,6 +227,7 @@ export class ClassVisibilityStore {
     this._hiddenClasses = newHiddenClasses;
 
     // broadcast change
+    this._onChange.dispatch([className]);
     this.globalSignalAtom.signal(this.jotaiStore.set);
     this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
   }
@@ -238,6 +241,7 @@ export class ClassVisibilityStore {
     this._hiddenClasses = new Set<string>(this.notationGraphStore.classNames);
 
     // broadcast change
+    this._onChange.dispatch(this.notationGraphStore.classNames);
     this.globalSignalAtom.signal(this.jotaiStore.set);
     for (const className of this.notationGraphStore.classNames) {
       this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
@@ -253,6 +257,7 @@ export class ClassVisibilityStore {
     this._hiddenClasses = new Set<string>([]);
 
     // broadcast change
+    this._onChange.dispatch(this.notationGraphStore.classNames);
     this.globalSignalAtom.signal(this.jotaiStore.set);
     for (const className of this.notationGraphStore.classNames) {
       this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
@@ -272,6 +277,7 @@ export class ClassVisibilityStore {
     );
 
     // broadcast change
+    this._onChange.dispatch(this.notationGraphStore.classNames);
     this.globalSignalAtom.signal(this.jotaiStore.set);
     for (const className of this.notationGraphStore.classNames) {
       this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
@@ -291,6 +297,7 @@ export class ClassVisibilityStore {
     );
 
     // broadcast change
+    this._onChange.dispatch(this.notationGraphStore.classNames);
     this.globalSignalAtom.signal(this.jotaiStore.set);
     for (const className of this.notationGraphStore.classNames) {
       this.classSignalAtoms.get(className).signal(this.jotaiStore.set);
@@ -334,5 +341,21 @@ export class ClassVisibilityStore {
     }
 
     return this.isClassVisibleAtoms.get(className)!;
+  }
+
+  ////////////
+  // Events //
+  ////////////
+
+  private _onChange = new SimpleEventDispatcher<readonly string[]>();
+
+  /**
+   * Fires once when the class visibility store is updated.
+   * The list of affected class names is provided as the argument
+   * to the event handler. To check the current visibility state
+   * of a class, test its presence in one of the two exposed sets.
+   */
+  public get onChange(): ISimpleEvent<readonly string[]> {
+    return this._onChange.asEvent();
   }
 }
