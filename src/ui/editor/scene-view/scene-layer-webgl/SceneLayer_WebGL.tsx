@@ -12,7 +12,8 @@ import { useAtomCallback } from "jotai/utils";
 import { EditorContext } from "../../EditorContext";
 import { SelectionLinksChangeMetadata, SelectionStore } from "../../state/selection-store/SelectionStore";
 import { Link } from "../../../../mung/Link";
-import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
+import { ClassVisibilityStore, DEFAULT_HIDDEN_CLASSES } from "../../state/ClassVisibilityStore";
+import { vec2, vec4, mat4 } from "gl-matrix";
 
 export interface SceneLayerProps {
   readonly zoomer: Zoomer;
@@ -256,15 +257,27 @@ export class GeometryBuffer {
   }
 }
 
-const LINE_VERTEX_SHADER_SOURCE =
+const SHADER_COMMON =
 `#version 300 es
 
   const uint FLAG_VISIBLE = (1u << 0);
+  const uint FLAG_HIGHLIGHTED = (1u << 1);
 
-  in vec2 a_position;
+  const uint PASS_NORMAL = 0u;
+  const uint PASS_OUTLINE = 1u;
+  const uint PASS_SELECTION = 2u;
+`;
+
+const LINE_VERTEX_SHADER_SOURCE =
+SHADER_COMMON +
+` const float HIGHLIGHT_OUTLINE_DISP = 5.0;
+
+  in vec4 a_position;
   in uint a_attributes;
 
   uniform mat4 u_mvp_matrix;
+  uniform uint u_pass;
+  uniform bool u_selecting;
 
   flat out uint v_attributes;
 
@@ -274,20 +287,29 @@ const LINE_VERTEX_SHADER_SOURCE =
     //this is more efficient than an if/else, as it is branch free
     //it will also degenerate the triangle to a point, which will either not be rendered,
     //or will be discarded by the fragment shader (but there will still be way less fragments to process)
-    gl_Position = u_mvp_matrix * vec4(a_position, 0, 1) * float(a_attributes & FLAG_VISIBLE);
+    if (u_pass == PASS_OUTLINE) {
+      gl_Position = u_mvp_matrix * vec4(a_position.xy + a_position.zw * HIGHLIGHT_OUTLINE_DISP, 0, 1) * float(a_attributes & FLAG_VISIBLE) * float(a_attributes & FLAG_HIGHLIGHTED) * 0.5;
+    } else if (u_pass == PASS_SELECTION) {
+      gl_Position = u_mvp_matrix * vec4(a_position.xy, 0, 1) * float(a_attributes & FLAG_VISIBLE) * float(a_attributes & FLAG_HIGHLIGHTED) * 0.5;
+    } else {
+      if (u_selecting) {
+        gl_Position = u_mvp_matrix * vec4(a_position.xy, 0, 1) * float(a_attributes & FLAG_VISIBLE) * (1.0 - float(a_attributes & FLAG_HIGHLIGHTED) * 0.5);
+      } else {
+        gl_Position = u_mvp_matrix * vec4(a_position.xy, 0, 1) * float(a_attributes & FLAG_VISIBLE);
+      }
+    }
   }
 `;
 
 const LINE_FRAGMENT_SHADER_SOURCE =
-`#version 300 es
-
-  const uint FLAG_VISIBLE = (1u << 0);
-  const uint FLAG_HIGHLIGHTED = (1u << 1);
-
+SHADER_COMMON +
+`
   precision mediump float;
 
   uniform vec4 u_color;
+  uniform vec4 u_outline_color;
   uniform bool u_selecting;
+  uniform highp uint u_pass;
 
   flat in uint v_attributes;
 
@@ -298,8 +320,13 @@ const LINE_FRAGMENT_SHADER_SOURCE =
       discard; // Do not render if not visible
     }
 
-    vec4 color = u_color;
-    if (u_selecting && (v_attributes & FLAG_HIGHLIGHTED) == 0u) {
+    bool highlighted = (v_attributes & FLAG_HIGHLIGHTED) != 0u;
+    if (u_pass != PASS_NORMAL && !highlighted) {
+      discard;
+    }
+
+    vec4 color = u_pass == PASS_OUTLINE ? u_outline_color : u_color;
+    if (u_selecting && !highlighted) {
       color.a = 0.15;
     }
 
@@ -321,7 +348,7 @@ export class GLRenderer {
   private transform: d3.ZoomTransform = d3.zoomIdentity;
 
   private currentProgram: WebGLProgram | null = null;
-  private currentMatrix: number[];
+  private currentMatrix: mat4 = mat4.create();
 
   constructor(gl: WebGL2RenderingContext) {
     this.gl = gl;
@@ -385,7 +412,9 @@ export class GLRenderer {
     this.gl.linkProgram(program);
 
     if (!this.gl.getProgramParameter(program, this.gl.LINK_STATUS)) {
-      throw new Error("Failed to link program");
+      const error = this.gl.getProgramInfoLog(program);
+      this.gl.deleteProgram(program);
+      throw new Error("Failed to link program: " + error);
     }
 
     return program;
@@ -466,6 +495,20 @@ export class GLRenderer {
     }
   }
 
+  public setUniformUInt(name: string, value: number) {
+    if (this.currentProgram === null) {
+      return;
+    }
+    const location = this.gl.getUniformLocation(this.currentProgram, name);
+    if (location !== null) {
+      this.gl.uniform1ui(location, value);
+    }
+  }
+
+  public setUniformBool(name: string, value: boolean) {
+    this.setUniformInt(name, value ? 1 : 0);
+  }
+
   public draw() {
     const canvas = this.gl.canvas as HTMLCanvasElement;
     //console.log("viewport", canvas.clientWidth, canvas.clientHeight);
@@ -483,7 +526,8 @@ export class GLRenderer {
 
     const transform = this.transform;
 
-    const projectionMatrix = this.createOrthoMatrix(
+    mat4.ortho(
+      this.currentMatrix,
       transform.invertX(0),
       transform.invertX(canvas.clientWidth),
       transform.invertY(canvas.clientHeight),
@@ -491,7 +535,6 @@ export class GLRenderer {
       -1,
       1
     );
-    this.currentMatrix = projectionMatrix;
 
     for (const drawable of this.drawables) {
       drawable.draw(this);
@@ -509,27 +552,6 @@ export class GLRenderer {
   public drawArrayByBuffer(primitiveType: GLenum, buffer: GeometryBuffer) {
     this.drawArray(primitiveType, 0, buffer.numVertices());
   }
-
-  private createOrthoMatrix(
-    left: number,
-    right: number,
-    bottom: number,
-    top: number,
-    near: number,
-    far: number,
-  ) {
-    //https://webglfundamentals.org/webgl/lessons/webgl-3d-orthographic.html
-    return [
-      2 / (right - left), 0, 0, 0,
-      0, 2 / (top - bottom), 0, 0,
-      0, 0, 2 / (near - far), 0,
-
-      (left + right) / (left - right),
-      (bottom + top) / (bottom - top),
-      (near + far) / (near - far),
-      1,
-    ];
-  }
 }
 
 interface LinkGeometryStateProvider {
@@ -537,10 +559,16 @@ interface LinkGeometryStateProvider {
   isHighlighted(): boolean;
 }
 
+const ZERO_VEC: vec2 = [0, 0];
+
 class LinkGeometry {
   public readonly VERTEX_COUNT = 6;
-  public readonly FLAG_VISIBLE = (1 << 0);
-  public readonly FLAG_HIGHLIGHTED = (1 << 1);
+  public static readonly FLAG_VISIBLE = (1 << 0);
+  public static readonly FLAG_HIGHLIGHTED = (1 << 1);
+
+  public static readonly PASS_NORMAL = 0;
+  public static readonly PASS_OUTLINE = 1;
+  public static readonly PASS_SELECTION = 2;
 
   constructor(
     private fromNode: Node,
@@ -549,36 +577,6 @@ class LinkGeometry {
     private lineThickness: number = 5,
     private arrowHeadScale: number = 2.0
   ) { }
-
-  public mainLineSource(): GeometrySource {
-    return {
-      VERTEX_COUNT: 2,
-      generateVertices: (consumer) => {
-        this.addNodeVertex(consumer, this.fromNode);
-        this.addNodeVertex(consumer, this.toNode);
-      }
-    };
-  }
-
-  public arrowHeadLineSource(): GeometrySource {
-    return {
-      VERTEX_COUNT: 4,
-      generateVertices: (consumer) => {
-        this.addArrowHeadLines(consumer);
-      }
-    };
-  }
-
-  public arrowHeadTriangleSource(): GeometrySource {
-    return {
-      VERTEX_COUNT: 3,
-      generateVertices: (consumer) => {
-        this.generateArrowHeadCoords().forEach((coords) => {
-          consumer(...coords);
-        });
-      }
-    };
-  }
 
   public allTriangleSource(): GeometrySource {
     return {
@@ -615,8 +613,8 @@ class LinkGeometry {
 
   private generateAttributeBits(): number {
     return this.bitMask(
-      [this.isVisible(), this.FLAG_VISIBLE],
-      [this.isHighlighted(), this.FLAG_HIGHLIGHTED]
+      [this.isVisible(), LinkGeometry.FLAG_VISIBLE],
+      [this.isHighlighted(), LinkGeometry.FLAG_HIGHLIGHTED]
     );
   }
 
@@ -630,103 +628,103 @@ class LinkGeometry {
     return mask;
   }
 
-  private addNodeVertex(consumer: (x: number, y: number) => void, node: Node) {
-    const [cx, cy] = this.nodeCenter(node);
-    consumer(cx, cy);
-  }
-
-  private addArrowHeadLines(consumer: (x: number, y: number) => void) {
-    const coords = this.generateArrowHeadCoords();
-    consumer(...coords[0]);
-    consumer(...coords[2]);
-    consumer(...coords[0]);
-    consumer(...coords[1]);
-  }
-
-  private getDirVec(fromCoords: [number, number], toCoords: [number, number]): [number, number] {
-    let dx = toCoords[0] - fromCoords[0];
-    let dy = toCoords[1] - fromCoords[1];
-    if (dx === 0 && dy === 0) {
-      dx = 1;
-      dy = 0; // Arbitrary direction if both nodes are at the same position
+  private getDirVec(fromCoords: vec2, toCoords: vec2): vec2 {
+    const diff = vec2.sub(vec2.create(), toCoords, fromCoords);
+    if (vec2.len(diff) == 0) {
+      diff[0] = 1; // Arbitrary direction if both nodes are at the same position
     }
-    return this.normalize(dx, dy);
+    return vec2.normalize(diff, diff);
   }
 
-  private generateArrowHeadCoords(): [number, number][] {
-    const [fx, fy] = this.nodeCenter(this.fromNode);
-    const [tx, ty] = this.nodeCenter(this.toNode);
+  private generateArrowAllTris(): vec4[] {
+    const fromPoint = this.nodeCenter(this.fromNode);
+    const toPoint = this.nodeCenter(this.toNode);
 
-    let [dx, dy] = this.getDirVec([tx, ty], [fx, fy]);
-
-    const lineSize = this.lineThickness * 2;
-    dx *= lineSize;
-    dy *= lineSize;
-
-    const [lx, ly] = this.rotateAround(dx, dy, 0, 0, Math.PI / 6);
-    const [rx, ry] = this.rotateAround(dx, dy, 0, 0, -Math.PI / 6);
-
-    return [
-      [tx, ty],
-      [tx + lx, ty + ly],
-      [tx + rx, ty + ry]
-    ];
-  }
-
-  private generateArrowAllTris(): number[][] {
-    const [fx, fy] = this.nodeCenter(this.fromNode);
-    const [tx, ty] = this.nodeCenter(this.toNode);
-
-    let [tfx, tfy] = this.getDirVec([tx, ty], [fx, fy]);
+    const toFromNormVec = this.getDirVec(toPoint, fromPoint);
 
     const headFrontLength = this.lineThickness * 2 * this.arrowHeadScale;
     const headSideLength = this.lineThickness * this.arrowHeadScale;
 
-    const [bodyEndX, bodyEndY] = [tx + tfx * headFrontLength, ty + tfy * headFrontLength];
+    const bodyEnd = vec2.create();
+    vec2.scaleAndAdd(bodyEnd, toPoint, toFromNormVec, headFrontLength);
 
-    let [headDispX, headDispY] = this.rotateAround(tfx, tfy, 0, 0, Math.PI / 2);
-    headDispX *= headSideLength;
-    headDispY *= headSideLength;
+    const headDisp = vec2.create();
+    vec2.rotate(headDisp, toFromNormVec, ZERO_VEC, Math.PI / 2);
+    vec2.scale(headDisp, headDisp, headSideLength);
 
-    const headLeft = [bodyEndX + headDispX, bodyEndY + headDispY];
-    const headRight = [bodyEndX - headDispX, bodyEndY - headDispY];
-    const headTip = [tx, ty];
+    const headLeft = vec2.add(vec2.create(), bodyEnd, headDisp);
+    const headRight = vec2.sub(vec2.create(), bodyEnd, headDisp);
+    const headTip = toPoint;
 
     const bodySideLength = this.lineThickness * 0.5;
-    let [bodyDispX, bodyDispY] = this.rotateAround(tfx, tfy, 0, 0, Math.PI / 2);
-    bodyDispX *= bodySideLength;
-    bodyDispY *= bodySideLength;
+    const bodyDisp = vec2.create();
+    vec2.rotate(bodyDisp, toFromNormVec, ZERO_VEC, Math.PI / 2);
+    vec2.scale(bodyDisp, bodyDisp, bodySideLength);
 
-    const bodyBottomLeft: [number, number] = [fx + bodyDispX, fy + bodyDispY];
-    const bodyBottomRight = [fx - bodyDispX, fy - bodyDispY];
-    const bodyTopLeft = [bodyEndX + bodyDispX, bodyEndY + bodyDispY];
-    const bodyTopRight = [bodyEndX - bodyDispX, bodyEndY - bodyDispY];
+    const bodyBottomLeft = vec2.add(vec2.create(), fromPoint, bodyDisp);
+    const bodyBottomRight = vec2.sub(vec2.create(), fromPoint, bodyDisp);
+    const bodyTopLeft = vec2.add(vec2.create(), bodyEnd, bodyDisp);
+    const bodyTopRight = vec2.sub(vec2.create(), bodyEnd, bodyDisp);
+
+    const normalBL = this.calcAvgNormal([bodyTopLeft, bodyBottomLeft], [bodyBottomLeft, bodyBottomRight]);
+    const normalBR = this.calcAvgNormal([bodyBottomLeft, bodyBottomRight], [bodyBottomRight, bodyTopRight]);
+    const bodyBottomLeftN = this.vec2Pair(bodyBottomLeft, normalBL);
+    const bodyBottomRightN = this.vec2Pair(bodyBottomRight, normalBR);
+    //stretch away from tip - do not overlap arrow triangle
+    const bodyTopRightN = this.vec2Pair(bodyTopRight, normalBR);
+    const bodyTopLeftN = this.vec2Pair(bodyTopLeft, normalBL);
+
+    //measured manually for a straight pointing-up arrow
+    const sideNL: vec2 = [-1.1443, Math.sqrt(2) / 2];
+    const sideNR: vec2 = [1.1443, Math.sqrt(2) / 2];
+    const topN: vec2 = [0, -vec2.len(sideNL)];
+    const sideNRotation = Math.atan2(toFromNormVec[1], toFromNormVec[0]) - Math.PI / 2;
+    const normalHeadL = vec2.create();
+    const normalHeadR = vec2.create();
+    const normalHeadT = vec2.create();
+    vec2.rotate(normalHeadL, sideNL, ZERO_VEC, sideNRotation);
+    vec2.rotate(normalHeadR, sideNR, ZERO_VEC, sideNRotation);
+    vec2.rotate(normalHeadT, topN, ZERO_VEC, sideNRotation);
+
+    const headTipN = this.vec2Pair(headTip, normalHeadT);
+    //scale the head normal to reach the body
+    const headLeftN = this.vec2Pair(headLeft, normalHeadL);
+    const headRightN = this.vec2Pair(headRight, normalHeadR);
 
     return [
-      bodyBottomLeft, bodyBottomRight, bodyTopRight,
-      bodyTopRight, bodyTopLeft, bodyBottomLeft,
-      headTip, headLeft, headRight,
+      bodyBottomLeftN, bodyBottomRightN, bodyTopRightN,
+      bodyTopRightN, bodyTopLeftN, bodyBottomLeftN,
+      headTipN, headLeftN, headRightN,
     ]
   }
 
-  private nodeCenter(node: Node): [number, number] {
+  private vec2Pair(a: vec2, b: vec2): vec4 {
+    return [a[0], a[1], b[0], b[1]];
+  }
+
+  private calcAvgNormal(...edges: vec2[][]) : vec2 {
+    const avgNormal = vec2.create();
+    let edgeCount = 0;
+    for (const edge of edges) {
+      const dir = vec2.create();
+      vec2.sub(dir, edge[1], edge[0]);
+      if (vec2.len(dir) === 0) {
+        continue; // Skip zero-length edges
+      }
+      vec2.normalize(dir, dir);
+      // convention - counter-clockwise right side normals
+      // so, an edge with points 0,0 and 1,0 will have a normal of 0,-1
+      vec2.rotate(dir, dir, ZERO_VEC, Math.PI / 2);
+      vec2.add(avgNormal, avgNormal, dir);
+      edgeCount++;
+    }
+    vec2.div(avgNormal, avgNormal, [edgeCount, edgeCount]);
+
+    return vec2.normalize(avgNormal, avgNormal);
+  }
+
+  private nodeCenter(node: Node): vec2 {
     return [node.left + node.width / 2, node.top + node.height / 2];
-  }
-
-  private normalize(x: number, y: number): [number, number] {
-    const length = Math.sqrt(x * x + y * y);
-    return [x / length, y / length];
-  }
-
-  private rotateAround(x: number, y: number, ox: number, oy: number, angle: number): [number, number] {
-    const cos = Math.cos(angle);
-    const sin = Math.sin(angle);
-    const dx = x - ox;
-    const dy = y - oy;
-    return [
-      ox + dx * cos - dy * sin,
-      oy + dx * sin + dy * cos,
-    ];
   }
 }
 
@@ -791,7 +789,7 @@ class LinkGeometryDrawable implements GLDrawable {
 
   private triangleBuffer = new GeometryBuffer({
     dataType: WebGL2RenderingContext.FLOAT,
-    elementCount: 2, // x, y coordinates
+    elementCount: 4, // x, y, nx, ny coordinates
     elementSizeof: Float32Array.BYTES_PER_ELEMENT
   });
   private attributeBuffer = new GeometryBuffer({
@@ -803,9 +801,12 @@ class LinkGeometryDrawable implements GLDrawable {
   private linkInsertSubscription: ISimpleEventHandler<LinkInsertMetadata>;
   private linkRemoveSubscription: ISimpleEventHandler<LinkRemoveMetadata>;
   private linkSelectionSubscription: ISimpleEventHandler<SelectionLinksChangeMetadata>;
+  private classVisibilitySubscription: ISimpleEventHandler<readonly string[]>;
 
   private linkToIndexMap = new Map<string, number>();
   private selectedLinks: Set<string> = new Set();
+  private linkToClassMap = new Map<string, Set<string>>();
+  private classToLinkMap = new Map<string, Set<string>>();
 
   constructor(notationGraph: NotationGraphStore, editorStateStore: EditorStateStore, selectionStore: SelectionStore, classVisibilityStore: ClassVisibilityStore) {
     this.notationGraph = notationGraph;
@@ -843,6 +844,14 @@ class LinkGeometryDrawable implements GLDrawable {
     selectionStore.fullySelectedLinks.forEach((link) => {
       this.onLinkSelected(link);
     });
+
+    this.classVisibilitySubscription = (classes) => {
+      classes.forEach((clazz) => {
+        this.onClassVisibilityChanged(clazz);
+      });
+    };
+
+    classVisibilityStore.onChange.subscribe(this.classVisibilitySubscription);
   }
 
   private onLinkSelected(Link: Link): void {
@@ -863,6 +872,15 @@ class LinkGeometryDrawable implements GLDrawable {
       return;
     }
     this.updateAttributeData(key);
+  }
+
+  private onClassVisibilityChanged(clazz: string) {
+    const links = this.classToLinkMap.get(clazz);
+    if (links) {
+      for (const linkKey of links) {
+        this.updateAttributeData(linkKey);
+      }
+    }
   }
 
   private updateAttributeData(key: string) {
@@ -896,16 +914,35 @@ class LinkGeometryDrawable implements GLDrawable {
     if (this.linkToIndexMap.has(key)) {
       return;
     }
-    const selectedLinks = this.selectedLinks;
+    const _this = this;
     const geometry = new LinkGeometry(meta.fromNode, meta.toNode, new class implements LinkGeometryStateProvider {
       isVisible(): boolean {
+        const linkClasses = _this.linkToClassMap.get(key);
+        for (const className of linkClasses || []) {
+          if (_this.classVisibilityStore.hiddenClasses.has(className)) {
+            return false;
+          }
+          if (!_this.classVisibilityStore.visibleClasses.has(className) && DEFAULT_HIDDEN_CLASSES.has(className)) {
+            return false;
+          }
+        }
         return true;
       }
 
       isHighlighted(): boolean {
-        return selectedLinks.has(key);
+        return _this.selectedLinks.has(key);
       }
     });
+
+    const linkClasses = new Set([meta.fromNode.className, meta.toNode.className]);
+    this.linkToClassMap.set(key, linkClasses);
+    for (const className of linkClasses) {
+      if (!this.classToLinkMap.has(className)) {
+        this.classToLinkMap.set(className, new Set());
+      }
+      this.classToLinkMap.get(className)!.add(key);
+    }
+
     const trisSource = geometry.allTriangleSource();
     const index = this.triangleBuffer.addGeometry(trisSource);
     this.attributeBuffer.addGeometry(geometry.attributesSourceFor(trisSource));
@@ -930,6 +967,17 @@ class LinkGeometryDrawable implements GLDrawable {
         this.linkToIndexMap.set(key, value - 1);
       }
     });
+
+    const linkClasses = this.linkToClassMap.get(key);
+    if (linkClasses) {
+      for (const className of linkClasses) {
+        const classLinks = this.classToLinkMap.get(className);
+        if (classLinks) {
+          classLinks.delete(key);
+        }
+      }
+    }
+    this.linkToClassMap.delete(key);
   }
 
   private makeLinkKey(data: LinkInsertMetadata): string {
@@ -948,16 +996,25 @@ class LinkGeometryDrawable implements GLDrawable {
     if (!this.isLayerVisible(this.editorState)) {
       return;
     }
-    gl.setUniformInt("u_selecting", this.selectedLinks.size > 0 ? 1 : 0);
+    const selecting = this.selectedLinks.size > 0;
+    gl.setUniformBool("u_selecting", selecting);
     gl.bindBuffer(this.triangleBuffer, "a_position");
     gl.bindBuffer(this.attributeBuffer, "a_attributes");
+    gl.setUniformUInt("u_pass", LinkGeometry.PASS_NORMAL);
     gl.drawArrayByBuffer(WebGL2RenderingContext.TRIANGLES, this.triangleBuffer);
+    if (selecting) {
+      gl.setUniformUInt("u_pass", LinkGeometry.PASS_OUTLINE);
+      gl.drawArrayByBuffer(WebGL2RenderingContext.TRIANGLES, this.triangleBuffer);
+      gl.setUniformUInt("u_pass", LinkGeometry.PASS_SELECTION);
+      gl.drawArrayByBuffer(WebGL2RenderingContext.TRIANGLES, this.triangleBuffer);
+    }
   }
 
   public unsubscribeEvents() {
     this.notationGraph.onLinkInserted.unsubscribe(this.linkInsertSubscription);
     this.notationGraph.onLinkRemoved.unsubscribe(this.linkRemoveSubscription);
     this.selectionStore.onLinksChange.unsubscribe(this.linkSelectionSubscription);
+    this.classVisibilityStore.onChange.unsubscribe(this.classVisibilitySubscription);
   }
 }
 
@@ -969,6 +1026,7 @@ class SyntaxLinkGeometryDrawable extends LinkGeometryDrawable {
 
   public draw(gl: GLRenderer): void {
     gl.setUniformColorInt("u_color", 0xFFFF3333);
+    gl.setUniformColorInt("u_outline_color", 0xFFFFFFFF);
     super.draw(gl);
   }
 
@@ -1045,6 +1103,7 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
     props.zoomer.onTransformChange.subscribe(onZoom);
     notationGraphStore.onNodeUpdatedOrLinked.subscribe(onGraphUpdate);
     selectionStore.onLinksChange.subscribe(onGraphUpdate);
+    classVisibilityStore.onChange.subscribe(onGraphUpdate);
 
     window.addEventListener("resize", onResize);
 
@@ -1053,6 +1112,7 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       props.zoomer.onTransformChange.unsubscribe(onZoom);
       notationGraphStore.onNodeUpdatedOrLinked.unsubscribe(onGraphUpdate);
       selectionStore.onLinksChange.unsubscribe(onGraphUpdate);
+      classVisibilityStore.onChange.unsubscribe(onGraphUpdate);
       syntaxLinks.unsubscribeEvents();
       precedenceLinks.unsubscribeEvents();
       window.removeEventListener("resize", onResize);
