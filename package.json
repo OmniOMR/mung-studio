@@ -52,6 +52,7 @@
         "strongly-typed-events": "^3.0.11"
     },
     "dependencies": {
-        "gl-matrix": "^3.4.3"
+        "gl-matrix": "^3.4.3",
+        "rbush": "^4.0.1"
     }
 }
