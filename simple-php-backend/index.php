@@ -651,8 +651,13 @@ function action_upload_document_mung() {
     $backupPath = Document::todays_backup_mung_path($document->name);
     if (!is_dir(dirname($backupPath))) {
         mkdir(dirname($backupPath));
+        
+        // make sure it can be modified and deleted by non-www users
+        chmod(dirname($backupPath), 0777);
     }
     file_put_contents($backupPath, file_get_contents("php://input"));
+
+    // make sure it can be modified and deleted by non-www users
     chmod($backupPath, 0666);
 }
 
