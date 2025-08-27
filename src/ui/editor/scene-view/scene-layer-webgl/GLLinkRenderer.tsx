@@ -10,6 +10,8 @@ import { ISimpleEventHandler } from "strongly-typed-events";
 import { LinkInsertMetadata, LinkRemoveMetadata } from "../../state/notation-graph-store/NodeCollection";
 import { Link } from "../../../../mung/Link";
 import { LinkType } from "../../../../mung/LinkType";
+import { Zoomer } from "../Zoomer";
+import { ZoomTransform } from "d3";
 
 const SHADER_COMMON =
 `#version 300 es
@@ -24,14 +26,15 @@ const SHADER_COMMON =
 
 const LINE_VERTEX_SHADER_SOURCE =
 SHADER_COMMON +
-` const float HIGHLIGHT_OUTLINE_DISP = 5.0;
-
-  in vec4 a_position;
+` in vec4 a_position;
   in uint a_attributes;
 
   uniform mat4 u_mvp_matrix;
   uniform uint u_pass;
   uniform bool u_selecting;
+
+  uniform float u_calcZoomDisp;
+  uniform float u_highlightOutlineDisp;
 
   flat out uint v_attributes;
 
@@ -41,15 +44,20 @@ SHADER_COMMON +
     //this is more efficient than an if/else, as it is branch free
     //it will also degenerate the triangle to a point, which will either not be rendered,
     //or will be discarded by the fragment shader (but there will still be way less fragments to process)
+    float finalZoom = u_calcZoomDisp;
     if (u_pass == PASS_OUTLINE) {
-      gl_Position = u_mvp_matrix * vec4(a_position.xy + a_position.zw * HIGHLIGHT_OUTLINE_DISP, 0, 1) * float(a_attributes & FLAG_VISIBLE) * float(a_attributes & FLAG_HIGHLIGHTED) * 0.5;
+      finalZoom += u_highlightOutlineDisp;
+    }
+    vec4 basePos = u_mvp_matrix * vec4(a_position.xy + a_position.zw * finalZoom, 0, 1);
+    if (u_pass == PASS_OUTLINE) {
+      gl_Position = basePos * float(a_attributes & FLAG_VISIBLE) * float(a_attributes & FLAG_HIGHLIGHTED) * 0.5;
     } else if (u_pass == PASS_SELECTION) {
-      gl_Position = u_mvp_matrix * vec4(a_position.xy, 0, 1) * float(a_attributes & FLAG_VISIBLE) * float(a_attributes & FLAG_HIGHLIGHTED) * 0.5;
+      gl_Position = basePos * float(a_attributes & FLAG_VISIBLE) * float(a_attributes & FLAG_HIGHLIGHTED) * 0.5;
     } else {
       if (u_selecting) {
-        gl_Position = u_mvp_matrix * vec4(a_position.xy, 0, 1) * float(a_attributes & FLAG_VISIBLE) * (1.0 - float(a_attributes & FLAG_HIGHLIGHTED) * 0.5);
+        gl_Position = basePos * float(a_attributes & FLAG_VISIBLE) * (1.0 - float(a_attributes & FLAG_HIGHLIGHTED) * 0.5);
       } else {
-        gl_Position = u_mvp_matrix * vec4(a_position.xy, 0, 1) * float(a_attributes & FLAG_VISIBLE);
+        gl_Position = basePos * float(a_attributes & FLAG_VISIBLE);
       }
     }
   }
@@ -299,10 +307,14 @@ export class LinkGeometryMasterDrawable extends GLDrawableComposite {
 }
 
 class LinkGeometryDrawable implements GLDrawable {
+
+  private static readonly LINK_WIDTH: number = 5.0;
+
   private notationGraph: NotationGraphStore;
   private editorState: EditorStateStore;
   private selectionStore: SelectionStore;
   private classVisibilityStore: ClassVisibilityStore;
+  private zoomer: Zoomer;
 
   private triangleBuffer = new GeometryBuffer({
     dataType: WebGL2RenderingContext.FLOAT,
@@ -319,17 +331,21 @@ class LinkGeometryDrawable implements GLDrawable {
   private linkRemoveSubscription: ISimpleEventHandler<LinkRemoveMetadata>;
   private linkSelectionSubscription: ISimpleEventHandler<SelectionLinksChangeMetadata>;
   private classVisibilitySubscription: ISimpleEventHandler<readonly string[]>;
+  private zoomSubscription: ISimpleEventHandler<ZoomTransform>;
 
   private linkToIndexMap = new Map<string, number>();
   private selectedLinks: Set<string> = new Set();
   private linkToClassMap = new Map<string, Set<string>>();
   private classToLinkMap = new Map<string, Set<string>>();
 
-  constructor(notationGraph: NotationGraphStore, editorStateStore: EditorStateStore, selectionStore: SelectionStore, classVisibilityStore: ClassVisibilityStore) {
+  private scale: number = 1.0;
+
+  constructor(notationGraph: NotationGraphStore, editorStateStore: EditorStateStore, selectionStore: SelectionStore, classVisibilityStore: ClassVisibilityStore, zoomer: Zoomer) {
     this.notationGraph = notationGraph;
     this.editorState = editorStateStore;
     this.selectionStore = selectionStore;
     this.classVisibilityStore = classVisibilityStore;
+    this.zoomer = zoomer;
 
     this.linkInsertSubscription = (meta) => {
       this.onLinkInserted(meta);
@@ -337,6 +353,10 @@ class LinkGeometryDrawable implements GLDrawable {
 
     this.linkRemoveSubscription = (meta) => {
       this.onLinkRemoved(meta);
+    };
+
+    this.zoomSubscription = (transform) => {
+      this.onZoom(transform);
     };
 
     notationGraph.onLinkInserted.subscribe(this.linkInsertSubscription);
@@ -369,6 +389,18 @@ class LinkGeometryDrawable implements GLDrawable {
     };
 
     classVisibilityStore.onChange.subscribe(this.classVisibilitySubscription);
+
+    zoomer.onTransformChange.subscribe(this.zoomSubscription);
+    this.onZoom(zoomer.currentTransform);
+  }
+
+  public setScale(scale: number): void {
+    this.scale = scale;
+  }
+
+  private onZoom(transform: ZoomTransform): void {
+    console.log(transform.k);
+    this.setScale(1.0 / transform.k);
   }
 
   private onLinkSelected(Link: Link): void {
@@ -449,7 +481,7 @@ class LinkGeometryDrawable implements GLDrawable {
       isHighlighted(): boolean {
         return _this.selectedLinks.has(key);
       }
-    });
+    }, LinkGeometryDrawable.LINK_WIDTH, 1.5);
 
     const linkClasses = new Set([meta.fromNode.className, meta.toNode.className]);
     this.linkToClassMap.set(key, linkClasses);
@@ -517,6 +549,17 @@ class LinkGeometryDrawable implements GLDrawable {
     if (!this.isLayerVisible(this.editorState)) {
       return;
     }
+    let scale = this.scale;
+    let zoomDisp;
+    if (scale < 1) {
+      scale = scale * scale;
+      zoomDisp = -LinkGeometryDrawable.LINK_WIDTH * 0.5 * (1.0 - scale);
+    } else {
+      scale = Math.min(2, scale);
+      zoomDisp = LinkGeometryDrawable.LINK_WIDTH * 0.5 * (scale - 1.0);
+    }
+    gl.setUniformFloat("u_calcZoomDisp", zoomDisp);
+    gl.setUniformFloat("u_highlightOutlineDisp", LinkGeometryDrawable.LINK_WIDTH * Math.sqrt(scale));
     gl.bindBuffer(this.triangleBuffer, "a_position");
     gl.bindBuffer(this.attributeBuffer, "a_attributes");
     gl.drawArrayByBuffer(WebGL2RenderingContext.TRIANGLES, this.triangleBuffer);
@@ -527,6 +570,7 @@ class LinkGeometryDrawable implements GLDrawable {
     this.notationGraph.onLinkRemoved.unsubscribe(this.linkRemoveSubscription);
     this.selectionStore.onLinksChange.unsubscribe(this.linkSelectionSubscription);
     this.classVisibilityStore.onChange.unsubscribe(this.classVisibilitySubscription);
+    this.zoomer.onTransformChange.unsubscribe(this.zoomSubscription);
   }
 }
 

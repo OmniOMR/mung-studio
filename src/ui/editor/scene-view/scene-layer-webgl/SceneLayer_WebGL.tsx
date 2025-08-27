@@ -33,11 +33,11 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       glRef.current = new GLRenderer(gl);
     }
 
-    const maskDrawable = new GlobalMaskTexture(6670, 8281, notationGraphStore);
+    const maskDrawable = GlobalMaskTexture.withAutoSize(notationGraphStore, { paddingMultiplier: 1.5, paddingExtraPixels: 256 });
     glRef.current.addDrawable(maskDrawable);
 
-    const syntaxLinks = new SyntaxLinkGeometryDrawable(notationGraphStore, editorStateStore, selectionStore, classVisibilityStore);
-    const precedenceLinks = new PrecedenceLinkGeometryDrawable(notationGraphStore, editorStateStore, selectionStore, classVisibilityStore);
+    const syntaxLinks = new SyntaxLinkGeometryDrawable(notationGraphStore, editorStateStore, selectionStore, classVisibilityStore, props.zoomer);
+    const precedenceLinks = new PrecedenceLinkGeometryDrawable(notationGraphStore, editorStateStore, selectionStore, classVisibilityStore, props.zoomer);
     const masterDrawable = new LinkGeometryMasterDrawable([syntaxLinks, precedenceLinks]);
     glRef.current.addDrawable(masterDrawable);
 

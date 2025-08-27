@@ -126,6 +126,18 @@ export class GLRenderer {
     this.gl.texStorage2D(this.gl.TEXTURE_2D, 1, format, width, height);
   }
 
+  public allocateMutableTextureStorage(
+    texture: WebGLTexture,
+    width: number,
+    height: number,
+    internalFormat: GLenum = this.gl.RGBA,
+    format: GLenum = this.gl.RGBA,
+    dataType: GLenum = this.gl.UNSIGNED_BYTE
+  ): void {
+    this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
+    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, internalFormat, width, height, 0, format, dataType, null);
+  }
+
   public updateTexture(texture: WebGLTexture, func: (WebGL2RenderingContext) => void): void {
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     func(this.gl);
@@ -218,6 +230,16 @@ export class GLRenderer {
     const location = this.gl.getUniformLocation(this.currentProgram, name);
     if (location !== null) {
       this.gl.uniform1ui(location, value);
+    }
+  }
+
+  public setUniformFloat(name: string, value: number) {
+    if (this.currentProgram === null) {
+      return;
+    }
+    const location = this.gl.getUniformLocation(this.currentProgram, name);
+    if (location !== null) {
+      this.gl.uniform1f(location, value);
     }
   }
 

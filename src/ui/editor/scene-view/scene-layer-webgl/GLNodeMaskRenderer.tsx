@@ -82,18 +82,28 @@ class TextureRectangle implements GLBuffer {
   }
 }
 
+interface TextureSafezones {
+  paddingMultiplier: number;
+  paddingExtraPixels: number;
+};
+
 export class GlobalMaskTexture implements GLDrawable {
   private static readonly PIXEL_STRIDE = 4; // RGBA
   private static readonly MASK_ALPHA = 255 / 5;
 
   private texture: WebGLTexture | null = null;
+
   private bgImageWidth: number;
   private bgImageHeight: number;
+  private dynamicSizeUpdatesEnabled: boolean = false;
+  private safezones: TextureSafezones;
+
   private queuedUpdates: Set<SubImageRange> = new Set();
   private clientBuffer: Uint8ClampedArray;
   private rectangle: TextureRectangle;
   private program: WebGLProgram | null = null;
   private forceFullUpload: boolean = true;
+  private requestTextureResize: boolean = false;
   private clientBufferIsFresh: boolean = true;
 
   private notationGraph: NotationGraphStore;
@@ -111,7 +121,8 @@ export class GlobalMaskTexture implements GLDrawable {
     this.bgImageHeight = bgImageHeight;
     this.rectangle = new TextureRectangle(bgImageWidth, bgImageHeight);
     this.notationGraph = notationGraph;
-    this.clientBuffer = new Uint8ClampedArray(bgImageWidth * bgImageHeight * GlobalMaskTexture.PIXEL_STRIDE);
+    console.log("Initializing client buffer with size", bgImageWidth + "x" + bgImageHeight);
+    this.clientBuffer = new Uint8ClampedArray(GlobalMaskTexture.calcTexBufferSize(bgImageWidth, bgImageHeight));
 
     this.notationGraph.nodes.forEach(this.insertNodeToIndex.bind(this));
     //initial client buffer fill
@@ -128,10 +139,67 @@ export class GlobalMaskTexture implements GLDrawable {
     });
   }
 
+  private static calcTexBufferSize(width: number, height: number): number {
+    return width * height * GlobalMaskTexture.PIXEL_STRIDE;
+  }
+
+  public static withAutoSize(notationGraph: NotationGraphStore, safezones: TextureSafezones): GlobalMaskTexture {
+    const width = this.calculateSafeTextureDimension(notationGraph, safezones, 0);
+    const height = this.calculateSafeTextureDimension(notationGraph, safezones, 1);
+    const result = new GlobalMaskTexture(width, height, notationGraph);
+    result.dynamicSizeUpdatesEnabled = true;
+    result.safezones = safezones;
+    return result;
+  }
+
+  public static calculateSafeTextureDimension(notationGraph: NotationGraphStore, safezones: TextureSafezones, coordinate: number) {
+    let selectCoordMin;
+    let selectCoordMax;
+
+    if (coordinate == 0) {
+      selectCoordMin = (node: Node) => node.left;
+      selectCoordMax = (node: Node) => node.left + node.width;
+    } else {
+      selectCoordMin = (node: Node) => node.top;
+      selectCoordMax = (node: Node) => node.top + node.height;
+    }
+
+    let minCoord = Number.MAX_VALUE;
+    let maxCoord = Number.MIN_VALUE;
+    notationGraph.nodes.forEach(node => {
+      minCoord = Math.min(minCoord, selectCoordMin(node));
+      maxCoord = Math.max(maxCoord, selectCoordMax(node));
+    });
+
+    if (minCoord === Number.MAX_VALUE || maxCoord === Number.MIN_VALUE) {
+      return safezones.paddingExtraPixels;
+    }
+
+    const startPadding = minCoord;
+    const paddedEnd = (maxCoord + 1 + (startPadding * safezones.paddingMultiplier) + safezones.paddingExtraPixels);
+
+    return Math.ceil(paddedEnd);
+  }
+
   public unsubscribeEvents() {
     this.notationGraph.onNodeInserted.unsubscribe(this.nodeInsertSubscription);
     this.notationGraph.onNodeRemoved.unsubscribe(this.nodeRemoveSubscription);
     this.notationGraph.onNodeUpdatedOrLinked.unsubscribe(this.nodeUpdateSubscription);
+  }
+
+  private resizeClientBuffer(newWidth: number, newHeight: number): void {
+    console.log("Triggered client buffer resize, old=", this.bgImageWidth + "x" + this.bgImageHeight, "new=", newWidth + "x" + newHeight);
+    const newClientBuffer = new Uint8ClampedArray(GlobalMaskTexture.calcTexBufferSize(newWidth, newHeight));
+    const copiedRowByteCount = Math.min(this.bgImageWidth, newWidth) * GlobalMaskTexture.PIXEL_STRIDE;
+    for (let row = 0; row < Math.min(this.bgImageHeight, newHeight); row++) {
+      const srcIndex = GlobalMaskTexture.calcRowByteOffset(this.bgImageWidth, row);
+      const destIndex = GlobalMaskTexture.calcRowByteOffset(newWidth, row);
+      newClientBuffer.set(this.clientBuffer.subarray(srcIndex, srcIndex + copiedRowByteCount), destIndex);
+    }
+    this.clientBuffer = newClientBuffer;
+    this.bgImageWidth = newWidth;
+    this.bgImageHeight = newHeight;
+    this.requestTextureResize = true;
   }
 
   private updateEntireClientBuffer(): void {
@@ -184,14 +252,14 @@ export class GlobalMaskTexture implements GLDrawable {
 
   private onNodeInserted(node: Node) {
     this.insertNodeToIndex(node);
-    this.queuedUpdates.add(this.currentNodeRanges.get(node.id)!);
+    this.queueUpdate(this.currentNodeRanges.get(node.id)!);
   }
 
   private onNodeRemoved(node: Node) {
     this.removeNodeFromIndex(node);
     const range = this.currentNodeRanges.get(node.id);
     if (range) {
-      this.queuedUpdates.add(range);
+      this.queueUpdate(range);
     }
   }
 
@@ -200,9 +268,19 @@ export class GlobalMaskTexture implements GLDrawable {
     this.removeNodeFromIndex(node);
     this.insertNodeToIndex(node);
     if (prevRange) {
-      this.queuedUpdates.add(prevRange);
+      this.queueUpdate(prevRange);
     }
-    this.queuedUpdates.add(this.currentNodeRanges.get(node.id)!);
+    this.queueUpdate(this.currentNodeRanges.get(node.id)!);
+  }
+
+  private queueUpdate(update: SubImageRange) {
+    this.queuedUpdates.add(update);
+
+    if (this.dynamicSizeUpdatesEnabled) {
+      if (update.x + update.width > this.bgImageWidth || update.y + update.height > this.bgImageHeight) {
+        this.requestTextureResize = true;
+      }
+    }
   }
 
   private getNodesInArea(area: SubImageRange): Node[] {
@@ -313,7 +391,10 @@ export class GlobalMaskTexture implements GLDrawable {
 
   public attach(gl: GLRenderer): void {
     this.texture = gl.createTexture();
-    gl.allocateTextureStorage(this.texture, this.bgImageWidth, this.bgImageHeight, WebGL2RenderingContext.RGBA8);
+    gl.allocateMutableTextureStorage(
+      this.texture, this.bgImageWidth, this.bgImageHeight,
+      WebGL2RenderingContext.RGBA8, WebGL2RenderingContext.RGBA, WebGL2RenderingContext.UNSIGNED_BYTE
+    );
     this.program = gl.createProgramFromSource(RECT_VERTEX_SHADER_SOURCE, RECT_FRAGMENT_SHADER_SOURCE);
     this.forceFullUpload = true;
   }
@@ -341,8 +422,12 @@ export class GlobalMaskTexture implements GLDrawable {
     gl.drawArrayByBuffer(WebGL2RenderingContext.TRIANGLES, this.rectangle!);
   }
 
+  private static calcRowByteOffset(texWidth: number, rowIndex: number): number {
+    return rowIndex * texWidth * GlobalMaskTexture.PIXEL_STRIDE;
+  }
+
   private getClientBufIndex(x: number, y: number): number {
-    return (y * this.bgImageWidth + x) * GlobalMaskTexture.PIXEL_STRIDE;
+    return GlobalMaskTexture.calcRowByteOffset(this.bgImageWidth, y) + x * GlobalMaskTexture.PIXEL_STRIDE;
   }
 
   private getClientBufPointer(x: number, y: number): Uint8ClampedArray {
@@ -351,6 +436,13 @@ export class GlobalMaskTexture implements GLDrawable {
   }
 
   public flush(gl: GLRenderer): void {
+    if (this.requestTextureResize && this.dynamicSizeUpdatesEnabled) {
+      const calcNewWidth = GlobalMaskTexture.calculateSafeTextureDimension(this.notationGraph, this.safezones, 0);
+      const calcNewHeight = GlobalMaskTexture.calculateSafeTextureDimension(this.notationGraph, this.safezones, 1);
+      this.resizeClientBuffer(calcNewWidth, calcNewHeight);
+      this.forceFullUpload = true;
+    }
+
     gl.updateTexture(this.texture!, (wgl: WebGL2RenderingContext) => {
       for (const update of this.queuedUpdates) {
         this.processUpdateRequest(update);
@@ -367,18 +459,33 @@ export class GlobalMaskTexture implements GLDrawable {
       }
     });
 
-    if (this.forceFullUpload) {
+    if (this.forceFullUpload || this.requestTextureResize) {
       gl.updateTexture(this.texture!, (wgl: WebGL2RenderingContext) => {
-        wgl.texSubImage2D(
-          WebGL2RenderingContext.TEXTURE_2D,
-          0,
-          0, 0, this.bgImageWidth, this.bgImageHeight,
-          WebGL2RenderingContext.RGBA, WebGL2RenderingContext.UNSIGNED_BYTE,
-          this.clientBuffer
-        );
+        if (this.requestTextureResize) {
+          //force full reallocation and reupload
+          wgl.texImage2D(
+            WebGL2RenderingContext.TEXTURE_2D,
+            0, WebGL2RenderingContext.RGBA8,
+            this.bgImageWidth, this.bgImageHeight, 0,
+            WebGL2RenderingContext.RGBA, WebGL2RenderingContext.UNSIGNED_BYTE,
+            this.clientBuffer
+          );
+        } else {
+          //only copy the texture data
+          //this is faster than calling glTexImage2D again, see
+          //https://www.khronos.org/opengl/wiki/Common_Mistakes#Updating_a_texture
+          wgl.texSubImage2D(
+            WebGL2RenderingContext.TEXTURE_2D,
+            0,
+            0, 0, this.bgImageWidth, this.bgImageHeight,
+            WebGL2RenderingContext.RGBA, WebGL2RenderingContext.UNSIGNED_BYTE,
+            this.clientBuffer
+          );
+        }
       });
-
-      this.forceFullUpload = false;
     }
+
+    this.forceFullUpload = false;
+    this.requestTextureResize = false;
   }
 }
