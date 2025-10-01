@@ -110,6 +110,7 @@ export class GlobalMaskTexture implements GLDrawable {
 
   private nodeBBoxIndex: RBush<Node> = new RBush<Node>();
   private currentNodeRanges: Map<number, SubImageRange> = new Map();
+  private hiddenNodes: Set<number>
 
   private nodeInsertSubscription: ISimpleEventHandler<Node>;
   private nodeRemoveSubscription: ISimpleEventHandler<Node>;
@@ -252,15 +253,12 @@ export class GlobalMaskTexture implements GLDrawable {
 
   private onNodeInserted(node: Node) {
     this.insertNodeToIndex(node);
-    this.queueUpdate(this.currentNodeRanges.get(node.id)!);
+    this.updateNodeRange(node);
   }
 
   private onNodeRemoved(node: Node) {
     this.removeNodeFromIndex(node);
-    const range = this.currentNodeRanges.get(node.id);
-    if (range) {
-      this.queueUpdate(range);
-    }
+    this.updateNodeRange(node);
   }
 
   private onNodeUpdated(node: Node) {
@@ -270,7 +268,18 @@ export class GlobalMaskTexture implements GLDrawable {
     if (prevRange) {
       this.queueUpdate(prevRange);
     }
-    this.queueUpdate(this.currentNodeRanges.get(node.id)!);
+    this.updateNodeRange(node);
+  }
+
+  private updateNodeRange(node: Node) {
+    this.updateNodeRangeByID(node.id);
+  }
+
+  private updateNodeRangeByID(nodeId: number) {
+    const range = this.currentNodeRanges.get(nodeId);
+    if (range) {
+      this.queueUpdate(range);
+    }
   }
 
   private queueUpdate(update: SubImageRange) {
@@ -283,13 +292,30 @@ export class GlobalMaskTexture implements GLDrawable {
     }
   }
 
+  public setNodeIDVisible(nodeId: number, visible: boolean) {
+    if (!visible) {
+      if (!this.hiddenNodes.has(nodeId)) {
+        this.hiddenNodes.add(nodeId);
+        this.updateNodeRangeByID(nodeId);
+      }
+    } else {
+      if (this.hiddenNodes.delete(nodeId)) {
+        this.updateNodeRangeByID(nodeId);
+      }
+    }
+  }
+
+  public setNodeVisible(node: Node, visible: boolean) {
+    this.setNodeIDVisible(node.id, visible);
+  }
+
   private getNodesInArea(area: SubImageRange): Node[] {
     return this.nodeBBoxIndex.search({
       minX: area.x,
       minY: area.y,
       maxX: area.x + area.width,
       maxY: area.y + area.height
-    }).map(entry => entry.value);
+    }).map(entry => entry.value).filter(entry => !this.hiddenNodes.has(entry.id));
   }
 
   private depthSortNodes(nodes: Node[]): Node[] {
