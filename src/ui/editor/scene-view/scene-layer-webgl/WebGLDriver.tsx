@@ -249,12 +249,9 @@ export class GLRenderer {
 
   public draw() {
     const canvas = this.gl.canvas as HTMLCanvasElement;
-    //console.log("viewport", canvas.clientWidth, canvas.clientHeight);
+    //console.log("viewport", canvas.width, canvas.height);
 
-    canvas.width = canvas.clientWidth;
-    canvas.height = canvas.clientHeight;
-
-    this.gl.viewport(0, 0, canvas.clientWidth, canvas.clientHeight);
+    this.gl.viewport(0, 0, canvas.width, canvas.height);
     this.gl.clearColor(0, 0, 0, 0);
     this.gl.clearDepth(1);
 

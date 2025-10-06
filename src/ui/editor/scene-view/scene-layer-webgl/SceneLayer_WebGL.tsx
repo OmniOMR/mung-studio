@@ -58,13 +58,34 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       render();
     };
 
-    const onResize = () => {
-      render();
-    };
-
     const onGraphUpdate = () => {
       setTimeout(render); // We need to do this on the next frame so that all the geometry has been updated before rendering is invoked
     };
+
+    //https://wikis.khronos.org/webgl/HandlingHighDPI
+
+    const resizeObserver = new ResizeObserver(resizeTheCanvasToDisplaySize)
+    resizeObserver.observe(canvasRef.current);
+
+    function resizeTheCanvasToDisplaySize(entries) {
+      let canvas = canvasRef.current!;
+
+      const entry = entries[0];
+      let width;
+      let height;
+      if (entry.devicePixelContentBoxSize) {
+        width = entry.devicePixelContentBoxSize[0].inlineSize;
+        height = entry.devicePixelContentBoxSize[0].blockSize;
+      } else if (entry.contentBoxSize) {
+        // fallback for Safari that will not always be correct
+        width = Math.round(entry.contentBoxSize[0].inlineSize * devicePixelRatio);
+        height = Math.round(entry.contentBoxSize[0].blockSize * devicePixelRatio);
+      }
+      canvas.width = width;
+      canvas.height = height;
+
+      render();
+    }
 
     props.zoomer.onTransformChange.subscribe(onZoom);
     notationGraphStore.onNodeUpdatedOrLinked.subscribe(onGraphUpdate);
@@ -74,8 +95,6 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
     classVisibilityStore.onChange.subscribe(onGraphUpdate);
     editorStateStore.displayPrecedenceLinksChangeEvent.subscribe(onGraphUpdate);
     editorStateStore.displaySyntaxLinksChangeEvent.subscribe(onGraphUpdate);
-
-    window.addEventListener("resize", onResize);
 
     // Cleanup
     return () => {
@@ -91,7 +110,7 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       syntaxLinks.unsubscribeEvents();
       precedenceLinks.unsubscribeEvents();
       maskDrawable.unsubscribeEvents();
-      window.removeEventListener("resize", onResize);
+      resizeObserver.disconnect();
     };
   }, []);
 
