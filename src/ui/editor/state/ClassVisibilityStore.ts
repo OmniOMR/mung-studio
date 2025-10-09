@@ -62,7 +62,11 @@ export const PRECEDENCE_LINK_ANNOTATION_CLASSES = new Set([
   "restDoubleWholeLegerLine",
   "restWholeLegerLine",
   "restHalfLegerLine",
+
+  // bar repeats
   "repeat1Bar",
+  "repeat2Bar",
+  "repeat4Bar",
 ]);
 
 /**
