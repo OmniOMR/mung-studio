@@ -221,12 +221,19 @@ const lookupTable = {
   restMaxima: "\u{E01A}\u{00A0}\u{00A0}\u{E4E0}",
   restLonga: "\u{E01A}\u{00A0}\u{00A0}\u{E4E1}",
   restDoubleWhole: "\u{E01A}\u{00A0}\u{00A0}\u{E4E2}",
+  restBreve: "\u{E01A}\u{00A0}\u{00A0}\u{E4E2}", // ⚠️ not a SMuFL class, see "restDoubleWhole"
   restWhole: "\u{E01A}\u{00A0}\u{00A0}\u{E4E3}", // Ⓜ️
+  restSemibreve: "\u{E01A}\u{00A0}\u{00A0}\u{E4E3}", // ⚠️ not a SMuFL class, see "restWhole"
   restHalf: "\u{E01A}\u{00A0}\u{00A0}\u{E4E4}", // Ⓜ️
+  restMinim: "\u{E01A}\u{00A0}\u{00A0}\u{E4E4}", // ⚠️ not a SMuFL class, see "restHalf"
   restQuarter: "\u{E4E5}", // Ⓜ️
+  restCrotchet: "\u{E4E5}", // ⚠️ not a SMuFL class, see "restQuarter"
   rest8th: "\u{E4E6}", // Ⓜ️
+  restQuaver: "\u{E4E6}", // ⚠️ not a SMuFL class, see "rest8th"
   rest16th: "\u{E4E7}", // Ⓜ️
+  restSemiquaver: "\u{E4E7}", // ⚠️ not a SMuFL class, see "rest16th"
   rest32nd: "\u{E4E8}", // Ⓜ️
+  restDemisemiquaver: "\u{E4E8}", // ⚠️ not a SMuFL class, see "rest32nd"
   rest64th: "\u{E4E9}", // Ⓜ️
   rest128th: "\u{E4EA}",
   rest256th: "\u{E4EB}",
