@@ -55,6 +55,7 @@ const lookupTable = {
 
   // bar repeats
   repeat1Bar: 4_500,
+  repeatOneBar: 4_500,
   repeat2Bars: 4_500,
   repeat4Bars: 4_500,
   repeatBarUpperDot: 4_500,

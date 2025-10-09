@@ -247,6 +247,7 @@ const lookupTable = {
   // 4.42. Bar repeats
   // https://w3c.github.io/smufl/latest/tables/bar-repeats.html
   repeat1Bar: "\u{E500}", // Ⓜ️
+  repeatOneBar: "\u{E500}", // ⚠️ not a SMuFL class, see "repeat1Bar"
   repeat2Bars: "\u{E501}",
   repeat4Bars: "\u{E502}",
   repeatBarUpperDot: "\u{E503}",

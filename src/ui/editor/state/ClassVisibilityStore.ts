@@ -64,6 +64,7 @@ export const PRECEDENCE_LINK_ANNOTATION_CLASSES = new Set([
   "restHalfLegerLine",
 
   // bar repeats
+  "repeatOneBar",
   "repeat1Bar",
   "repeat2Bar",
   "repeat4Bar",
