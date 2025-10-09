@@ -9,6 +9,9 @@ import { useAtomValue } from "jotai";
 import { EditorTool } from "../state/EditorStateStore";
 import { useContext } from "react";
 import { EditorContext } from "../EditorContext";
+import { isMacish } from "../../../utils/isMacish";
+
+const modKeyName = isMacish() ? "Command ⌘" : "Ctrl";
 
 export function SyntaxLinksToolPanel() {
   const { editorStateStore, selectionStore } = useContext(EditorContext);
@@ -34,7 +37,7 @@ export function SyntaxLinksToolPanel() {
         )}
         {selectedNodeIds.length > 0 && (
           <Alert color="primary">
-            Hold Ctrl and select target nodes to create links.
+            Hold { modKeyName } and select target nodes to create links.
           </Alert>
         )}
       </AccordionDetails>

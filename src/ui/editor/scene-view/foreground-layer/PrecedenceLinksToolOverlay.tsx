@@ -21,7 +21,7 @@ export interface PrecedenceLinksToolOverlayProps {
 export function PrecedenceLinksToolOverlay(
   props: PrecedenceLinksToolOverlayProps,
 ) {
-  const isCtrlPressedRef = useIsKeyPressedRef("Control");
+  const isCtrlPressedRef = useIsKeyPressedRef("MS::CtrlOrCmd");
 
   function onSelectionChange(e: SelectionNodeChangeMetadata) {
     if (!isCtrlPressedRef.current) return;
@@ -69,7 +69,7 @@ interface OverlayedPrecedenceLinksProps {
 
 function OverlayedPrecedenceLinks(props: OverlayedPrecedenceLinksProps) {
   const selectedNodes = useAtomValue(props.selectionStore.selectedNodesAtom);
-  const isCtrlPressed = useIsKeyPressed("Control");
+  const isCtrlPressed = useIsKeyPressed("MS::CtrlOrCmd");
 
   return (
     <OverlayedLinks

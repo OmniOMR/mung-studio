@@ -13,6 +13,9 @@ import {
 } from "../state/ClassVisibilityStore";
 import { useContext, useEffect, useRef } from "react";
 import { EditorContext } from "../EditorContext";
+import { isMacish } from "../../../utils/isMacish";
+
+const modKeyName = isMacish() ? "Command ⌘" : "Ctrl";
 
 export function PrecedenceLinksToolPanel() {
   const { editorStateStore, selectionStore, classVisibilityStore } =
@@ -41,7 +44,7 @@ export function PrecedenceLinksToolPanel() {
         )}
         {selectedNodeIds.length > 0 && (
           <Alert color="primary">
-            Hold Ctrl and select target nodes to create links.
+            Hold { modKeyName } and select target nodes to create links.
           </Alert>
         )}
       </AccordionDetails>
