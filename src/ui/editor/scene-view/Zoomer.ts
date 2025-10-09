@@ -3,6 +3,7 @@ import { atom, Atom, getDefaultStore } from "jotai";
 import { RefObject, useEffect } from "react";
 import { ISimpleEvent, SimpleEventDispatcher } from "strongly-typed-events";
 import { JotaiStore } from "../state/JotaiStore";
+import { isMacish } from "../../../utils/isMacish";
 
 /**
  * Function signature for transform change event listener
@@ -119,7 +120,7 @@ export class Zoomer {
     // require CTRL key be pressed for wheel zooming
     const originalD3WheelZoomHandler = svgElement.on("wheel.zoom");
     svgElement.on("wheel.zoom", function (event: WheelEvent) {
-      if (event.ctrlKey) {
+      if (isMacish() ? event.metaKey : event.ctrlKey) {
         originalD3WheelZoomHandler?.call(this, event);
       }
     });
@@ -139,7 +140,7 @@ export class Zoomer {
       return event.deltaMode === 1 ? 25 : event.deltaMode ? 500 : 1;
     }
     svgElement.on("wheel.custom-pan", function (event: WheelEvent) {
-      if (event.ctrlKey) return;
+      if (isMacish() ? event.metaKey : event.ctrlKey) return;
       const transform = svgElement.property("__zoom") as d3.ZoomTransform;
       const scale = (1 / transform.k) * panningDeltaScale(event);
       if (event.shiftKey) {
