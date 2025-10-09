@@ -35,6 +35,12 @@ export const PRECEDENCE_LINK_ANNOTATION_CLASSES = new Set([
   "noteheadSlashWhiteWhole",
   "noteheadSlashWhiteHalf",
 
+  // gracenote noteheads (have their own disjoint precedence graph)
+  "noteheadWholeSmall",
+  "noteheadHalfSmall",
+  "noteheadBlackSmall",
+  "noteheadFullSmall",
+
   // rests
   "multiMeasureRest",
   "restMaxima",
