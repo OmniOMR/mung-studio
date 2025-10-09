@@ -91,7 +91,7 @@ function decodeRleMaskString(
   height: number,
 ): ImageData {
   // validate dimensions
-  if (width > 4096 || height > 4096) {
+  if (width > 4096 * 3 || height > 4096 * 3) {
     throw new Error("Mask too large.");
   }
   width = Math.floor(width);
