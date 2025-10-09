@@ -37,7 +37,7 @@ export function SyntaxLinksToolPanel() {
         )}
         {selectedNodeIds.length > 0 && (
           <Alert color="primary">
-            Hold { modKeyName } and select target nodes to create links.
+            Hold {modKeyName} and select target nodes to create links.
           </Alert>
         )}
       </AccordionDetails>

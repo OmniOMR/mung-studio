@@ -2,7 +2,12 @@ import { atom, getDefaultStore, WritableAtom } from "jotai";
 import { NotationGraphStore } from "./notation-graph-store/NotationGraphStore";
 import { SignalAtomWrapper } from "./SignalAtomWrapper";
 import { SignalAtomCollection } from "./SignalAtomCollection";
-import { ISignal, ISimpleEvent, SignalDispatcher, SimpleEventDispatcher } from "strongly-typed-events";
+import {
+  ISignal,
+  ISimpleEvent,
+  SignalDispatcher,
+  SimpleEventDispatcher,
+} from "strongly-typed-events";
 
 /**
  * Class names that should be hidden in the default visibility state.

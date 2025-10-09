@@ -7,9 +7,12 @@ const MOD_KEY_REPLACEMENT = isMacish() ? "Meta" : "Control";
 /**
  * Returns a ref value that holds true when the requested key is pressed
  */
-export function useIsKeyPressed(givenKey: string, caseSensitive: boolean = false) {
+export function useIsKeyPressed(
+  givenKey: string,
+  caseSensitive: boolean = false,
+) {
   const testedKey = givenKey === MOD_KEY_NAME ? MOD_KEY_REPLACEMENT : givenKey;
-  
+
   const [isPressed, setIsPressed] = useState<boolean>(false);
 
   const eventHandler = useCallback(
