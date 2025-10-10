@@ -16,7 +16,7 @@ export class ToolbeltController {
 
   constructor(jotaiStore: JotaiStore) {
     this.jotaiStore = jotaiStore;
-    
+
     this.nodeEditingController = new NodeEditingController();
   }
 

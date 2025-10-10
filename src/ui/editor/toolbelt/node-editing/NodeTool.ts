@@ -11,7 +11,7 @@ export enum NodeTool {
    * Tool that erases the mask
    */
   Eraser = "Eraser",
-  
+
   /**
    * Tool that draws a polygon, that once submitted is added to the mask
    */
