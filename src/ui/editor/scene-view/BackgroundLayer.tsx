@@ -1,17 +1,18 @@
-import { useRef } from "react";
+import { useContext, useRef } from "react";
 import * as d3 from "d3";
-import { Zoomer } from "./Zoomer";
+import { EditorContext } from "../EditorContext";
 
 export interface BackgroundLayerProps {
-  readonly zoomer: Zoomer;
   readonly backgroundImageUrl: string | null;
 }
 
 export function BackgroundLayer(props: BackgroundLayerProps) {
+  const { zoomController } = useContext(EditorContext);
+
   const gRef = useRef<SVGGElement | null>(null);
 
   // move the background image together with the scene
-  props.zoomer.useOnTransformChange((transform: d3.ZoomTransform) => {
+  zoomController.useOnTransformChange((transform: d3.ZoomTransform) => {
     gRef.current?.setAttribute("transform", transform.toString());
   }, []);
 

@@ -5,7 +5,7 @@ import { Highlighter } from "./Highlighter";
 import { JotaiStore } from "../../state/JotaiStore";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
-import { Zoomer } from "../Zoomer";
+import { ZoomController } from "../../controllers/ZoomController";
 import { Node } from "../../../../mung/Node";
 import { EditorStateStore } from "../../state/EditorStateStore";
 
@@ -20,7 +20,7 @@ export class Selector {
   private readonly selectionStore: SelectionStore;
   private readonly editorStateStore: EditorStateStore;
   private readonly highlighter: Highlighter;
-  private readonly zoomer: Zoomer;
+  private readonly zoomer: ZoomController;
 
   constructor(
     notationGraphStore: NotationGraphStore,
@@ -28,7 +28,7 @@ export class Selector {
     selectionStore: SelectionStore,
     editorStateStore: EditorStateStore,
     highlighter: Highlighter,
-    zoomer: Zoomer,
+    zoomer: ZoomController,
   ) {
     this.notationGraphStore = notationGraphStore;
     this.classVisibilityStore = classVisibilityStore;

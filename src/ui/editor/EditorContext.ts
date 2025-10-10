@@ -10,6 +10,7 @@ import { PythonRuntime } from "../../../pyodide/PythonRuntime";
 import { getDefaultStore } from "jotai";
 import { JotaiStore } from "./state/JotaiStore";
 import { ToolbeltController } from "./toolbelt/ToolbeltController";
+import { ZoomController } from "./controllers/ZoomController";
 
 /**
  * All fields present in the editor component's global context
@@ -19,15 +20,18 @@ export interface EditorContextState {
   readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
   readonly editorStateStore: EditorStateStore;
-  readonly toolbeltController: ToolbeltController;
   readonly autosaveStore: AutosaveStore;
+
   readonly pythonRuntime: PythonRuntime;
+
+  readonly zoomController: ZoomController;
+  readonly toolbeltController: ToolbeltController;
 }
 
 /**
  * Creates all services and stores present in the editor context
  */
-export function useEditorContextState(
+export function useConstructContextServices(
   initialNodes: readonly Node[],
   initialMungFileMetadata: MungFileMetadata,
 ): EditorContextState {
@@ -52,11 +56,6 @@ export function useEditorContextState(
 
   // TODO: historyStore (for undo/redo)
 
-  const toolbeltController = useMemo(
-    () => new ToolbeltController(jotaiStore),
-    [],
-  );
-
   const autosaveStore = useMemo(
     () => new AutosaveStore(notationGraphStore),
     [],
@@ -64,14 +63,24 @@ export function useEditorContextState(
 
   const pythonRuntime = useMemo(() => PythonRuntime.resolveInstance(), []);
 
+  const zoomController = useMemo(() => new ZoomController(jotaiStore), []);
+
+  const toolbeltController = useMemo(
+    () => new ToolbeltController(jotaiStore),
+    [],
+  );
+
   return {
     notationGraphStore,
     selectionStore,
     classVisibilityStore,
     editorStateStore,
-    toolbeltController,
     autosaveStore,
+
     pythonRuntime,
+
+    zoomController,
+    toolbeltController,
   };
 }
 

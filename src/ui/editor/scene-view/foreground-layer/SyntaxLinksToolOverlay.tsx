@@ -7,13 +7,13 @@ import {
 import { useIsKeyPressedRef } from "../../../../utils/useIsKeyPressedRef";
 import { LinkType } from "../../../../mung/LinkType";
 import { OverlayedLinks } from "./OverlayedLinks";
-import { Zoomer } from "../Zoomer";
+import { ZoomController } from "../../controllers/ZoomController";
 import { useAtomValue } from "jotai";
 import { useIsKeyPressed } from "../../../../utils/useIsKeyPressed";
 
 export interface SyntaxLinksToolOverlayProps {
   readonly svgRef: React.RefObject<SVGElement | null>;
-  readonly zoomer: Zoomer;
+  readonly zoomer: ZoomController;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectionStore: SelectionStore;
 }
@@ -66,7 +66,7 @@ export function SyntaxLinksToolOverlay(props: SyntaxLinksToolOverlayProps) {
 
 interface OverlayedSyntaxLinksProps {
   readonly svgRef: React.RefObject<SVGElement | null>;
-  readonly zoomer: Zoomer;
+  readonly zoomer: ZoomController;
   readonly selectionStore: SelectionStore;
 }
 

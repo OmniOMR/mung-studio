@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { SelectionStore } from "../../state/selection-store/SelectionStore";
 import { Node } from "../../../../mung/Node";
 import { LinkType } from "../../../../mung/LinkType";
-import { Zoomer } from "../Zoomer";
+import { ZoomController } from "../../controllers/ZoomController";
 import {
   LINK_STROKE_WIDTH,
   PRECEDENCE_LINK_COLOR,
@@ -14,7 +14,7 @@ export interface OverlayedLinksProps {
   readonly sourceNodes: readonly Node[];
   readonly svgRef: React.RefObject<SVGElement | null>;
   readonly selectionStore: SelectionStore;
-  readonly zoomer: Zoomer;
+  readonly zoomer: ZoomController;
 }
 
 /**

@@ -1,7 +1,7 @@
 import { RefObject, useEffect, useRef } from "react";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 import { LinkType } from "../../../../mung/LinkType";
-import { Zoomer } from "../Zoomer";
+import { ZoomController } from "../../controllers/ZoomController";
 import {
   SelectionNodeChangeMetadata,
   SelectionStore,
@@ -13,7 +13,7 @@ import { OverlayedLinks } from "./OverlayedLinks";
 
 export interface PrecedenceLinksToolOverlayProps {
   readonly svgRef: RefObject<SVGSVGElement | null>;
-  readonly zoomer: Zoomer;
+  readonly zoomer: ZoomController;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectionStore: SelectionStore;
 }
@@ -63,7 +63,7 @@ export function PrecedenceLinksToolOverlay(
 
 interface OverlayedPrecedenceLinksProps {
   readonly svgRef: React.RefObject<SVGElement | null>;
-  readonly zoomer: Zoomer;
+  readonly zoomer: ZoomController;
   readonly selectionStore: SelectionStore;
 }
 

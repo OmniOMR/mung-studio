@@ -1,6 +1,5 @@
 import { useContext, useEffect, useMemo, useRef } from "react";
 import { NodeEditorOverlay } from "./NodeEditorOverlay";
-import { Zoomer } from "../Zoomer";
 import { Highlighter, HighlighterComponent } from "./Highlighter";
 import { PrecedenceLinksToolOverlay } from "./PrecedenceLinksToolOverlay";
 import { EditorTool } from "../../toolbelt/EditorTool";
@@ -10,24 +9,21 @@ import { SyntaxLinksToolOverlay } from "./SyntaxLinksToolOverlay";
 import { NodeMaskCanvas } from "./NodeMaskCanvas";
 import { EditorContext } from "../../EditorContext";
 
-export interface ForegroundLayerProps {
-  readonly zoomer: Zoomer;
-}
-
-export function ForegroundLayer(props: ForegroundLayerProps) {
+export function ForegroundLayer() {
   const {
     selectionStore,
     notationGraphStore,
     editorStateStore,
     toolbeltController,
     classVisibilityStore,
+    zoomController,
   } = useContext(EditorContext);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   const highlighter = useMemo(
     () =>
-      new Highlighter(notationGraphStore, classVisibilityStore, props.zoomer),
+      new Highlighter(notationGraphStore, classVisibilityStore, zoomController),
     [],
   );
 
@@ -39,7 +35,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
         selectionStore,
         editorStateStore,
         highlighter,
-        props.zoomer,
+        zoomController,
       ),
     [],
   );
@@ -47,13 +43,13 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
   const currentTool = useAtomValue(toolbeltController.currentToolAtom);
 
   // bind zoomer to the SVG element
-  props.zoomer.useZoomer(
+  zoomController.useZoomer(
     svgRef,
     () => toolbeltController.currentTool == EditorTool.Hand,
   );
 
   // determine the mouse cursor type
-  const isGrabbing = useAtomValue(props.zoomer.isGrabbingAtom);
+  const isGrabbing = useAtomValue(zoomController.isGrabbingAtom);
   let cursor = "default";
   if (currentTool === EditorTool.Hand) cursor = "grab";
   if (isGrabbing) cursor = "grabbing";
@@ -73,7 +69,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
         <NodeMaskCanvas
           notationGraphStore={notationGraphStore}
           selectionStore={selectionStore}
-          zoomer={props.zoomer}
+          zoomer={zoomController}
         />
       )}
       <svg
@@ -102,7 +98,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
           {currentTool === EditorTool.SyntaxLinks && (
             <SyntaxLinksToolOverlay
               svgRef={svgRef}
-              zoomer={props.zoomer}
+              zoomer={zoomController}
               notationGraphStore={notationGraphStore}
               selectionStore={selectionStore}
             />
@@ -111,7 +107,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
           {currentTool === EditorTool.PrecedenceLinks && (
             <PrecedenceLinksToolOverlay
               svgRef={svgRef}
-              zoomer={props.zoomer}
+              zoomer={zoomController}
               notationGraphStore={notationGraphStore}
               selectionStore={selectionStore}
             />

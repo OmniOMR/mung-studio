@@ -4,7 +4,7 @@ import { Node } from "../../../../mung/Node";
 import { Atom, atom, getDefaultStore, useAtomValue } from "jotai";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
-import { Zoomer } from "../Zoomer";
+import { ZoomController } from "../../controllers/ZoomController";
 import { JotaiStore } from "../../state/JotaiStore";
 import { SignalAtomWrapper } from "../../state/SignalAtomWrapper";
 
@@ -18,12 +18,12 @@ export class Highlighter {
 
   private readonly notationGraphStore: NotationGraphStore;
   private readonly classVisibilityStore: ClassVisibilityStore;
-  private readonly zoomer: Zoomer;
+  private readonly zoomer: ZoomController;
 
   constructor(
     notationGraphStore: NotationGraphStore,
     classVisibilityStore: ClassVisibilityStore,
-    zoomer: Zoomer,
+    zoomer: ZoomController,
   ) {
     this.notationGraphStore = notationGraphStore;
     this.classVisibilityStore = classVisibilityStore;

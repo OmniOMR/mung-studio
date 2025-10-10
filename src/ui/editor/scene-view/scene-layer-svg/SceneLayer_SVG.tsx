@@ -2,7 +2,6 @@ import * as d3 from "d3";
 import { useAtomValue } from "jotai";
 import { useContext, useRef } from "react";
 import { NodeDisplayMode } from "../../state/EditorStateStore";
-import { Zoomer } from "../Zoomer";
 import { SvgLink } from "./SvgLink";
 import { SvgNode } from "./SvgNode";
 import { getLinkId } from "../../../../mung/getLinkId";
@@ -12,15 +11,12 @@ import {
 } from "../../../../mung/linkAppearance";
 import { EditorContext } from "../../EditorContext";
 
-export interface SceneLayerProps {
-  readonly zoomer: Zoomer;
-}
-
 /**
  * Scene layer, rendered via SVG
  */
-export function SceneLayer_SVG(props: SceneLayerProps) {
-  const { notationGraphStore, editorStateStore } = useContext(EditorContext);
+export function SceneLayer_SVG() {
+  const { notationGraphStore, editorStateStore, zoomController } =
+    useContext(EditorContext);
 
   const nodeDisplayMode = useAtomValue(editorStateStore.nodeDisplayModeAtom);
 
@@ -30,7 +26,7 @@ export function SceneLayer_SVG(props: SceneLayerProps) {
   const gRef = useRef<SVGGElement | null>(null);
 
   // move scene objects together with the scene
-  props.zoomer.useOnTransformChange((transform: d3.ZoomTransform) => {
+  zoomController.useOnTransformChange((transform: d3.ZoomTransform) => {
     gRef.current?.setAttribute("transform", transform.toString());
   }, []);
 

@@ -1,5 +1,5 @@
 import * as d3 from "d3";
-import { atom, Atom, getDefaultStore } from "jotai";
+import { atom, Atom } from "jotai";
 import { RefObject, useEffect } from "react";
 import { ISimpleEvent, SimpleEventDispatcher } from "strongly-typed-events";
 import { JotaiStore } from "../state/JotaiStore";
@@ -25,8 +25,12 @@ export const IDENTITY_TRANSFORM = new d3.ZoomTransform(1, 0, 0);
  * Encapsulates D3 zoom behaviour, exposes its state as if it was a store
  * and provides hooks for embedding the behaviour into react components.
  */
-export class Zoomer {
-  private jotaiStore: JotaiStore = getDefaultStore();
+export class ZoomController {
+  private jotaiStore: JotaiStore;
+
+  constructor(jotaiStore: JotaiStore) {
+    this.jotaiStore = jotaiStore;
+  }
 
   ///////////
   // State //

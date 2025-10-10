@@ -1,0 +1,1 @@
+Controller is a global service, that is reposible for handling user interations with the application. It may store state, but it's UI-related state, not domain-related. Controllers exist as singleton services in the global react context (EditorContext).

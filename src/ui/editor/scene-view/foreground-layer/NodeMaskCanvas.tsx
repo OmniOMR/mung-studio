@@ -1,23 +1,16 @@
-import { useCallback, useEffect, useRef } from "react";
-import {
-  SelectionNodeChangeMetadata,
-  SelectionStore,
-} from "../../state/selection-store/SelectionStore";
-import { Zoomer } from "../Zoomer";
-import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
+import { useCallback, useContext, useEffect, useRef } from "react";
+import { SelectionNodeChangeMetadata } from "../../state/selection-store/SelectionStore";
 import { Node } from "../../../../mung/Node";
 import { classNameToHue } from "../../../../mung/classNameToHue";
-
-export interface NodeMaskCanvasProps {
-  readonly notationGraphStore: NotationGraphStore;
-  readonly selectionStore: SelectionStore;
-  readonly zoomer: Zoomer;
-}
+import { EditorContext } from "../../EditorContext";
 
 /**
  * Canvas 2D that renders the mask of the currently edited node
  */
-export function NodeMaskCanvas(props: NodeMaskCanvasProps) {
+export function NodeMaskCanvas() {
+  const { notationGraphStore, selectionStore, zoomController } =
+    useContext(EditorContext);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
   // const imageBitmapRef = useRef<ImageBitmapOptions | null>(null);
@@ -26,13 +19,13 @@ export function NodeMaskCanvas(props: NodeMaskCanvasProps) {
     const ctx = canvasContextRef.current;
     if (ctx === null) return;
 
-    if (props.selectionStore.selectedNodeIds.length == 1) {
-      const node = props.notationGraphStore.getNode(
-        props.selectionStore.selectedNodeIds[0],
+    if (selectionStore.selectedNodeIds.length == 1) {
+      const node = notationGraphStore.getNode(
+        selectionStore.selectedNodeIds[0],
       );
-      renderToCanvas(node, ctx, props.zoomer.currentTransform);
+      renderToCanvas(node, ctx, zoomController.currentTransform);
     } else {
-      renderToCanvas(null, ctx, props.zoomer.currentTransform);
+      renderToCanvas(null, ctx, zoomController.currentTransform);
     }
   }, []);
 
@@ -47,13 +40,13 @@ export function NodeMaskCanvas(props: NodeMaskCanvasProps) {
     // also draw immediately when mounted
     draw();
 
-    props.zoomer.onTransformChange.subscribe(onZoom);
-    props.selectionStore.onNodesChange.subscribe(onSelectionChange);
-    props.notationGraphStore.onChange.subscribe(onGraphChange);
+    zoomController.onTransformChange.subscribe(onZoom);
+    selectionStore.onNodesChange.subscribe(onSelectionChange);
+    notationGraphStore.onChange.subscribe(onGraphChange);
     return () => {
-      props.zoomer.onTransformChange.unsubscribe(onZoom);
-      props.selectionStore.onNodesChange.unsubscribe(onSelectionChange);
-      props.notationGraphStore.onChange.unsubscribe(onGraphChange);
+      zoomController.onTransformChange.unsubscribe(onZoom);
+      selectionStore.onNodesChange.unsubscribe(onSelectionChange);
+      notationGraphStore.onChange.unsubscribe(onGraphChange);
     };
   }, []);
 

@@ -8,7 +8,7 @@ import { useUnload } from "../../utils/useUnload";
 import { MungFileMetadata } from "../../mung/MungFileMetadata";
 import { MungFile } from "../../mung/MungFile";
 import { Toolbelt } from "./toolbelt/Toolbelt";
-import { EditorContext, useEditorContextState } from "./EditorContext";
+import { EditorContext, useConstructContextServices } from "./EditorContext";
 
 export interface EditorProps {
   /**
@@ -55,7 +55,7 @@ export interface EditorProps {
  * that could edit two different mung documents.
  */
 export function Editor(props: EditorProps) {
-  const editorContext = useEditorContextState(
+  const editorContext = useConstructContextServices(
     props.initialNodes,
     props.initialMungFileMetadata,
   );

@@ -1,9 +1,9 @@
-import { useRef, useState } from "react";
-import { Zoomer } from "./Zoomer";
+import { useContext, useRef } from "react";
 import { ForegroundLayer } from "./foreground-layer/ForegroundLayer";
 import { SceneLayer_Canvas2D } from "./SceneLayer_Canvas2D";
 import { SceneLayer_SVG } from "./scene-layer-svg/SceneLayer_SVG";
 import { BackgroundLayer } from "./BackgroundLayer";
+import { EditorContext } from "../EditorContext";
 
 export interface SceneViewProps {
   readonly backgroundImageUrl: string | null;
@@ -15,12 +15,12 @@ export interface SceneViewProps {
  * with the scene to the user.
  */
 export function SceneView(props: SceneViewProps) {
-  const [zoomer, _] = useState<Zoomer>(() => new Zoomer());
+  const { zoomController } = useContext(EditorContext);
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
   // update the CSS variable used to scale strokes to screen space
-  zoomer.useOnTransformChange((transform: d3.ZoomTransform) => {
+  zoomController.useOnTransformChange((transform: d3.ZoomTransform) => {
     if (containerRef.current === null) return;
     containerRef.current.style.setProperty(
       "--scene-screen-pixel",
@@ -38,22 +38,16 @@ export function SceneView(props: SceneViewProps) {
       }}
     >
       {/* The gray background and the scanned document image */}
-      <BackgroundLayer
-        zoomer={zoomer}
-        backgroundImageUrl={props.backgroundImageUrl}
-      />
+      <BackgroundLayer backgroundImageUrl={props.backgroundImageUrl} />
 
       {/* Objects that are not being edited, but there is many of them,
       so tricks have to be made to render them fast */}
-      <SceneLayer_SVG zoomer={zoomer} />
-      {/* <SceneLayer_Canvas2D
-        zoomEventDispatcher={zoomEventDispatcher}
-        notationGraphStore={props.notationGraphStore}
-      /> */}
+      <SceneLayer_SVG />
+      {/* <SceneLayer_Canvas2D /> */}
 
       {/* The editing overlay for the current object, consumes pointer events
       and contains the zoom controlling code */}
-      <ForegroundLayer zoomer={zoomer} />
+      <ForegroundLayer />
     </div>
   );
 }
