@@ -1,7 +1,7 @@
 import { RefObject, useEffect, useRef } from "react";
 import { getDefaultStore, useAtomValue } from "jotai";
 import { SelectionStore } from "../../state/selection-store/SelectionStore";
-import { Highlighter } from "./Highlighter";
+import { HighlightController } from "../../controllers/HighlightController";
 import { JotaiStore } from "../../state/JotaiStore";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
@@ -19,7 +19,7 @@ export class Selector {
   private readonly classVisibilityStore: ClassVisibilityStore;
   private readonly selectionStore: SelectionStore;
   private readonly editorStateStore: EditorStateStore;
-  private readonly highlighter: Highlighter;
+  private readonly highlighter: HighlightController;
   private readonly zoomer: ZoomController;
 
   constructor(
@@ -27,7 +27,7 @@ export class Selector {
     classVisibilityStore: ClassVisibilityStore,
     selectionStore: SelectionStore,
     editorStateStore: EditorStateStore,
-    highlighter: Highlighter,
+    highlighter: HighlightController,
     zoomer: ZoomController,
   ) {
     this.notationGraphStore = notationGraphStore;
@@ -59,7 +59,7 @@ export class Selector {
    * React hook that attaches the selector to an SVG element, so that it
    * starts reacting to mouse events.
    */
-  public useHighlighter(
+  public useSelector(
     svgRef: RefObject<SVGSVGElement | null>,
     sweepRectangleRef: RefObject<SVGRectElement | null>,
   ) {
@@ -236,7 +236,7 @@ export interface SelectorComponentProps {
 export function SelectorComponent(props: SelectorComponentProps) {
   const sweepRectangleRef = useRef<SVGRectElement | null>(null);
 
-  props.selector.useHighlighter(props.svgRef, sweepRectangleRef);
+  props.selector.useSelector(props.svgRef, sweepRectangleRef);
 
   return (
     <>

@@ -1,33 +1,40 @@
-import { RefObject, useEffect } from "react";
-import * as d3 from "d3";
-import { Node } from "../../../../mung/Node";
-import { Atom, atom, getDefaultStore, useAtomValue } from "jotai";
-import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
-import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
-import { ZoomController } from "../../controllers/ZoomController";
-import { JotaiStore } from "../../state/JotaiStore";
-import { SignalAtomWrapper } from "../../state/SignalAtomWrapper";
+import { JSX } from "react";
+import { Node } from "../../../mung/Node";
+import { Atom, atom, useAtomValue } from "jotai";
+import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
+import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
+import { ZoomController } from "./ZoomController";
+import { JotaiStore } from "../state/JotaiStore";
+import { SignalAtomWrapper } from "../state/SignalAtomWrapper";
+import { IController } from "./IController";
+import { EditorTool } from "../toolbelt/EditorTool";
+import { ToolbeltController } from "../toolbelt/ToolbeltController";
 
 /**
- * Contains logic and state related to node and link highlighting.
+ * Contains logic and state related to node highlighting.
  * Highlighted object is one that is being hovered over, and is to be selected
- * or and action is to be performed with it upon clicking.
+ * or an action is to be performed with it upon clicking.
  */
-export class Highlighter {
-  private jotaiStore: JotaiStore = getDefaultStore();
+export class HighlightController implements IController {
+  private jotaiStore: JotaiStore;
 
   private readonly notationGraphStore: NotationGraphStore;
   private readonly classVisibilityStore: ClassVisibilityStore;
   private readonly zoomer: ZoomController;
+  private readonly toolbeltController: ToolbeltController;
 
   constructor(
+    jotaiStore: JotaiStore,
     notationGraphStore: NotationGraphStore,
     classVisibilityStore: ClassVisibilityStore,
     zoomer: ZoomController,
+    toolbeltController: ToolbeltController,
   ) {
+    this.jotaiStore = jotaiStore;
     this.notationGraphStore = notationGraphStore;
     this.classVisibilityStore = classVisibilityStore;
     this.zoomer = zoomer;
+    this.toolbeltController = toolbeltController;
   }
 
   ///////////
@@ -91,25 +98,7 @@ export class Highlighter {
   // Mouse interaction //
   ///////////////////////
 
-  /**
-   * React hook that attaches the highlighter to an SVG element, so that it
-   * starts reacting to mouse events.
-   */
-  public useHighlighter(svgRef: RefObject<SVGSVGElement | null>) {
-    useEffect(() => {
-      if (svgRef.current === null) return;
-      const svg = svgRef.current;
-
-      const listener = this.onMouseMove.bind(this);
-
-      svg.addEventListener("mousemove", listener);
-      return () => {
-        svg.removeEventListener("mousemove", listener);
-      };
-    }, []);
-  }
-
-  private onMouseMove(e: MouseEvent) {
+  public onMouseMove(e: MouseEvent) {
     if (!this._isNodeHighlightingEnabled) return;
 
     const t = this.zoomer.currentTransform;
@@ -146,38 +135,35 @@ export class Highlighter {
 
     return highlightedNode;
   }
-}
 
-/////////////////////
-// React component //
-/////////////////////
+  ///////////////
+  // Rendering //
+  ///////////////
 
-export interface HighlighterComponentProps {
-  readonly svgRef: RefObject<SVGSVGElement | null>;
-  readonly highlighter: Highlighter;
-}
+  public renderSVG(): JSX.Element | null {
+    const currentTool = useAtomValue(this.toolbeltController.currentToolAtom);
+    const highlightedNode = useAtomValue(this.highlightedNodeAtom);
 
-/**
- * Binds highlighter to the SVG foreground layer and renders the highlight rect
- */
-export function HighlighterComponent(props: HighlighterComponentProps) {
-  const highlightedNode = useAtomValue(props.highlighter.highlightedNodeAtom);
+    // highlighting is only visible when we are not editing nodes
+    if (currentTool === EditorTool.NodeEditing) {
+      return null;
+    }
 
-  props.highlighter.useHighlighter(props.svgRef);
-
-  return (
-    <>
-      {highlightedNode && (
-        <rect
-          x={highlightedNode.left}
-          y={highlightedNode.top}
-          width={highlightedNode.width}
-          height={highlightedNode.height}
-          fill="none"
-          stroke="white"
-          strokeWidth="calc(var(--scene-screen-pixel) * 2)"
-        />
-      )}
-    </>
-  );
+    // render the highlight rectangle
+    return (
+      <>
+        {highlightedNode && (
+          <rect
+            x={highlightedNode.left}
+            y={highlightedNode.top}
+            width={highlightedNode.width}
+            height={highlightedNode.height}
+            fill="none"
+            stroke="white"
+            strokeWidth="calc(var(--scene-screen-pixel) * 2)"
+          />
+        )}
+      </>
+    );
+  }
 }

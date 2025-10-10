@@ -5,13 +5,40 @@ import { JSX } from "react";
  * foreground layer and renders onto its canvas and SVG
  */
 export interface IController {
+  /**
+   * Invoked when the mouse moves over the foreground layer SVG element
+   */
   readonly onMouseMove?: (e: MouseEvent) => void;
+
+  /**
+   * Invoked when the mouse clicks down the foreground layer SVG element
+   */
   readonly onMouseDown?: (e: MouseEvent) => void;
+
+  /**
+   * Invoked when the mouse clicks up the foreground layer SVG element
+   */
   readonly onMouseUp?: (e: MouseEvent) => void;
 
+  /**
+   * Invoked when a keyboard key is pressed down
+   */
   readonly onKeyDown?: (e: KeyboardEvent) => void;
+
+  /**
+   * Invoked when a keyboard key is released
+   */
   readonly onKeyUp?: (e: KeyboardEvent) => void;
 
+  /**
+   * Invoked when the Canvas2D of the foreground
+   * scene view layer should be redrawn
+   */
   readonly renderCanvas?: (ctx: CanvasRenderingContext2D) => void;
-  readonly renderSVG?: () => JSX.Element;
+
+  /**
+   * Invoked when the SVG foregound layer should be re-rendered.
+   * This method is a React component function, use hooks and atoms.
+   */
+  readonly renderSVG?: () => JSX.Element | null;
 }
