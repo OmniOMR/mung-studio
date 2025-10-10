@@ -2,6 +2,7 @@ import { atom, Atom } from "jotai";
 import { SignalAtomWrapper } from "../state/SignalAtomWrapper";
 import { JotaiStore } from "../state/JotaiStore";
 import { EditorTool } from "./EditorTool";
+import { NodeEditingController } from "./node-editing/NodeEditingController";
 
 /**
  * State and logic behind the toolbelt.
@@ -10,8 +11,13 @@ import { EditorTool } from "./EditorTool";
 export class ToolbeltController {
   private readonly jotaiStore: JotaiStore;
 
+  // controllers for individual tools
+  public readonly nodeEditingController: NodeEditingController;
+
   constructor(jotaiStore: JotaiStore) {
     this.jotaiStore = jotaiStore;
+    
+    this.nodeEditingController = new NodeEditingController();
   }
 
   // holds the selected editor tool value

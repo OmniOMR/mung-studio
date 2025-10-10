@@ -2,7 +2,7 @@ import { Card, Stack } from "@mui/joy";
 import { EditorTool } from "./EditorTool";
 import { ToolsContent } from "./ToolsContent";
 import { useAtomValue } from "jotai";
-import { NodeEditingContent } from "./NodeEditingContent";
+import { NodeEditingContent } from "./node-editing/NodeEditingContent";
 import { useContext } from "react";
 import { EditorContext } from "../EditorContext";
 

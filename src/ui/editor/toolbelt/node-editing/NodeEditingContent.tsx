@@ -1,12 +1,12 @@
-import { EditorTool } from "./EditorTool";
-import { ToolbeltButton } from "./ToolbeltButton";
+import { EditorTool } from "../EditorTool";
+import { ToolbeltButton } from "../ToolbeltButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import BrushIcon from "@mui/icons-material/Brush";
 import FilterCenterFocusIcon from "@mui/icons-material/FilterCenterFocus";
 import EditIcon from "@mui/icons-material/Edit";
 import { Divider } from "@mui/joy";
 import { useCallback, useContext, useEffect } from "react";
-import { EditorContext } from "../EditorContext";
+import { EditorContext } from "../../EditorContext";
 
 export function NodeEditingContent() {
   const { toolbeltController } = useContext(EditorContext);
