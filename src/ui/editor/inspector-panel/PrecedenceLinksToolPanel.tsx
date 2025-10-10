@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/joy";
 import { useAtomValue } from "jotai";
-import { EditorTool } from "../state/EditorStateStore";
+import { EditorTool } from "../toolbelt/EditorTool";
 import {
   ClassVisibilityStore,
   PRECEDENCE_LINK_ANNOTATION_CLASSES,
@@ -18,10 +18,10 @@ import { isMacish } from "../../../utils/isMacish";
 const modKeyName = isMacish() ? "Command ⌘" : "Ctrl";
 
 export function PrecedenceLinksToolPanel() {
-  const { editorStateStore, selectionStore, classVisibilityStore } =
+  const { toolbeltController, selectionStore, classVisibilityStore } =
     useContext(EditorContext);
 
-  const tool = useAtomValue(editorStateStore.currentToolAtom);
+  const tool = useAtomValue(toolbeltController.currentToolAtom);
 
   const selectedNodeIds = useAtomValue(selectionStore.selectedNodeIdsAtom);
 

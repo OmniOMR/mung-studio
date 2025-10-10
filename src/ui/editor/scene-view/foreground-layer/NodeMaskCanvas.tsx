@@ -44,6 +44,9 @@ export function NodeMaskCanvas(props: NodeMaskCanvasProps) {
     const onSelectionChange = (meta: SelectionNodeChangeMetadata) => draw();
     const onGraphChange = () => draw();
 
+    // also draw immediately when mounted
+    draw();
+
     props.zoomer.onTransformChange.subscribe(onZoom);
     props.selectionStore.onNodesChange.subscribe(onSelectionChange);
     props.notationGraphStore.onChange.subscribe(onGraphChange);

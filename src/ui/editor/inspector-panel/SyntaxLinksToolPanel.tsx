@@ -6,7 +6,7 @@ import {
   Typography,
 } from "@mui/joy";
 import { useAtomValue } from "jotai";
-import { EditorTool } from "../state/EditorStateStore";
+import { EditorTool } from "../toolbelt/EditorTool";
 import { useContext } from "react";
 import { EditorContext } from "../EditorContext";
 import { isMacish } from "../../../utils/isMacish";
@@ -14,9 +14,9 @@ import { isMacish } from "../../../utils/isMacish";
 const modKeyName = isMacish() ? "Command ⌘" : "Ctrl";
 
 export function SyntaxLinksToolPanel() {
-  const { editorStateStore, selectionStore } = useContext(EditorContext);
+  const { toolbeltController, selectionStore } = useContext(EditorContext);
 
-  const tool = useAtomValue(editorStateStore.currentToolAtom);
+  const tool = useAtomValue(toolbeltController.currentToolAtom);
 
   const selectedNodeIds = useAtomValue(selectionStore.selectedNodeIdsAtom);
 

@@ -7,6 +7,9 @@ import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { EditorStateStore } from "./state/EditorStateStore";
 import { AutosaveStore } from "./state/AutosaveStore";
 import { PythonRuntime } from "../../../pyodide/PythonRuntime";
+import { getDefaultStore } from "jotai";
+import { JotaiStore } from "./state/JotaiStore";
+import { ToolbeltController } from "./toolbelt/ToolbeltController";
 
 /**
  * All fields present in the editor component's global context
@@ -16,6 +19,7 @@ export interface EditorContextState {
   readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
   readonly editorStateStore: EditorStateStore;
+  readonly toolbeltController: ToolbeltController;
   readonly autosaveStore: AutosaveStore;
   readonly pythonRuntime: PythonRuntime;
 }
@@ -27,6 +31,8 @@ export function useEditorContextState(
   initialNodes: readonly Node[],
   initialMungFileMetadata: MungFileMetadata,
 ): EditorContextState {
+  const jotaiStore: JotaiStore = useMemo(() => getDefaultStore(), []);
+
   const notationGraphStore = useMemo(
     () => new NotationGraphStore(initialNodes, initialMungFileMetadata),
     [],
@@ -42,9 +48,14 @@ export function useEditorContextState(
     [],
   );
 
-  const editorStateStore = useMemo(() => new EditorStateStore(), []);
+  const editorStateStore = useMemo(() => new EditorStateStore(jotaiStore), []);
 
   // TODO: historyStore (for undo/redo)
+
+  const toolbeltController = useMemo(
+    () => new ToolbeltController(jotaiStore),
+    [],
+  );
 
   const autosaveStore = useMemo(
     () => new AutosaveStore(notationGraphStore),
@@ -58,6 +69,7 @@ export function useEditorContextState(
     selectionStore,
     classVisibilityStore,
     editorStateStore,
+    toolbeltController,
     autosaveStore,
     pythonRuntime,
   };

@@ -1,5 +1,5 @@
 import { useAtomValue } from "jotai";
-import { EditorTool } from "../state/EditorStateStore";
+import { EditorTool } from "./EditorTool";
 import { ToolbeltButton } from "./ToolbeltButton";
 import { useCallback, useContext, useEffect } from "react";
 import NearMeIcon from "@mui/icons-material/NearMe";
@@ -10,9 +10,9 @@ import PentagonIcon from "@mui/icons-material/Pentagon";
 import { EditorContext } from "../EditorContext";
 
 export function ToolsContent() {
-  const { editorStateStore, selectionStore } = useContext(EditorContext);
+  const { toolbeltController, selectionStore } = useContext(EditorContext);
 
-  const tool = useAtomValue(editorStateStore.currentToolAtom);
+  const tool = useAtomValue(toolbeltController.currentToolAtom);
   const selectedNodes = useAtomValue(selectionStore.selectedNodesAtom);
 
   /////////////////////////
@@ -22,32 +22,32 @@ export function ToolsContent() {
   function equipPointerTool() {
     if (tool === EditorTool.Pointer) return;
 
-    editorStateStore.setCurrentTool(EditorTool.Pointer);
+    toolbeltController.setCurrentTool(EditorTool.Pointer);
   }
 
   function equipHandTool() {
     if (tool === EditorTool.Hand) return;
 
-    editorStateStore.setCurrentTool(EditorTool.Hand);
+    toolbeltController.setCurrentTool(EditorTool.Hand);
   }
 
   function equipNodeEditingTool() {
     if (tool === EditorTool.NodeEditing) return;
     if (selectedNodes.length > 1) return;
 
-    editorStateStore.setCurrentTool(EditorTool.NodeEditing);
+    toolbeltController.setCurrentTool(EditorTool.NodeEditing);
   }
 
   function equipSyntaxLinksTool() {
     if (tool === EditorTool.SyntaxLinks) return;
 
-    editorStateStore.setCurrentTool(EditorTool.SyntaxLinks);
+    toolbeltController.setCurrentTool(EditorTool.SyntaxLinks);
   }
 
   function equipPrecedenceLinksTool() {
     if (tool === EditorTool.PrecedenceLinks) return;
 
-    editorStateStore.setCurrentTool(EditorTool.PrecedenceLinks);
+    toolbeltController.setCurrentTool(EditorTool.PrecedenceLinks);
   }
 
   ////////////////////////

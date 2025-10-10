@@ -3,7 +3,7 @@ import { NodeEditorOverlay } from "./NodeEditorOverlay";
 import { Zoomer } from "../Zoomer";
 import { Highlighter, HighlighterComponent } from "./Highlighter";
 import { PrecedenceLinksToolOverlay } from "./PrecedenceLinksToolOverlay";
-import { EditorTool } from "../../state/EditorStateStore";
+import { EditorTool } from "../../toolbelt/EditorTool";
 import { useAtomValue } from "jotai";
 import { Selector, SelectorComponent } from "./Selector";
 import { SyntaxLinksToolOverlay } from "./SyntaxLinksToolOverlay";
@@ -19,6 +19,7 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
     selectionStore,
     notationGraphStore,
     editorStateStore,
+    toolbeltController,
     classVisibilityStore,
   } = useContext(EditorContext);
 
@@ -43,12 +44,12 @@ export function ForegroundLayer(props: ForegroundLayerProps) {
     [],
   );
 
-  const currentTool = useAtomValue(editorStateStore.currentToolAtom);
+  const currentTool = useAtomValue(toolbeltController.currentToolAtom);
 
   // bind zoomer to the SVG element
   props.zoomer.useZoomer(
     svgRef,
-    () => editorStateStore.currentTool == EditorTool.Hand,
+    () => toolbeltController.currentTool == EditorTool.Hand,
   );
 
   // determine the mouse cursor type
