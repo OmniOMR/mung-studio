@@ -19,7 +19,7 @@ export interface SyntaxLinksToolOverlayProps {
 }
 
 export function SyntaxLinksToolOverlay(props: SyntaxLinksToolOverlayProps) {
-  const isCtrlPressedRef = useIsKeyPressedRef("Control");
+  const isCtrlPressedRef = useIsKeyPressedRef("MS::CtrlOrCmd");
   const ignoreSelectionChangeRef = useRef<boolean>(false);
 
   function restoreSelection(newNodeSet: readonly number[]) {
@@ -72,7 +72,7 @@ interface OverlayedSyntaxLinksProps {
 
 function OverlayedSyntaxLinks(props: OverlayedSyntaxLinksProps) {
   const selectedNodes = useAtomValue(props.selectionStore.selectedNodesAtom);
-  const isCtrlPressed = useIsKeyPressed("Control");
+  const isCtrlPressed = useIsKeyPressed("MS::CtrlOrCmd");
 
   return (
     <OverlayedLinks
