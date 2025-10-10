@@ -1,9 +1,8 @@
-import { RefObject, useContext, useEffect, useMemo, useRef } from "react";
+import { RefObject, useContext, useEffect, useRef } from "react";
 import { NodeEditorOverlay } from "./NodeEditorOverlay";
 import { PrecedenceLinksToolOverlay } from "./PrecedenceLinksToolOverlay";
 import { EditorTool } from "../../toolbelt/EditorTool";
 import { useAtomValue } from "jotai";
-import { Selector, SelectorComponent } from "./Selector";
 import { SyntaxLinksToolOverlay } from "./SyntaxLinksToolOverlay";
 import { NodeMaskCanvas } from "./NodeMaskCanvas";
 import { EditorContext } from "../../EditorContext";
@@ -13,32 +12,18 @@ export function ForegroundLayer() {
   const {
     selectionStore,
     notationGraphStore,
-    editorStateStore,
     toolbeltController,
-    classVisibilityStore,
     zoomController,
     highlightController,
+    selectionController,
   } = useContext(EditorContext);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
 
   // defines which controllers and in what order are they going to be rendered
-  const controllers: IController[] = [highlightController];
+  const controllers: IController[] = [highlightController, selectionController];
 
   useBindControllerEvents(controllers, svgRef);
-
-  const selector = useMemo(
-    () =>
-      new Selector(
-        notationGraphStore,
-        classVisibilityStore,
-        selectionStore,
-        editorStateStore,
-        highlightController,
-        zoomController,
-      ),
-    [],
-  );
 
   const currentTool = useAtomValue(toolbeltController.currentToolAtom);
 
@@ -60,7 +45,7 @@ export function ForegroundLayer() {
     if (currentTool === EditorTool.Hand) isEnabled = false;
 
     highlightController.setIsNodeHighlightingEnabled(isEnabled);
-    selector.isEnabled = isEnabled;
+    selectionController.isEnabled = isEnabled;
   }, [currentTool]);
 
   return (
@@ -81,12 +66,6 @@ export function ForegroundLayer() {
         {/* This <g> element is what the zoomer applies transform to */}
         <g>
           {controllers.map((c) => c.renderSVG?.() || null)}
-
-          {currentTool !== EditorTool.NodeEditing && (
-            <>
-              <SelectorComponent svgRef={svgRef} selector={selector} />
-            </>
-          )}
 
           {currentTool === EditorTool.NodeEditing && <NodeEditorOverlay />}
 

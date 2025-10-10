@@ -1,19 +1,22 @@
-import { RefObject, useEffect, useRef } from "react";
+import { JSX, RefObject, useEffect, useRef } from "react";
 import { getDefaultStore, useAtomValue } from "jotai";
-import { SelectionStore } from "../../state/selection-store/SelectionStore";
-import { HighlightController } from "../../controllers/HighlightController";
-import { JotaiStore } from "../../state/JotaiStore";
-import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
-import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
-import { ZoomController } from "../../controllers/ZoomController";
-import { Node } from "../../../../mung/Node";
-import { EditorStateStore } from "../../state/EditorStateStore";
+import { SelectionStore } from "../state/selection-store/SelectionStore";
+import { HighlightController } from "./HighlightController";
+import { JotaiStore } from "../state/JotaiStore";
+import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
+import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
+import { ZoomController } from "./ZoomController";
+import { Node } from "../../../mung/Node";
+import { EditorStateStore } from "../state/EditorStateStore";
+import { IController } from "./IController";
+import { ToolbeltController } from "../toolbelt/ToolbeltController";
+import { EditorTool } from "../toolbelt/EditorTool";
 
 /**
  * Contains logic for selecting and deselecting nodes.
  */
-export class Selector {
-  private jotaiStore: JotaiStore = getDefaultStore();
+export class SelectionController implements IController {
+  private jotaiStore: JotaiStore;
 
   private readonly notationGraphStore: NotationGraphStore;
   private readonly classVisibilityStore: ClassVisibilityStore;
@@ -21,21 +24,26 @@ export class Selector {
   private readonly editorStateStore: EditorStateStore;
   private readonly highlighter: HighlightController;
   private readonly zoomer: ZoomController;
+  private readonly toolbeltController: ToolbeltController;
 
   constructor(
+    jotaiStore: JotaiStore,
     notationGraphStore: NotationGraphStore,
     classVisibilityStore: ClassVisibilityStore,
     selectionStore: SelectionStore,
     editorStateStore: EditorStateStore,
     highlighter: HighlightController,
     zoomer: ZoomController,
+    toolbeltController: ToolbeltController,
   ) {
+    this.jotaiStore = jotaiStore;
     this.notationGraphStore = notationGraphStore;
     this.classVisibilityStore = classVisibilityStore;
     this.selectionStore = selectionStore;
     this.editorStateStore = editorStateStore;
     this.highlighter = highlighter;
     this.zoomer = zoomer;
+    this.toolbeltController = toolbeltController;
   }
 
   ///////////
@@ -55,35 +63,7 @@ export class Selector {
   // Mouse interaction //
   ///////////////////////
 
-  /**
-   * React hook that attaches the selector to an SVG element, so that it
-   * starts reacting to mouse events.
-   */
-  public useSelector(
-    svgRef: RefObject<SVGSVGElement | null>,
-    sweepRectangleRef: RefObject<SVGRectElement | null>,
-  ) {
-    useEffect(() => {
-      if (svgRef.current === null) return;
-      const svg = svgRef.current;
-      this.sweepRectangle = sweepRectangleRef.current;
-
-      const downListener = this.onMouseDown.bind(this);
-      const moveListener = this.onMouseMove.bind(this);
-      const upListener = this.onMouseUp.bind(this);
-
-      svg.addEventListener("mousedown", downListener);
-      svg.addEventListener("mousemove", moveListener);
-      svg.addEventListener("mouseup", upListener);
-      return () => {
-        svg.removeEventListener("mousedown", downListener);
-        svg.removeEventListener("mousemove", moveListener);
-        svg.removeEventListener("mouseup", upListener);
-      };
-    }, []);
-  }
-
-  private onMouseMove(e: MouseEvent) {
+  public onMouseMove(e: MouseEvent) {
     if (!this.isEnabled) return;
     if (!this.isSweeping) return;
 
@@ -99,7 +79,7 @@ export class Selector {
     this.updateSweepRectangle();
   }
 
-  private onMouseUp(e: MouseEvent) {
+  public onMouseUp(e: MouseEvent) {
     if (!this.isEnabled) return;
     if (e.button !== 0) return; // LMB only
     if (!this.isSweeping) return;
@@ -118,7 +98,7 @@ export class Selector {
     this.updateSweepRectangle();
   }
 
-  private onMouseDown(e: MouseEvent) {
+  public onMouseDown(e: MouseEvent) {
     if (!this.isEnabled) return;
     if (e.button !== 0) return; // LMB only
 
@@ -222,37 +202,40 @@ export class Selector {
 
     return nodes;
   }
-}
 
-/////////////////////
-// React component //
-/////////////////////
+  ///////////////
+  // Rendering //
+  ///////////////
 
-export interface SelectorComponentProps {
-  readonly svgRef: RefObject<SVGSVGElement | null>;
-  readonly selector: Selector;
-}
+  public renderSVG(): JSX.Element | null {
+    const currentTool = useAtomValue(this.toolbeltController.currentToolAtom);
+    const sweepRectangleRef = useRef<SVGRectElement | null>(null);
 
-export function SelectorComponent(props: SelectorComponentProps) {
-  const sweepRectangleRef = useRef<SVGRectElement | null>(null);
+    useEffect(() => {
+      this.sweepRectangle = sweepRectangleRef.current;
+    }, []);
 
-  props.selector.useSelector(props.svgRef, sweepRectangleRef);
+    // selection is only visible when we are not editing nodes
+    if (currentTool === EditorTool.NodeEditing) {
+      return null;
+    }
 
-  return (
-    <>
-      <rect
-        ref={sweepRectangleRef}
-        x={0}
-        y={0}
-        width={0}
-        height={0}
-        fill="color-mix(in srgb, var(--joy-palette-primary-400) 20%, transparent)"
-        stroke="var(--joy-palette-primary-400)"
-        strokeWidth="var(--scene-screen-pixel)"
-        style={{
-          display: "none",
-        }}
-      />
-    </>
-  );
+    return (
+      <>
+        <rect
+          ref={sweepRectangleRef}
+          x={0}
+          y={0}
+          width={0}
+          height={0}
+          fill="color-mix(in srgb, var(--joy-palette-primary-400) 20%, transparent)"
+          stroke="var(--joy-palette-primary-400)"
+          strokeWidth="var(--scene-screen-pixel)"
+          style={{
+            display: "none",
+          }}
+        />
+      </>
+    );
+  }
 }

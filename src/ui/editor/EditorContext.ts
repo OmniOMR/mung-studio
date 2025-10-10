@@ -12,6 +12,7 @@ import { JotaiStore } from "./state/JotaiStore";
 import { ToolbeltController } from "./toolbelt/ToolbeltController";
 import { ZoomController } from "./controllers/ZoomController";
 import { HighlightController } from "./controllers/HighlightController";
+import { SelectionController } from "./controllers/SelectionController";
 
 /**
  * All fields present in the editor component's global context
@@ -28,6 +29,7 @@ export interface EditorContextState {
   readonly zoomController: ZoomController;
   readonly toolbeltController: ToolbeltController;
   readonly highlightController: HighlightController;
+  readonly selectionController: SelectionController;
 }
 
 /**
@@ -84,6 +86,21 @@ export function useConstructContextServices(
     [],
   );
 
+  const selectionController = useMemo(
+    () =>
+      new SelectionController(
+        jotaiStore,
+        notationGraphStore,
+        classVisibilityStore,
+        selectionStore,
+        editorStateStore,
+        highlightController,
+        zoomController,
+        toolbeltController,
+      ),
+    [],
+  );
+
   return {
     notationGraphStore,
     selectionStore,
@@ -96,6 +113,7 @@ export function useConstructContextServices(
     zoomController,
     toolbeltController,
     highlightController,
+    selectionController,
   };
 }
 
