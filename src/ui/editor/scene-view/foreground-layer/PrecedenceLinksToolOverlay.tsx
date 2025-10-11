@@ -13,7 +13,7 @@ import { OverlayedLinks } from "./OverlayedLinks";
 
 export interface PrecedenceLinksToolOverlayProps {
   readonly svgRef: RefObject<SVGSVGElement | null>;
-  readonly zoomer: ZoomController;
+  readonly zoomController: ZoomController;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectionStore: SelectionStore;
 }
@@ -55,7 +55,7 @@ export function PrecedenceLinksToolOverlay(
   return (
     <OverlayedPrecedenceLinks
       svgRef={props.svgRef}
-      zoomer={props.zoomer}
+      zoomController={props.zoomController}
       selectionStore={props.selectionStore}
     />
   );
@@ -63,7 +63,7 @@ export function PrecedenceLinksToolOverlay(
 
 interface OverlayedPrecedenceLinksProps {
   readonly svgRef: React.RefObject<SVGElement | null>;
-  readonly zoomer: ZoomController;
+  readonly zoomController: ZoomController;
   readonly selectionStore: SelectionStore;
 }
 
@@ -77,7 +77,7 @@ function OverlayedPrecedenceLinks(props: OverlayedPrecedenceLinksProps) {
       sourceNodes={isCtrlPressed ? selectedNodes : []}
       svgRef={props.svgRef}
       selectionStore={props.selectionStore}
-      zoomer={props.zoomer}
+      zoomController={props.zoomController}
     />
   );
 }

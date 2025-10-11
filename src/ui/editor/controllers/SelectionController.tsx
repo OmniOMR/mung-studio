@@ -1,5 +1,5 @@
-import { JSX, RefObject, useEffect, useRef } from "react";
-import { getDefaultStore, useAtomValue } from "jotai";
+import { JSX, useEffect, useRef } from "react";
+import { atom, Atom } from "jotai";
 import { SelectionStore } from "../state/selection-store/SelectionStore";
 import { HighlightController } from "./HighlightController";
 import { JotaiStore } from "../state/JotaiStore";
@@ -23,7 +23,7 @@ export class SelectionController implements IController {
   private readonly selectionStore: SelectionStore;
   private readonly editorStateStore: EditorStateStore;
   private readonly highlighter: HighlightController;
-  private readonly zoomer: ZoomController;
+  private readonly zoomController: ZoomController;
   private readonly toolbeltController: ToolbeltController;
 
   constructor(
@@ -33,7 +33,7 @@ export class SelectionController implements IController {
     selectionStore: SelectionStore,
     editorStateStore: EditorStateStore,
     highlighter: HighlightController,
-    zoomer: ZoomController,
+    zoomController: ZoomController,
     toolbeltController: ToolbeltController,
   ) {
     this.jotaiStore = jotaiStore;
@@ -42,15 +42,24 @@ export class SelectionController implements IController {
     this.selectionStore = selectionStore;
     this.editorStateStore = editorStateStore;
     this.highlighter = highlighter;
-    this.zoomer = zoomer;
+    this.zoomController = zoomController;
     this.toolbeltController = toolbeltController;
+  }
+
+  public isEnabledAtom: Atom<boolean> = atom((get) => {
+    const currentTool = get(this.toolbeltController.currentToolAtom);
+    if (currentTool === EditorTool.Hand) return false;
+    if (currentTool === EditorTool.NodeEditing) return false;
+    return true;
+  });
+
+  public get isEnabled(): boolean {
+    return this.jotaiStore.get(this.isEnabledAtom);
   }
 
   ///////////
   // State //
   ///////////
-
-  public isEnabled: boolean = true;
 
   private sweepRectangle: SVGRectElement | null = null;
   private isSweeping: boolean = false;
@@ -64,11 +73,10 @@ export class SelectionController implements IController {
   ///////////////////////
 
   public onMouseMove(e: MouseEvent) {
-    if (!this.isEnabled) return;
     if (!this.isSweeping) return;
 
     // pointer position
-    const t = this.zoomer.currentTransform;
+    const t = this.zoomController.currentTransform;
     const x = t.invertX(e.offsetX);
     const y = t.invertY(e.offsetY);
 
@@ -80,7 +88,6 @@ export class SelectionController implements IController {
   }
 
   public onMouseUp(e: MouseEvent) {
-    if (!this.isEnabled) return;
     if (e.button !== 0) return; // LMB only
     if (!this.isSweeping) return;
 
@@ -99,17 +106,16 @@ export class SelectionController implements IController {
   }
 
   public onMouseDown(e: MouseEvent) {
-    if (!this.isEnabled) return;
     if (e.button !== 0) return; // LMB only
 
     const highlightedNode = this.highlighter.highlightedNode;
 
     // pointer position
-    const t = this.zoomer.currentTransform;
+    const t = this.zoomController.currentTransform;
     const x = t.invertX(e.offsetX);
     const y = t.invertY(e.offsetY);
 
-    // click on the backgorund de-selects
+    // click on the background de-selects
     // and initiates the sweep select
     if (highlightedNode === null) {
       // Do not deselect here. That happens on mouse up if there's nothing
@@ -160,7 +166,7 @@ export class SelectionController implements IController {
     const y = Math.min(this.sweepStartY, this.sweepEndY);
     const width = Math.abs(this.sweepStartX - this.sweepEndX);
     const height = Math.abs(this.sweepStartY - this.sweepEndY);
-    const dashed = !this.editorStateStore.isSelectionLazy;
+    const dashed = !this.editorStateStore.isSelectionLazy; // TODO: this state should be inside of this controller
 
     this.sweepRectangle.style.display = "block";
     this.sweepRectangle.setAttribute("x", String(x));
@@ -208,17 +214,11 @@ export class SelectionController implements IController {
   ///////////////
 
   public renderSVG(): JSX.Element | null {
-    const currentTool = useAtomValue(this.toolbeltController.currentToolAtom);
     const sweepRectangleRef = useRef<SVGRectElement | null>(null);
 
     useEffect(() => {
       this.sweepRectangle = sweepRectangleRef.current;
     }, []);
-
-    // selection is only visible when we are not editing nodes
-    if (currentTool === EditorTool.NodeEditing) {
-      return null;
-    }
 
     return (
       <>

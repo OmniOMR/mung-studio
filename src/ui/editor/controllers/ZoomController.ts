@@ -11,7 +11,7 @@ import { isMacish } from "../../../utils/isMacish";
 export type OnTransformChangeListener = (transform: d3.ZoomTransform) => void;
 
 /**
- * Predicate that is used by the zoomer to query, whether the hand tool
+ * Predicate that is used by the zoom controller to query, whether the hand tool
  * is active and thus whether to drag screen with LMB
  */
 export type IsHandToolActivePredicate = () => boolean;
@@ -54,7 +54,7 @@ export class ZoomController {
   /**
    * React hook that attaches the D3 zoom behaviour to and SVG element
    */
-  public useZoomer(
+  public useZoomController(
     svgRef: RefObject<SVGSVGElement | null>,
     isHandToolActivePredicate: IsHandToolActivePredicate,
   ) {

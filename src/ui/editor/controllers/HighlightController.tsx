@@ -20,21 +20,32 @@ export class HighlightController implements IController {
 
   private readonly notationGraphStore: NotationGraphStore;
   private readonly classVisibilityStore: ClassVisibilityStore;
-  private readonly zoomer: ZoomController;
+  private readonly zoomController: ZoomController;
   private readonly toolbeltController: ToolbeltController;
 
   constructor(
     jotaiStore: JotaiStore,
     notationGraphStore: NotationGraphStore,
     classVisibilityStore: ClassVisibilityStore,
-    zoomer: ZoomController,
+    zoomController: ZoomController,
     toolbeltController: ToolbeltController,
   ) {
     this.jotaiStore = jotaiStore;
     this.notationGraphStore = notationGraphStore;
     this.classVisibilityStore = classVisibilityStore;
-    this.zoomer = zoomer;
+    this.zoomController = zoomController;
     this.toolbeltController = toolbeltController;
+  }
+
+  public isEnabledAtom: Atom<boolean> = atom((get) => {
+    const currentTool = get(this.toolbeltController.currentToolAtom);
+    if (currentTool === EditorTool.Hand) return false;
+    if (currentTool === EditorTool.NodeEditing) return false;
+    return true;
+  });
+
+  public get isEnabled(): boolean {
+    return this.jotaiStore.get(this.isEnabledAtom);
   }
 
   ///////////
@@ -42,7 +53,6 @@ export class HighlightController implements IController {
   ///////////
 
   private signalAtom = new SignalAtomWrapper();
-  private _isNodeHighlightingEnabled = true;
   private _highlightedNode: Node | null = null;
 
   /**
@@ -50,17 +60,9 @@ export class HighlightController implements IController {
    * or highlighting is disabled
    */
   public get highlightedNode(): Node | null {
-    if (!this._isNodeHighlightingEnabled) return null;
+    if (!this.isEnabled) return null;
     return this._highlightedNode;
   }
-
-  /**
-   * Read-only atom that exposes whether the node highlighting is enabled
-   */
-  public readonly isNodeHighlightingEnabledAtom: Atom<boolean> = atom((get) => {
-    this.signalAtom.subscribe(get);
-    return this._isNodeHighlightingEnabled;
-  });
 
   /**
    * Read-only atom that exposes the highlighted node
@@ -82,26 +84,12 @@ export class HighlightController implements IController {
     this.signalAtom.signal(this.jotaiStore.set);
   }
 
-  /**
-   * Sets whether node highlighting is enabled
-   */
-  public setIsNodeHighlightingEnabled(isEnabled: boolean) {
-    // skip if no change
-    if (this._isNodeHighlightingEnabled === isEnabled) return;
-
-    // change the state
-    this._isNodeHighlightingEnabled = isEnabled;
-    this.signalAtom.signal(this.jotaiStore.set);
-  }
-
   ///////////////////////
   // Mouse interaction //
   ///////////////////////
 
   public onMouseMove(e: MouseEvent) {
-    if (!this._isNodeHighlightingEnabled) return;
-
-    const t = this.zoomer.currentTransform;
+    const t = this.zoomController.currentTransform;
 
     const x = t.invertX(e.offsetX);
     const y = t.invertY(e.offsetY);
@@ -141,13 +129,7 @@ export class HighlightController implements IController {
   ///////////////
 
   public renderSVG(): JSX.Element | null {
-    const currentTool = useAtomValue(this.toolbeltController.currentToolAtom);
     const highlightedNode = useAtomValue(this.highlightedNodeAtom);
-
-    // highlighting is only visible when we are not editing nodes
-    if (currentTool === EditorTool.NodeEditing) {
-      return null;
-    }
 
     // render the highlight rectangle
     return (

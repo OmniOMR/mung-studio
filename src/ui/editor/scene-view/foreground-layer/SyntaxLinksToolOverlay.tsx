@@ -13,7 +13,7 @@ import { useIsKeyPressed } from "../../../../utils/useIsKeyPressed";
 
 export interface SyntaxLinksToolOverlayProps {
   readonly svgRef: React.RefObject<SVGElement | null>;
-  readonly zoomer: ZoomController;
+  readonly zoomController: ZoomController;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectionStore: SelectionStore;
 }
@@ -58,7 +58,7 @@ export function SyntaxLinksToolOverlay(props: SyntaxLinksToolOverlayProps) {
   return (
     <OverlayedSyntaxLinks
       svgRef={props.svgRef}
-      zoomer={props.zoomer}
+      zoomController={props.zoomController}
       selectionStore={props.selectionStore}
     />
   );
@@ -66,7 +66,7 @@ export function SyntaxLinksToolOverlay(props: SyntaxLinksToolOverlayProps) {
 
 interface OverlayedSyntaxLinksProps {
   readonly svgRef: React.RefObject<SVGElement | null>;
-  readonly zoomer: ZoomController;
+  readonly zoomController: ZoomController;
   readonly selectionStore: SelectionStore;
 }
 
@@ -80,7 +80,7 @@ function OverlayedSyntaxLinks(props: OverlayedSyntaxLinksProps) {
       sourceNodes={isCtrlPressed ? selectedNodes : []}
       svgRef={props.svgRef}
       selectionStore={props.selectionStore}
-      zoomer={props.zoomer}
+      zoomController={props.zoomController}
     />
   );
 }

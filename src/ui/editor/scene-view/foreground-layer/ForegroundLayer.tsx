@@ -23,14 +23,17 @@ export function ForegroundLayer() {
   // defines which controllers and in what order are they going to be rendered
   const controllers: IController[] = [highlightController, selectionController];
 
+  // rendering uses isEnabled properties so we need to listen to their changes
+  controllers.map((c) => useAtomValue(c.isEnabledAtom));
+
   useBindControllerEvents(controllers, svgRef);
 
   const currentTool = useAtomValue(toolbeltController.currentToolAtom);
 
-  // bind zoomer to the SVG element
-  zoomController.useZoomer(
+  // bind zoom controller to the SVG element
+  zoomController.useZoomController(
     svgRef,
-    () => toolbeltController.currentTool == EditorTool.Hand,
+    () => toolbeltController.currentTool == EditorTool.Hand, // TODO: this should be an internal dependency
   );
 
   // determine the mouse cursor type
@@ -38,15 +41,6 @@ export function ForegroundLayer() {
   let cursor = "default";
   if (currentTool === EditorTool.Hand) cursor = "grab";
   if (isGrabbing) cursor = "grabbing";
-
-  // determine whether the highlighter and selector is enabled
-  useEffect(() => {
-    let isEnabled = true;
-    if (currentTool === EditorTool.Hand) isEnabled = false;
-
-    highlightController.setIsNodeHighlightingEnabled(isEnabled);
-    selectionController.isEnabled = isEnabled;
-  }, [currentTool]);
 
   return (
     <>
@@ -63,16 +57,21 @@ export function ForegroundLayer() {
           cursor: cursor,
         }}
       >
-        {/* This <g> element is what the zoomer applies transform to */}
+        {/* This <g> element is what the zoom ctrl applies transform to */}
         <g>
-          {controllers.map((c) => c.renderSVG?.() || null)}
+          {controllers
+            .filter((c) => c.renderSVG && c.isEnabled)
+            .map((c) => {
+              const ControllerElement = c.renderSVG!.bind(c);
+              return <ControllerElement key={c.constructor.name} />;
+            })}
 
           {currentTool === EditorTool.NodeEditing && <NodeEditorOverlay />}
 
           {currentTool === EditorTool.SyntaxLinks && (
             <SyntaxLinksToolOverlay
               svgRef={svgRef}
-              zoomer={zoomController}
+              zoomController={zoomController}
               notationGraphStore={notationGraphStore}
               selectionStore={selectionStore}
             />
@@ -81,7 +80,7 @@ export function ForegroundLayer() {
           {currentTool === EditorTool.PrecedenceLinks && (
             <PrecedenceLinksToolOverlay
               svgRef={svgRef}
-              zoomer={zoomController}
+              zoomController={zoomController}
               notationGraphStore={notationGraphStore}
               selectionStore={selectionStore}
             />
@@ -91,6 +90,13 @@ export function ForegroundLayer() {
     </>
   );
 }
+
+interface ControllerEventBinding {
+  readonly eventName: string;
+  readonly eventListener: (e: any) => void;
+}
+
+type ControllerEventHook = ((e: Event) => void) | undefined;
 
 /**
  * Uses useEffect to register and unregister common interaction events
@@ -104,27 +110,41 @@ function useBindControllerEvents(
     if (svgRef.current === null) return;
     const svg = svgRef.current;
 
-    // helpers
-    const bindings: [string, any][] = [];
-    const bind = (eventName: string, listener: any) => {
-      bindings.push([eventName, listener]);
-      svg.addEventListener(eventName, listener);
+    // list of registered bindings
+    const bindings: ControllerEventBinding[] = [];
+
+    // registers a new event binding
+    const bind = (
+      eventName: string,
+      controller: IController,
+      controllerEventHook: ControllerEventHook,
+    ) => {
+      // wrap the hook in additional logic
+      const eventListener = (e: Event) => {
+        // don't invoke if not enabled
+        if (!controller.isEnabled) return;
+
+        // invoke if hook exists
+        controllerEventHook?.(e);
+      };
+
+      svg.addEventListener(eventName, eventListener);
+      bindings.push({ eventName, eventListener });
     };
 
     // bind events
     for (const c of controllers) {
-      bind("mousemove", c.onMouseMove?.bind(c));
-      bind("mousedown", c.onMouseDown?.bind(c));
-      bind("mouseup", c.onMouseUp?.bind(c));
-
-      bind("keydown", c.onKeyDown?.bind(c));
-      bind("keyup", c.onKeyUp?.bind(c));
+      bind("mousemove", c, c.onMouseMove?.bind(c));
+      bind("mousedown", c, c.onMouseDown?.bind(c));
+      bind("mouseup", c, c.onMouseUp?.bind(c));
+      bind("keydown", c, c.onKeyDown?.bind(c));
+      bind("keyup", c, c.onKeyUp?.bind(c));
     }
 
     // unbind events
     return () => {
       for (const b of bindings) {
-        svg.removeEventListener(b[0], b[1]);
+        svg.removeEventListener(b.eventName, b.eventListener);
       }
     };
   }, []);

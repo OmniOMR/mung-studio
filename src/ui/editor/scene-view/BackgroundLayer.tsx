@@ -27,7 +27,7 @@ export function BackgroundLayer(props: BackgroundLayerProps) {
         background: "#eee",
       }}
     >
-      {/* This <g> element has zoomer transform applied to */}
+      {/* This <g> element has zoom transform applied to */}
       <g ref={gRef}>
         <image
           x="0"

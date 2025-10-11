@@ -1,3 +1,4 @@
+import { Atom } from "jotai";
 import { JSX } from "react";
 
 /**
@@ -5,6 +6,20 @@ import { JSX } from "react";
  * foreground layer and renders onto its canvas and SVG
  */
 export interface IController {
+  /**
+   * Readable atom that determines, whether the controller should be rendered
+   * and events should be sent to it. The value must be synchronised
+   * with the isEnabled field.
+   */
+  readonly isEnabledAtom: Atom<boolean>;
+
+  /**
+   * Readable property that determines, whether the controller should
+   * be rendered and events should be sent to it. The value must be synchronised
+   * with the isEnabledAtom field.
+   */
+  readonly isEnabled: boolean;
+
   /**
    * Invoked when the mouse moves over the foreground layer SVG element
    */
