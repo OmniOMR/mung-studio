@@ -4,17 +4,13 @@ import { RefObject, useEffect } from "react";
 import { ISimpleEvent, SimpleEventDispatcher } from "strongly-typed-events";
 import { JotaiStore } from "../state/JotaiStore";
 import { isMacish } from "../../../utils/isMacish";
+import { ToolbeltController } from "../toolbelt/ToolbeltController";
+import { EditorTool } from "../toolbelt/EditorTool";
 
 /**
  * Function signature for transform change event listener
  */
 export type OnTransformChangeListener = (transform: d3.ZoomTransform) => void;
-
-/**
- * Predicate that is used by the zoom controller to query, whether the hand tool
- * is active and thus whether to drag screen with LMB
- */
-export type IsHandToolActivePredicate = () => boolean;
 
 /**
  * D3 zoom transform that represent no transform
@@ -28,8 +24,11 @@ export const IDENTITY_TRANSFORM = new d3.ZoomTransform(1, 0, 0);
 export class ZoomController {
   private jotaiStore: JotaiStore;
 
-  constructor(jotaiStore: JotaiStore) {
+  private toolbeltController: ToolbeltController;
+
+  constructor(jotaiStore: JotaiStore, toolbeltController: ToolbeltController) {
     this.jotaiStore = jotaiStore;
+    this.toolbeltController = toolbeltController;
   }
 
   ///////////
@@ -52,12 +51,9 @@ export class ZoomController {
   ////////////////
 
   /**
-   * React hook that attaches the D3 zoom behaviour to and SVG element
+   * React hook that attaches the D3 zoom behaviour to an SVG element
    */
-  public useZoomController(
-    svgRef: RefObject<SVGSVGElement | null>,
-    isHandToolActivePredicate: IsHandToolActivePredicate,
-  ) {
+  public useZoomController(svgRef: RefObject<SVGSVGElement | null>) {
     useEffect(() => {
       if (svgRef.current === null) return;
 
@@ -91,11 +87,7 @@ export class ZoomController {
         .on("start", started)
         .on("end", ended);
       svgElement.call(zoom);
-      this.customizeD3ZoomBehaviour(
-        svgElement,
-        zoom,
-        isHandToolActivePredicate,
-      );
+      this.customizeD3ZoomBehaviour(svgElement, zoom);
     }, []);
   }
 
@@ -105,7 +97,6 @@ export class ZoomController {
   private customizeD3ZoomBehaviour(
     svgElement: d3.Selection<SVGSVGElement, unknown, null, undefined>,
     zoom: d3.ZoomBehavior<Element, unknown>,
-    isHandToolActivePredicate: IsHandToolActivePredicate,
   ) {
     // disable double-click zooming
     svgElement.on("dblclick.zoom", null);
@@ -113,10 +104,12 @@ export class ZoomController {
     // mouse dragging will be done with the middle mouse button
     // or with the primary button while the hand tool is active
     zoom.filter((event: MouseEvent) => {
+      const isHandToolActive =
+        this.toolbeltController.currentTool === EditorTool.Hand;
       return (
         event.type === "wheel" ||
         event.type.startsWith("touch") ||
-        (isHandToolActivePredicate() && event.button == 0) ||
+        (isHandToolActive && event.button == 0) ||
         event.button == 1
       );
     });

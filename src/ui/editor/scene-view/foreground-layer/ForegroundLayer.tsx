@@ -28,15 +28,11 @@ export function ForegroundLayer() {
 
   useBindControllerEvents(controllers, svgRef);
 
-  const currentTool = useAtomValue(toolbeltController.currentToolAtom);
-
   // bind zoom controller to the SVG element
-  zoomController.useZoomController(
-    svgRef,
-    () => toolbeltController.currentTool == EditorTool.Hand, // TODO: this should be an internal dependency
-  );
+  zoomController.useZoomController(svgRef);
 
   // determine the mouse cursor type
+  const currentTool = useAtomValue(toolbeltController.currentToolAtom);
   const isGrabbing = useAtomValue(zoomController.isGrabbingAtom);
   let cursor = "default";
   if (currentTool === EditorTool.Hand) cursor = "grab";

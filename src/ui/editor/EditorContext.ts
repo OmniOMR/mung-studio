@@ -26,8 +26,8 @@ export interface EditorContextState {
 
   readonly pythonRuntime: PythonRuntime;
 
-  readonly zoomController: ZoomController;
   readonly toolbeltController: ToolbeltController;
+  readonly zoomController: ZoomController;
   readonly highlightController: HighlightController;
   readonly selectionController: SelectionController;
 }
@@ -67,10 +67,13 @@ export function useConstructContextServices(
 
   const pythonRuntime = useMemo(() => PythonRuntime.resolveInstance(), []);
 
-  const zoomController = useMemo(() => new ZoomController(jotaiStore), []);
-
   const toolbeltController = useMemo(
     () => new ToolbeltController(jotaiStore),
+    [],
+  );
+
+  const zoomController = useMemo(
+    () => new ZoomController(jotaiStore, toolbeltController),
     [],
   );
 
@@ -110,8 +113,8 @@ export function useConstructContextServices(
 
     pythonRuntime,
 
-    zoomController,
     toolbeltController,
+    zoomController,
     highlightController,
     selectionController,
   };
