@@ -21,6 +21,18 @@ export interface IController {
   readonly isEnabled: boolean;
 
   /**
+   * Invoked, when the controller becomes enabled.
+   * Does NOT fire on startup.
+   */
+  readonly onEnabled?: () => void;
+
+  /**
+   * Invoked, when the controller becomes disabled.
+   * Does NOT fire on teardown.
+   */
+  readonly onDisabled?: () => void;
+
+  /**
    * Invoked when the mouse moves over the foreground layer SVG element
    */
   readonly onMouseMove?: (e: MouseEvent) => void;

@@ -89,7 +89,30 @@ export function ForegroundLayer() {
   }, []);
 
   // redraw controllers when their isEnabled states change
+  // also trigger onEnabled and onDisabled events
+  const previousControllerEnablednessListRef = useRef<boolean[]>(
+    controllerEnablednessList,
+  );
   useEffect(() => {
+    const previous = previousControllerEnablednessListRef.current;
+    const current = controllerEnablednessList;
+
+    // fire onDisabled
+    for (let i = 0; i < previous.length; i++) {
+      if (previous[i] && !current[i]) {
+        controllers[i].onDisabled?.();
+      }
+    }
+
+    // fire onEnabled
+    for (let i = 0; i < previous.length; i++) {
+      if (!previous[i] && current[i]) {
+        controllers[i].onEnabled?.();
+      }
+    }
+
+    previousControllerEnablednessListRef.current = controllerEnablednessList;
+
     draw();
   }, controllerEnablednessList);
 

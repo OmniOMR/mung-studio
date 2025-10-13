@@ -39,8 +39,8 @@ export class NodeEditingController implements IController {
 
     // redraw when source data changes
     zoomController.onTransformChange.subscribe(this.notify.bind(this));
-    selectionStore.onNodesChange.subscribe(this.notify.bind(this));
-    notationGraphStore.onChange.subscribe(this.notify.bind(this));
+    // selectionStore.onNodesChange.subscribe(this.notify.bind(this));
+    // notationGraphStore.onChange.subscribe(this.notify.bind(this));
   }
 
   private notify() {
@@ -56,6 +56,15 @@ export class NodeEditingController implements IController {
 
   public get isEnabled(): boolean {
     return this.jotaiStore.get(this.isEnabledAtom);
+  }
+
+  public onEnabled() {
+    this.clearState();
+    this.populateState();
+  }
+
+  public onDisabled() {
+    this.clearState();
   }
 
   /////////////////////
@@ -96,21 +105,58 @@ export class NodeEditingController implements IController {
     this.jotaiStore.set(this.currentNodeToolBaseAtom, tool);
   }
 
+  /////////////////////
+  // The edited node //
+  /////////////////////
+
+  /**
+   * The MuNG node instance being edited
+   */
+  public editedNode: Node | null = null;
+
+  public maskCanvas: OffscreenCanvas | null = null;
+  public maskCanvasContext: OffscreenCanvasRenderingContext2D | null = null;
+
+  private clearState() {
+    this.editedNode = null;
+    this.maskCanvas = null;
+    this.maskCanvasContext = null;
+  }
+
+  private populateState() {
+    if (this.selectionStore.selectedNodeIds.length === 0) {
+      return;
+    }
+
+    this.editedNode = this.notationGraphStore.getNode(
+      this.selectionStore.selectedNodeIds[0],
+    );
+
+    if (this.editedNode.decodedMask !== null) {
+      this.maskCanvas = new OffscreenCanvas(
+        this.editedNode.width,
+        this.editedNode.height,
+      );
+      this.maskCanvasContext = this.maskCanvas.getContext("2d");
+      this.maskCanvasContext?.putImageData(this.editedNode.decodedMask, 0, 0);
+    }
+  }
+
+  /////////////////////
+  // Mask operations //
+  /////////////////////
+
+  // TODO: shrink node to mask content
+
+  // TODO: binarize mask region
+
   ////////////////////
   // Mask rendering //
   ////////////////////
 
-  private getEditedNode(): Node | null {
-    if (this.selectionStore.selectedNodeIds.length === 0) return null;
-    return this.notationGraphStore.getNode(
-      this.selectionStore.selectedNodeIds[0],
-    );
-  }
-
   public draw(ctx: CanvasRenderingContext2D): void {
     // get the node to be rendered and return if not available
-    const node = this.getEditedNode();
-    if (node === null) return;
+    if (this.editedNode === null) return;
 
     // set the scene transform
     const t = this.zoomController.currentTransform;
@@ -119,22 +165,12 @@ export class NodeEditingController implements IController {
     ctx.scale(t.k, t.k);
 
     // draw the mask
-    // TODO: this should not be async, this is a temporary hack!
-    (async () => {
-      // const hue = classNameToHue(node.className);
-      // const lightness = 50;
-      // ctx.fillStyle = `hsla(${hue}, 100%, ${lightness}%, 0.2)`;
-
-      if (node.decodedMask !== null) {
-        // TODO: use an OffscreenCanvas so that mask can be edited
-        // and put it inside of a store
-        const img = await createImageBitmap(node.decodedMask, {
-          resizeQuality: "pixelated",
-        });
-        ctx.imageSmoothingEnabled = false;
-        ctx.globalAlpha = 0.5;
-        ctx.drawImage(img, node.left, node.top);
-      }
-    })();
+    if (this.maskCanvas !== null) {
+      ctx.imageSmoothingEnabled = false;
+      ctx.globalAlpha = 0.5;
+      ctx.drawImage(this.maskCanvas, this.editedNode.left, this.editedNode.top);
+      ctx.globalAlpha = 1.0;
+      ctx.imageSmoothingEnabled = true;
+    }
   }
 }
