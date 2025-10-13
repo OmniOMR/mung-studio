@@ -46,10 +46,16 @@ export interface IController {
   readonly onKeyUp?: (e: KeyboardEvent) => void;
 
   /**
+   * Invoked just before draw. Can be used to re-position
+   * SVG elements from renderSVG via react refs as well.
+   */
+  readonly update?: () => void;
+
+  /**
    * Invoked when the Canvas2D of the foreground
    * scene view layer should be redrawn
    */
-  readonly renderCanvas?: (ctx: CanvasRenderingContext2D) => void;
+  readonly draw?: (ctx: CanvasRenderingContext2D) => void;
 
   /**
    * Invoked when the SVG foregound layer should be re-rendered.

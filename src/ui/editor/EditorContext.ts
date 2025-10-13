@@ -13,6 +13,9 @@ import { ToolbeltController } from "./toolbelt/ToolbeltController";
 import { ZoomController } from "./controllers/ZoomController";
 import { HighlightController } from "./controllers/HighlightController";
 import { SelectionController } from "./controllers/SelectionController";
+import { RedrawTrigger } from "./controllers/RedrawTrigger";
+import { PolygonToolsController } from "./toolbelt/node-editing/PolygonToolsController";
+import { NodeEditingController } from "./toolbelt/node-editing/NodeEditingController";
 
 /**
  * All fields present in the editor component's global context
@@ -26,10 +29,13 @@ export interface EditorContextState {
 
   readonly pythonRuntime: PythonRuntime;
 
+  readonly redrawTrigger: RedrawTrigger;
   readonly toolbeltController: ToolbeltController;
   readonly zoomController: ZoomController;
   readonly highlightController: HighlightController;
   readonly selectionController: SelectionController;
+  readonly nodeEditingController: NodeEditingController;
+  readonly polygonToolsController: PolygonToolsController;
 }
 
 /**
@@ -66,6 +72,8 @@ export function useConstructContextServices(
   );
 
   const pythonRuntime = useMemo(() => PythonRuntime.resolveInstance(), []);
+
+  const redrawTrigger = useMemo(() => new RedrawTrigger(), []);
 
   const toolbeltController = useMemo(
     () => new ToolbeltController(jotaiStore),
@@ -104,6 +112,30 @@ export function useConstructContextServices(
     [],
   );
 
+  const nodeEditingController = useMemo(
+    () =>
+      new NodeEditingController(
+        jotaiStore,
+        notationGraphStore,
+        selectionStore,
+        toolbeltController,
+        zoomController,
+        redrawTrigger,
+      ),
+    [],
+  );
+
+  const polygonToolsController = useMemo(
+    () =>
+      new PolygonToolsController(
+        jotaiStore,
+        zoomController,
+        redrawTrigger,
+        nodeEditingController,
+      ),
+    [],
+  );
+
   return {
     notationGraphStore,
     selectionStore,
@@ -113,10 +145,13 @@ export function useConstructContextServices(
 
     pythonRuntime,
 
+    redrawTrigger,
     toolbeltController,
     zoomController,
     highlightController,
     selectionController,
+    nodeEditingController,
+    polygonToolsController,
   };
 }
 

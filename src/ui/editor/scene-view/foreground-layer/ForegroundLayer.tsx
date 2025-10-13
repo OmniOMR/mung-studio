@@ -1,10 +1,9 @@
-import { RefObject, useContext, useEffect, useRef } from "react";
+import { RefObject, useCallback, useContext, useEffect, useRef } from "react";
 import { NodeEditorOverlay } from "./NodeEditorOverlay";
 import { PrecedenceLinksToolOverlay } from "./PrecedenceLinksToolOverlay";
 import { EditorTool } from "../../toolbelt/EditorTool";
 import { useAtomValue } from "jotai";
 import { SyntaxLinksToolOverlay } from "./SyntaxLinksToolOverlay";
-import { NodeMaskCanvas } from "./NodeMaskCanvas";
 import { EditorContext } from "../../EditorContext";
 import { IController } from "../../controllers/IController";
 
@@ -13,23 +12,86 @@ export function ForegroundLayer() {
     selectionStore,
     notationGraphStore,
     toolbeltController,
+    nodeEditingController,
     zoomController,
     highlightController,
     selectionController,
+    redrawTrigger,
+    polygonToolsController,
   } = useContext(EditorContext);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
 
   // defines which controllers and in what order are they going to be rendered
-  const controllers: IController[] = [highlightController, selectionController];
+  const controllers: IController[] = [
+    highlightController,
+    selectionController,
+    nodeEditingController,
+    polygonToolsController,
+  ];
 
-  // rendering uses isEnabled properties so we need to listen to their changes
-  controllers.map((c) => useAtomValue(c.isEnabledAtom));
+  // rendering uses isEnabled properties so we need to listen to their changes,
+  // also we use this list to re-draw controllers when this list changes
+  const controllerEnablednessList = controllers.map((c) =>
+    useAtomValue(c.isEnabledAtom),
+  );
 
+  // feeds mouse-move/up/down events to the controllers
   useBindControllerEvents(controllers, svgRef);
+
+  // invokes update and draw for all controllers
+  const draw = useCallback(() => {
+    const ctx = canvasContextRef.current;
+    if (ctx === null) return;
+
+    // update
+    controllers
+      .filter((c) => c.update && c.isEnabled)
+      .forEach((c) => c.update!());
+
+    // resize canvas frame buffer if necessary
+    if (ctx.canvas.width != ctx.canvas.clientWidth) {
+      ctx.canvas.width = ctx.canvas.clientWidth;
+    }
+    if (ctx.canvas.height != ctx.canvas.clientHeight) {
+      ctx.canvas.height = ctx.canvas.clientHeight;
+    }
+
+    // clear the frame buffer and reset stateful properties
+    ctx.reset();
+
+    // draw
+    controllers
+      .filter((c) => c.draw && c.isEnabled)
+      .forEach((c) => c.draw!(ctx));
+  }, []);
 
   // bind zoom controller to the SVG element
   zoomController.useZoomController(svgRef);
+
+  // connect to the canvas element and draw trigger logic
+  useEffect(() => {
+    if (canvasRef.current === null) return;
+
+    // setup canvas context
+    canvasContextRef.current = canvasRef.current.getContext("2d");
+
+    // draw immediately when mounted
+    draw();
+
+    // bind the trigger to the draw callback
+    redrawTrigger.bindDrawCallback(draw);
+    return () => {
+      redrawTrigger.unbindDrawCallback();
+    };
+  }, []);
+
+  // redraw controllers when their isEnabled states change
+  useEffect(() => {
+    draw();
+  }, controllerEnablednessList);
 
   // determine the mouse cursor type
   const currentTool = useAtomValue(toolbeltController.currentToolAtom);
@@ -40,7 +102,17 @@ export function ForegroundLayer() {
 
   return (
     <>
-      {currentTool === EditorTool.NodeEditing && <NodeMaskCanvas />}
+      <canvas
+        ref={canvasRef}
+        style={{
+          position: "absolute",
+          top: 0,
+          left: 0,
+          width: "100%",
+          height: "100%",
+          pointerEvents: "none",
+        }}
+      ></canvas>
       <svg
         ref={svgRef}
         style={{

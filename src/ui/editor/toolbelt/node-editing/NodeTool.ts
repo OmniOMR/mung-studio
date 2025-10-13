@@ -3,6 +3,11 @@
  */
 export enum NodeTool {
   /**
+   * The value used when the node editing mode is not enabled
+   */
+  None = "None",
+
+  /**
    * Tool that paints more of the mask
    */
   Brush = "Brush",
