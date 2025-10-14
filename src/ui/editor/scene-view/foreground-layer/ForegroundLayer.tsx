@@ -147,6 +147,7 @@ export function ForegroundLayer() {
           background: "none",
           cursor: cursor,
         }}
+        onContextMenu={(e) => e.preventDefault()} // disables right-click menu
       >
         {/* This <g> element is what the zoom ctrl applies transform to */}
         <g>
@@ -183,6 +184,7 @@ export function ForegroundLayer() {
 }
 
 interface ControllerEventBinding {
+  readonly target: WindowEventHandlers;
   readonly eventName: string;
   readonly eventListener: (e: any) => void;
 }
@@ -206,6 +208,7 @@ function useBindControllerEvents(
 
     // registers a new event binding
     const bind = (
+      target: WindowEventHandlers,
       eventName: string,
       controller: IController,
       controllerEventHook: ControllerEventHook,
@@ -219,23 +222,23 @@ function useBindControllerEvents(
         controllerEventHook?.(e);
       };
 
-      svg.addEventListener(eventName, eventListener);
-      bindings.push({ eventName, eventListener });
+      target.addEventListener(eventName, eventListener);
+      bindings.push({ target, eventName, eventListener });
     };
 
     // bind events
     for (const c of controllers) {
-      bind("mousemove", c, c.onMouseMove?.bind(c));
-      bind("mousedown", c, c.onMouseDown?.bind(c));
-      bind("mouseup", c, c.onMouseUp?.bind(c));
-      bind("keydown", c, c.onKeyDown?.bind(c));
-      bind("keyup", c, c.onKeyUp?.bind(c));
+      bind(svg, "mousemove", c, c.onMouseMove?.bind(c));
+      bind(svg, "mousedown", c, c.onMouseDown?.bind(c));
+      bind(svg, "mouseup", c, c.onMouseUp?.bind(c));
+      bind(window, "keydown", c, c.onKeyDown?.bind(c));
+      bind(window, "keyup", c, c.onKeyUp?.bind(c));
     }
 
     // unbind events
     return () => {
       for (const b of bindings) {
-        svg.removeEventListener(b.eventName, b.eventListener);
+        b.target.removeEventListener(b.eventName, b.eventListener);
       }
     };
   }, []);

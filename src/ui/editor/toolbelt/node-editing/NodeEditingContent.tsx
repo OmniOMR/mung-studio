@@ -86,14 +86,16 @@ export function NodeEditingContent() {
 
       <ToolbeltButton
         tooltip="Brush"
-        isSelected={false}
+        isSelected={nodeTool === NodeTool.Brush}
+        isDisabled={true}
         onClick={equipBrushTool}
       >
         <BrushIcon />
       </ToolbeltButton>
       <ToolbeltButton
         tooltip="Erase"
-        isSelected={false}
+        isSelected={nodeTool === NodeTool.Eraser}
+        isDisabled={true}
         onClick={equipEraserTool}
       >
         <EditIcon sx={{ transform: "rotate(180deg)" }} />

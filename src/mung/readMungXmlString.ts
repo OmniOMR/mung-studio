@@ -1,4 +1,5 @@
 import { DataItems } from "./DataItems";
+import { MUNG_MAX_MASK_SIZE } from "./mungConstants";
 import { MungFile } from "./MungFile";
 import { Node } from "./Node";
 
@@ -91,7 +92,7 @@ function decodeRleMaskString(
   height: number,
 ): ImageData {
   // validate dimensions
-  if (width > 4096 * 3 || height > 4096 * 3) {
+  if (width > MUNG_MAX_MASK_SIZE || height > MUNG_MAX_MASK_SIZE) {
     throw new Error("Mask too large.");
   }
   width = Math.floor(width);
