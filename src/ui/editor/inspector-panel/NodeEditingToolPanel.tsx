@@ -33,7 +33,8 @@ export function NodeEditingToolPanel() {
         <Typography level="title-sm">Node Editing Tool</Typography>
       </AccordionSummary>
       <AccordionDetails>
-        {nodeTool === NodeTool.PolygonFill && (
+        {(nodeTool === NodeTool.PolygonFill ||
+          nodeTool === NodeTool.PolygonErase) && (
           <Alert color="primary">
             Start by clicking into the scene which starts drawing the polygon.
             Once done, press Enter/Return to rasterize the polygon.

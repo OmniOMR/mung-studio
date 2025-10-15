@@ -582,8 +582,8 @@ export class NodeEditingController implements IController {
 
     // draw the mask extent
     if (this.maskExtent !== null) {
-      ctx.strokeStyle = "rgba(255, 0, 0, 0.3)";
-      ctx.lineWidth = 2;
+      ctx.strokeStyle = "rgba(255, 255, 255, 0.4)";
+      ctx.lineWidth = 4.0 / t.k;
       ctx.strokeRect(
         this.maskExtent.x,
         this.maskExtent.y,

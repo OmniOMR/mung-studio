@@ -6,6 +6,7 @@ import { useAtomValue } from "jotai";
 import { SyntaxLinksToolOverlay } from "./SyntaxLinksToolOverlay";
 import { EditorContext } from "../../EditorContext";
 import { IController } from "../../controllers/IController";
+import { NodeTool } from "../../toolbelt/node-editing/NodeTool";
 
 export function ForegroundLayer() {
   const {
@@ -117,11 +118,15 @@ export function ForegroundLayer() {
   }, controllerEnablednessList);
 
   // determine the mouse cursor type
-  const currentTool = useAtomValue(toolbeltController.currentToolAtom);
+  const editorTool = useAtomValue(toolbeltController.currentToolAtom);
+  const nodeTool = useAtomValue(nodeEditingController.currentNodeToolAtom);
   const isGrabbing = useAtomValue(zoomController.isGrabbingAtom);
   let cursor = "default";
-  if (currentTool === EditorTool.Hand) cursor = "grab";
+  if (editorTool === EditorTool.Hand) cursor = "grab";
   if (isGrabbing) cursor = "grabbing";
+  if (nodeTool === NodeTool.PolygonErase || nodeTool == NodeTool.PolygonFill) {
+    cursor = "crosshair";
+  }
 
   return (
     <>
@@ -158,9 +163,9 @@ export function ForegroundLayer() {
               return <ControllerElement key={c.constructor.name} />;
             })}
 
-          {currentTool === EditorTool.NodeEditing && <NodeEditorOverlay />}
+          {/* {currentTool === EditorTool.NodeEditing && <NodeEditorOverlay />} */}
 
-          {currentTool === EditorTool.SyntaxLinks && (
+          {editorTool === EditorTool.SyntaxLinks && (
             <SyntaxLinksToolOverlay
               svgRef={svgRef}
               zoomController={zoomController}
@@ -169,7 +174,7 @@ export function ForegroundLayer() {
             />
           )}
 
-          {currentTool === EditorTool.PrecedenceLinks && (
+          {editorTool === EditorTool.PrecedenceLinks && (
             <PrecedenceLinksToolOverlay
               svgRef={svgRef}
               zoomController={zoomController}

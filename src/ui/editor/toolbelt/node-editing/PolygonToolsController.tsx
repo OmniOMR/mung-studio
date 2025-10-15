@@ -1,4 +1,4 @@
-import { Atom, atom } from "jotai";
+import { Atom, atom, useAtom, useAtomValue } from "jotai";
 import { IController } from "../../controllers/IController";
 import { ZoomController } from "../../controllers/ZoomController";
 import { RedrawTrigger } from "../../controllers/RedrawTrigger";
@@ -170,6 +170,7 @@ export class PolygonToolsController implements IController {
   ///////////////
 
   private svgPathElement: SVGPathElement | null = null;
+  private svgPatternElement: SVGPatternElement | null = null;
 
   private buildPolygonPathData(includePointer: boolean): string {
     let d = "";
@@ -199,29 +200,71 @@ export class PolygonToolsController implements IController {
   }
 
   public update(): void {
-    if (this.svgPathElement === null) return;
-
     // update SVG path definition
-    this.svgPathElement.setAttribute("d", this.buildPolygonPathData(true));
+    this.svgPathElement?.setAttribute("d", this.buildPolygonPathData(true));
+
+    // update crosshatch patern scaling
+    this.svgPatternElement?.setAttribute(
+      "patternTransform",
+      `scale(${1 / this.zoomController.currentTransform.k})`,
+    );
   }
 
   public renderSVG(): JSX.Element | null {
     const svgPathRef = useRef<SVGPathElement | null>(null);
+    const svgPatternRef = useRef<SVGPatternElement | null>(null);
 
     useEffect(() => {
       this.svgPathElement = svgPathRef.current;
+      this.svgPatternElement = svgPatternRef.current;
       return () => {
         this.svgPathElement = null;
+        this.svgPatternElement = null;
       };
     }, []);
 
+    const nodeTool = useAtomValue(
+      this.nodeEditingController.currentNodeToolAtom,
+    );
+    const isErasing = nodeTool === NodeTool.PolygonErase;
+
     return (
-      <path
-        ref={svgPathRef}
-        fill="rgba(255, 255, 255, 0.5)"
-        stroke="rgba(0, 0, 0, 0.5)"
-        strokeWidth="1"
-      />
+      <>
+        <pattern
+          ref={svgPatternRef}
+          id="pattern-crosshatch"
+          x="0"
+          y="0"
+          width="10"
+          height="10"
+          patternUnits="userSpaceOnUse"
+        >
+          <line
+            x1="0"
+            y1="0"
+            x2="10"
+            y2="10"
+            strokeWidth="2"
+            stroke="rgba(255, 255, 255, 0.5)"
+          />
+          <line
+            x1="10"
+            y1="0"
+            x2="0"
+            y2="10"
+            strokeWidth="2"
+            stroke="rgba(255, 255, 255, 0.5)"
+          />
+        </pattern>
+        <path
+          ref={svgPathRef}
+          fill={
+            isErasing ? "url(#pattern-crosshatch)" : "rgba(255, 255, 255, 0.5)"
+          }
+          stroke="rgba(0, 0, 0, 0.5)"
+          style={{ strokeWidth: "calc(var(--scene-screen-pixel) * 2)" }}
+        />
+      </>
     );
   }
 }
