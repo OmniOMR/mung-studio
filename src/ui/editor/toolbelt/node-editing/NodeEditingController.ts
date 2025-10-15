@@ -1,4 +1,4 @@
-import { Atom, atom } from "jotai";
+import { Atom, atom, PrimitiveAtom, useAtomValue } from "jotai";
 import { JotaiStore } from "../../state/JotaiStore";
 import { NodeTool } from "./NodeTool";
 import { IController } from "../../controllers/IController";
@@ -13,6 +13,7 @@ import { intersectRectangles } from "../../../../utils/intersectRectangles";
 import { unionRectangles } from "../../../../utils/unionRectangles";
 import { snapGrowRectangle } from "../../../../utils/snapGrowRectangle";
 import { MUNG_MAX_MASK_SIZE } from "../../../../mung/mungConstants";
+import { JSX, useEffect } from "react";
 
 /**
  * Encapsulates the canvas.getContext("2d") method, since there are additional
@@ -53,8 +54,8 @@ export class NodeEditingController implements IController {
 
     // redraw when source data changes
     zoomController.onTransformChange.subscribe(this.notify.bind(this));
-    // selectionStore.onNodesChange.subscribe(this.notify.bind(this));
-    // notationGraphStore.onChange.subscribe(this.notify.bind(this));
+    selectionStore.onNodesChange.subscribe(this.notify.bind(this));
+    notationGraphStore.onChange.subscribe(this.notify.bind(this));
   }
 
   private notify() {
@@ -70,15 +71,6 @@ export class NodeEditingController implements IController {
 
   public get isEnabled(): boolean {
     return this.jotaiStore.get(this.isEnabledAtom);
-  }
-
-  public onEnabled() {
-    this.clearState();
-    this.populateState();
-  }
-
-  public onDisabled() {
-    this.clearState();
   }
 
   /////////////////////
@@ -130,14 +122,56 @@ export class NodeEditingController implements IController {
    *
    * Null when new a node is being created and when this tool is disabled.
    */
-  public editedNode: Node | null = null;
+  public editedNodeAtom: Atom<Node | null> = atom((get) => {
+    const isEnabled = get(this.isEnabledAtom);
+    if (!isEnabled) return null;
+
+    const selectedNodes = get(this.selectionStore.selectedNodesAtom);
+    return selectedNodes[0] || null;
+  });
+
+  /**
+   * When an node is being edited, this atom controls its class name,
+   * otherwise it controls the default class name used, when a new node is
+   * to be created. This atom is what the UI interacts with.
+   *
+   * Setting this atom when no node is being edited results in modifying the
+   * default class name for newly created nodes. Setting it when a node is
+   * being edited changes that node's class name.
+   */
+  public classNameAtom = atom(
+    (get) => {
+      const editedNode = get(this.editedNodeAtom);
+      if (editedNode === null) {
+        return get(this.newNodeClassNameAtom);
+      } else {
+        return editedNode.className;
+      }
+    },
+    (get, set, newValue: string) => {
+      const editedNode = get(this.editedNodeAtom);
+      if (editedNode === null) {
+        set(this.newNodeClassNameAtom, newValue);
+      } else {
+        this.notationGraphStore.updateNode({
+          ...editedNode,
+          className: newValue,
+        });
+      }
+    },
+  );
+
+  /**
+   * Holds the default class name used for a newly created node
+   */
+  private newNodeClassNameAtom: PrimitiveAtom<string> = atom("noteheadBlack");
 
   /**
    * Position and size of the edited node (the mask) in the scene space.
    *
    * Null when new a node is being created and when this tool is disabled.
    */
-  public maskExtent: DOMRect | null = null;
+  private maskExtent: DOMRect | null = null;
 
   /**
    * The canvas that stores the currently edited mask pixels. Its size must
@@ -146,68 +180,149 @@ export class NodeEditingController implements IController {
    * Null when a new node is being created, or the edited node has
    * a full-rectangle mask (e.g. staff,measure) or this tool is disabled.
    */
-  public maskCanvas: OffscreenCanvas | null = null;
+  private maskCanvas: OffscreenCanvas | null = null;
 
-  private clearState() {
-    this.editedNode = null;
+  /**
+   * This method is called whenever the editedNodeAtom value changes.
+   * Its purpose is to pull latest data from the state stores into the
+   * temporary state variables inside of this controller (duplicate the state
+   * into a more editable-friendly form).
+   *
+   * This metod is analogous, to reading the "value" prop
+   * of an <input> element in React.
+   */
+  private onEditedNodeChange(): void {
+    // clear the state
     this.maskExtent = null;
     this.maskCanvas = null;
-  }
 
-  private populateState() {
-    if (this.selectionStore.selectedNodeIds.length === 0) {
-      return;
-    }
+    // get the edited node, if none, we are done
+    const editedNode = this.jotaiStore.get(this.editedNodeAtom);
+    if (editedNode === null) return;
 
-    this.editedNode = this.notationGraphStore.getNode(
-      this.selectionStore.selectedNodeIds[0],
-    );
-
+    // get the node extent rectangle
     this.maskExtent = new DOMRect(
-      this.editedNode.left,
-      this.editedNode.top,
-      this.editedNode.width,
-      this.editedNode.height,
+      editedNode.left,
+      editedNode.top,
+      editedNode.width,
+      editedNode.height,
     );
 
-    if (this.editedNode.decodedMask !== null) {
+    // get the node mask pixels
+    if (editedNode.decodedMask !== null) {
       this.maskCanvas = new OffscreenCanvas(
-        this.editedNode.width,
-        this.editedNode.height,
+        editedNode.width,
+        editedNode.height,
       );
       const ctx = getOffscreenCanvasContext(this.maskCanvas);
-      ctx.putImageData(this.editedNode.decodedMask, 0, 0);
+      ctx.putImageData(editedNode.decodedMask, 0, 0);
     }
   }
 
   /**
-   * Takes the mask canvas and extent and writes them into the mung node
-   * in the graph.
+   * Takes the duplicated state of this controller and pushes it into the
+   * external state stores, thereby committing any locally made changes
+   * to the notation graph (the edited node).
+   *
+   * This method is analogous to the "onChange" prop callback
+   * of an <input> element in React.
    */
-  private flushState(): void {
-    // mask extent is null when the whole mask was erased,
-    // therefore we're deleting the node
-    if (this.maskExtent === null) {
-      if (this.editedNode === null) {
-        // this happens when we were creating a new node, so we don't need to
-        // do anything. Just do nothing.
+  private pushLocalChanges(): void {
+    // get the edited node
+    const editedNode = this.jotaiStore.get(this.editedNodeAtom);
+
+    // we have not edited an existing node, therefore we are creating a new one
+    if (editedNode === null) {
+      // we the newly created node has no extent, then it technically does not
+      // exist and so we don't do anything (there isn't anything to create).
+      if (this.maskExtent === null) return;
+
+      // create the new node
+      const node: Node = {
+        id: this.notationGraphStore.getFreeId(),
+        className: this.jotaiStore.get(this.newNodeClassNameAtom),
+        left: this.maskExtent.left,
+        top: this.maskExtent.top,
+        width: this.maskExtent.width,
+        height: this.maskExtent.height,
+        decodedMask: this.exportMaskImageDataFromCanvas(),
+        syntaxOutlinks: [],
+        syntaxInlinks: [],
+        precedenceOutlinks: [],
+        precedenceInlinks: [],
+        polygon: null,
+      };
+      this.notationGraphStore.insertNode(node);
+
+      // select the new node
+      this.selectionStore.changeSelection([node.id]);
+    } // we are editing an existing node
+    else {
+      // the extent of the node has become non-existant,
+      // meaning the node was essentially deleted - so let's delete it for real
+      if (this.maskExtent === null) {
+        this.notationGraphStore.removeNodeWithLinks(editedNode.id);
         return;
       }
 
-      // TODO: removeNode
-      return;
+      // update the node
+      this.notationGraphStore.updateNode({
+        ...editedNode,
+        left: this.maskExtent.left,
+        top: this.maskExtent.top,
+        width: this.maskExtent.width,
+        height: this.maskExtent.height,
+        decodedMask: this.exportMaskImageDataFromCanvas(),
+      });
+    }
+  }
+
+  /**
+   * Takes the maskCanvas and reads and returns its image data.
+   * If the canvas is null (meaning the mask is a full-rectangle),
+   * then null is returned. The dimensions of the mask are checked against
+   * the mask extent, which should have the same dimensions.
+   */
+  private exportMaskImageDataFromCanvas(): ImageData | null {
+    if (this.maskExtent === null) {
+      throw new Error("This methods depends on maskExtent to not be null.");
     }
 
-    // now the mask extent exists, so there is some mask to be written
-    // (pixelated or full-rectangle one)
+    // check that node has integer coordinates
+    if (
+      this.maskExtent.left !== Math.floor(this.maskExtent.left) ||
+      this.maskExtent.top !== Math.floor(this.maskExtent.top)
+    ) {
+      throw new Error(
+        "Mask extent does not have integer coordinates. This is a mung " +
+          "requirement and therefore signals some implementation bug.",
+      );
+    }
 
-    // if there is no edited node, then we've just created a new node
-    // TODO: create a new node with class from a property
-    // TODO: set the editedNode to the new instance
+    // no mask
+    if (this.maskCanvas === null) {
+      return null;
+    }
 
-    // ... TODO ... atomic store change
+    // check that dimensions match
+    if (
+      this.maskCanvas.width !== this.maskExtent.width ||
+      this.maskCanvas.height !== this.maskExtent.height
+    ) {
+      throw new Error(
+        "Mask canvas dimensions do not match the maskExtent dimensions. " +
+          "These two values must be kept in sync and this signals some " +
+          "implementation bug.",
+      );
+    }
 
-    // TODO: select the new node (if it is a new one)
+    const ctx = getOffscreenCanvasContext(this.maskCanvas);
+    return ctx.getImageData(
+      0,
+      0,
+      this.maskCanvas.width,
+      this.maskCanvas.height,
+    );
   }
 
   ///////////////////
@@ -241,7 +356,7 @@ export class NodeEditingController implements IController {
     this.shrinkMaskToContent();
 
     // write the modified mask to the notation graph
-    this.flushState();
+    this.pushLocalChanges();
 
     // make sure draw is called on the next frame
     this.redrawTrigger.requestRedrawNextFrame();
@@ -476,5 +591,16 @@ export class NodeEditingController implements IController {
         this.maskExtent.height,
       );
     }
+  }
+
+  public renderSVG(): JSX.Element | null {
+    const editedNode = useAtomValue(this.editedNodeAtom);
+
+    // bind the callback that observes the edited node value
+    useEffect(() => {
+      this.onEditedNodeChange();
+    }, [editedNode]);
+
+    return null;
   }
 }

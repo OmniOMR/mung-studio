@@ -65,15 +65,12 @@ export interface Node {
   readonly precedenceInlinks: number[];
 
   /**
-   * The binary pixel mask in its string representation in the XML file.
-   * This is a temporary field before proper mask decoding is implemented.
-   *
+   * Decoded pixels of the node mask.
    * When null, the annotated symbol is understood to occupy the
    * entire bounding box.
    */
-  readonly maskString: string | null;
-
   readonly decodedMask: ImageData | null;
 
+  // TODO: remove this, since it's obsolete
   readonly polygon: number[] | null;
 }

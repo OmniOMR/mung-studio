@@ -161,10 +161,10 @@ export class NodeCollection {
 
     // check input data constraints
     if (
-      node.syntaxInlinks.length === 0 &&
-      node.syntaxOutlinks.length === 0 &&
-      node.precedenceInlinks.length === 0 &&
-      node.precedenceOutlinks.length === 0
+      node.syntaxInlinks.length > 0 ||
+      node.syntaxOutlinks.length > 0 ||
+      node.precedenceInlinks.length > 0 ||
+      node.precedenceOutlinks.length > 0
     ) {
       throw new Error("Node must have NO links to be removed.");
     }

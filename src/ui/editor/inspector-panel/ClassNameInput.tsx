@@ -6,7 +6,6 @@ import {
   Typography,
 } from "@mui/joy";
 import { SxProps } from "@mui/material";
-import { useState } from "react";
 import {
   MUNG_CLASS_NAMES,
   MUNG_CLASSES_BY_NAME,
@@ -29,14 +28,11 @@ export interface ClassNameInputProps {
  * https://mui.com/joy-ui/react-autocomplete/#users-created-option
  */
 export function ClassNameInput(props: ClassNameInputProps) {
-  const [value, setValue] = useState<string>("");
-
   return (
     <Autocomplete
-      value={value}
+      value={props.value}
       onChange={(event, newClassName: string | null) => {
-        setValue(newClassName || "");
-        console.log(newClassName);
+        props.onChange?.(newClassName || "");
       }}
       options={MUNG_CLASS_NAMES}
       autoHighlight

@@ -55,7 +55,6 @@ function readNodeFromXmlElement(element: Element): Node {
     syntaxInlinks: parseIntList(element.querySelector("Inlinks")?.innerHTML),
     precedenceOutlinks: parseIntList(dataItems["precedence_outlinks"]?.value),
     precedenceInlinks: parseIntList(dataItems["precedence_inlinks"]?.value),
-    maskString: maskString,
     decodedMask: decodedMask,
     polygon: null,
   };

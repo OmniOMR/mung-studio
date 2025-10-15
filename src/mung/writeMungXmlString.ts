@@ -76,9 +76,9 @@ function createXmlElementForMungNode(
   heightElement.append(String(node.height));
   nodeElement.append(ONE_INDENT, heightElement, NEWLINE);
 
-  if (node.maskString !== null) {
+  if (node.decodedMask !== null) {
     const maskElement = doc.createElement("Mask");
-    maskElement.append(node.maskString);
+    maskElement.append(encodeRleMaskString(node.decodedMask));
     nodeElement.append(ONE_INDENT, maskElement, NEWLINE);
   }
 
@@ -146,4 +146,42 @@ function isEmptyObject(obj: object): boolean {
     return false;
   }
   return true;
+}
+
+function encodeRleMaskString(mask: ImageData): string {
+  // Pixel-level view at the data where each pixel is represented
+  // by one uint32 value and zero means black transparency.
+  // We will treat everything non-zero as a mask pixel.
+  const pixels = new Uint32Array(mask.data.buffer);
+
+  // output tokens, one token is the "C:N" bit, where C is 0/1 and N is count.
+  const tokens: string[] = [];
+
+  // which pixel type are we currently counting
+  let currentRunType: 0 | 1 = 0;
+
+  // how many pixels are there in the current run
+  let currentRunLength = 0;
+
+  // run through the pixel array
+  for (let i = 0; i < pixels.length; i++) {
+    const pixelType: 0 | 1 = pixels[i] === 0 ? 0 : 1;
+
+    if (pixelType === currentRunType) {
+      // continue the current run
+      currentRunLength += 1;
+    } else {
+      // emit previous run on pixel type change
+      tokens.push(currentRunType + ":" + currentRunLength);
+
+      // set up the next run
+      currentRunType = pixelType;
+      currentRunLength = 1;
+    }
+  }
+  // emit the last run
+  tokens.push(currentRunType + ":" + currentRunLength);
+
+  // join tokens and return
+  return tokens.join(" ");
 }

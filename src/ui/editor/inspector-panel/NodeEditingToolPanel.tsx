@@ -5,7 +5,7 @@ import {
   Alert,
   Typography,
 } from "@mui/joy";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import { EditorTool } from "../toolbelt/EditorTool";
 import { useContext } from "react";
 import { EditorContext } from "../EditorContext";
@@ -18,6 +18,10 @@ export function NodeEditingToolPanel() {
 
   const editorTool = useAtomValue(toolbeltController.currentToolAtom);
   const nodeTool = useAtomValue(nodeEditingController.currentNodeToolAtom);
+
+  const [className, setClassName] = useAtom(
+    nodeEditingController.classNameAtom,
+  );
 
   if (editorTool !== EditorTool.NodeEditing) {
     return null;
@@ -35,7 +39,11 @@ export function NodeEditingToolPanel() {
             Once done, press Enter/Return to rasterize the polygon.
           </Alert>
         )}
-        <ClassNameInput sx={{ mt: 1 }} />
+        <ClassNameInput
+          value={className}
+          onChange={(newValue: string) => setClassName(newValue)}
+          sx={{ mt: 1 }}
+        />
       </AccordionDetails>
     </Accordion>
   );
