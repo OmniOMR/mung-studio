@@ -33,7 +33,7 @@ export interface EditorProps {
    * Called when the file modifications should be persisted
    * (is not called if missing)
    */
-  readonly onSave?: (mung: MungFile) => void;
+  readonly onSave?: (mung: MungFile) => Promise<void> | void;
 
   /**
    * Callback triggered, when the user wants to leave the editor.
@@ -75,25 +75,47 @@ export function Editor(props: EditorProps) {
    * Handles file saving.
    */
   const beforeLeavingEditor = useCallback(() => {
-    if (props.onSave === undefined) return; // skip if saving not implemented
-
-    // save if dirty
-    if (autosaveStore.isDirty) {
-      props.onSave(notationGraphStore.getMungFile());
-      autosaveStore.setClean();
-    }
+    setTimeout(() => {
+      console.log("Im living 500ms later!");
+    }, 500);
   }, [notationGraphStore, autosaveStore]);
 
   /**
    * The user wants to leave the editor by clicking the exit button
    */
-  function handleCloseFileButtonClick() {
-    beforeLeavingEditor();
+  async function handleCloseFileButtonClick() {
+    let savePromise: Promise<void> | null | undefined | void = null;
+
+    // save if dirty
+    if (autosaveStore.isDirty) {
+      savePromise = props.onSave?.(notationGraphStore.getMungFile());
+    }
+
+    // close the editor UI
     props.onClose();
+
+    // wait for the save to complete and reset the autosave store
+    // (in case the onClose event did not destroy the editor)
+    await savePromise;
+    autosaveStore.setClean();
   }
 
   // The user is leaving the editor by closing or reloading the browser tab
-  useUnload(beforeLeavingEditor);
+  useUnload((e: BeforeUnloadEvent) => {
+    if (props.onSave === undefined) return; // skip if saving not implemented
+    if (!autosaveStore.isDirty) return; // skip if not dirty
+
+    // trigger save right after the dialog is closed
+    // (if it gets triggered during the dialog, even better)
+    setTimeout(async () => {
+      await props.onSave?.(notationGraphStore.getMungFile());
+      autosaveStore.setClean();
+    }, 50);
+
+    // these two lines should cause the browser to halt the user via dialog
+    e.returnValue = "trigger-confirmation-dialog";
+    return "trigger-confirmation-dialog";
+  });
 
   return (
     <EditorContext.Provider value={editorContext}>
