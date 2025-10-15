@@ -126,15 +126,15 @@ export function MainMenu(props: MainMenuProps) {
   const onKeydown = (e: KeyboardEvent) => {
     if (e.key.toUpperCase() === "E" && !e.shiftKey) {
       toggleSyntaxLink();
-      e.preventDefault();
+      // e.preventDefault();
     }
     if (e.key.toUpperCase() === "E" && e.shiftKey) {
       togglePrecedenceLink();
-      e.preventDefault();
+      // e.preventDefault();
     }
     if (e.key.toUpperCase() === "DELETE" && e.shiftKey) {
       removePartiallySelectedLinks();
-      e.preventDefault();
+      // e.preventDefault();
     }
   };
 

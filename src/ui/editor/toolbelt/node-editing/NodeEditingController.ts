@@ -180,6 +180,36 @@ export class NodeEditingController implements IController {
     }
   }
 
+  /**
+   * Takes the mask canvas and extent and writes them into the mung node
+   * in the graph.
+   */
+  private flushState(): void {
+    // mask extent is null when the whole mask was erased,
+    // therefore we're deleting the node
+    if (this.maskExtent === null) {
+      if (this.editedNode === null) {
+        // this happens when we were creating a new node, so we don't need to
+        // do anything. Just do nothing.
+        return;
+      }
+
+      // TODO: removeNode
+      return;
+    }
+
+    // now the mask extent exists, so there is some mask to be written
+    // (pixelated or full-rectangle one)
+
+    // if there is no edited node, then we've just created a new node
+    // TODO: create a new node with class from a property
+    // TODO: set the editedNode to the new instance
+
+    // ... TODO ... atomic store change
+
+    // TODO: select the new node (if it is a new one)
+  }
+
   ///////////////////
   // Mask painting //
   ///////////////////
@@ -210,6 +240,9 @@ export class NodeEditingController implements IController {
     // remove whitespace around the actual mask content
     this.shrinkMaskToContent();
 
+    // write the modified mask to the notation graph
+    this.flushState();
+
     // make sure draw is called on the next frame
     this.redrawTrigger.requestRedrawNextFrame();
   }
@@ -224,14 +257,14 @@ export class NodeEditingController implements IController {
         ? region
         : unionRectangles(this.maskExtent, region);
 
-    // clip the maximum mask size and log warning
+    // clip the maximum mask size and show warning
     if (newExtent.width > MUNG_MAX_MASK_SIZE) {
       newExtent.width = MUNG_MAX_MASK_SIZE;
-      console.warn("Clipping mask width, it has reached the size limit.");
+      alert("Mask is too tall! Clipping it from below to fit the limit.");
     }
     if (newExtent.height > MUNG_MAX_MASK_SIZE) {
       newExtent.height = MUNG_MAX_MASK_SIZE;
-      console.warn("Clipping mask height, it has reached the size limit.");
+      alert("Mask is too wide! Clipping it from the right to fit the limit");
     }
 
     // create the new, resized canvas
@@ -386,7 +419,7 @@ export class NodeEditingController implements IController {
     while (rowIsEmpty(bottom) && bottom >= 0) bottom--;
 
     // if the mask is now completely empty, get rid of it
-    // (when commited, the node will be deleted)
+    // (when flushed, the node will be deleted)
     if (left >= width || top >= height || right < 0 || bottom < 0) {
       this.maskCanvas = null;
       this.maskExtent = null;

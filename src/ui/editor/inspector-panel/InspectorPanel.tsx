@@ -13,6 +13,7 @@ import { SyntaxLinksToolPanel } from "./SyntaxLinksToolPanel";
 import { PrecedenceLinksToolPanel } from "./PrecedenceLinksToolPanel";
 import { useContext } from "react";
 import { EditorContext } from "../EditorContext";
+import { NodeEditingToolPanel } from "./NodeEditingToolPanel";
 
 /**
  * The right-side panel, showing details about selected nodes.
@@ -47,6 +48,8 @@ export function InspectorPanel() {
         }}
       >
         <AccordionGroup>
+          <NodeEditingToolPanel />
+
           <SyntaxLinksToolPanel />
 
           <PrecedenceLinksToolPanel />
