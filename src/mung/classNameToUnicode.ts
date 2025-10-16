@@ -11,5 +11,5 @@ import { MUNG_CLASSES_BY_NAME } from "./ontology/mungClasses";
  * standard.
  */
 export function classNameToUnicode(className: string): string {
-  return MUNG_CLASSES_BY_NAME[className].unicode || "?";
+  return MUNG_CLASSES_BY_NAME[className]?.unicode || "?";
 }
