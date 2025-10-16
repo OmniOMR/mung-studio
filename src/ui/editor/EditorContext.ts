@@ -117,6 +117,7 @@ export function useConstructContextServices(
       new NodeEditingController(
         jotaiStore,
         notationGraphStore,
+        classVisibilityStore,
         selectionStore,
         toolbeltController,
         zoomController,

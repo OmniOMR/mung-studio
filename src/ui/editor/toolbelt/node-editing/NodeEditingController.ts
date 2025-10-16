@@ -14,6 +14,7 @@ import { unionRectangles } from "../../../../utils/unionRectangles";
 import { snapGrowRectangle } from "../../../../utils/snapGrowRectangle";
 import { MUNG_MAX_MASK_SIZE } from "../../../../mung/mungConstants";
 import { JSX, useEffect } from "react";
+import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
 
 /**
  * Encapsulates the canvas.getContext("2d") method, since there are additional
@@ -32,6 +33,7 @@ export class NodeEditingController implements IController {
   private readonly jotaiStore: JotaiStore;
 
   private readonly notationGraphStore: NotationGraphStore;
+  private readonly classVisibilityStore: ClassVisibilityStore;
   private readonly selectionStore: SelectionStore;
   private readonly toolbeltController: ToolbeltController;
   private readonly zoomController: ZoomController;
@@ -40,6 +42,7 @@ export class NodeEditingController implements IController {
   constructor(
     jotaiStore: JotaiStore,
     notationGraphStore: NotationGraphStore,
+    classVisibilityStore: ClassVisibilityStore,
     selectionStore: SelectionStore,
     toolbeltController: ToolbeltController,
     zoomController: ZoomController,
@@ -47,6 +50,7 @@ export class NodeEditingController implements IController {
   ) {
     this.jotaiStore = jotaiStore;
     this.notationGraphStore = notationGraphStore;
+    this.classVisibilityStore = classVisibilityStore;
     this.selectionStore = selectionStore;
     this.toolbeltController = toolbeltController;
     this.zoomController = zoomController;
@@ -153,10 +157,15 @@ export class NodeEditingController implements IController {
       if (editedNode === null) {
         set(this.newNodeClassNameAtom, newValue);
       } else {
+        // update the node's class
+        console.log("Updating the node class to", newValue, "...");
         this.notationGraphStore.updateNode({
           ...editedNode,
           className: newValue,
         });
+
+        // make sure the new node's class is visible when you exit this tool
+        this.classVisibilityStore.setClassVisibility(newValue, true);
       }
     },
   );
@@ -254,10 +263,15 @@ export class NodeEditingController implements IController {
       };
       this.notationGraphStore.insertNode(node);
 
+      // make sure the new node's class is visible when you exit this tool
+      this.classVisibilityStore.setClassVisibility(node.className, true);
+
       // select the new node
       this.selectionStore.changeSelection([node.id]);
-    } // we are editing an existing node
-    else {
+    }
+
+    // else - we are editing an existing node
+    if (editedNode !== null) {
       // the extent of the node has become non-existant,
       // meaning the node was essentially deleted - so let's delete it for real
       if (this.maskExtent === null) {
