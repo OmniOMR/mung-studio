@@ -273,12 +273,24 @@ export class NotationGraphStore {
    */
   public removeNodeWithLinks(nodeId: number) {
     const node = this.nodeCollection.getNode(nodeId);
+
+    // remove links going out from this node
     for (let outlink of node.syntaxOutlinks) {
       this.nodeCollection.removeLink(nodeId, outlink, LinkType.Syntax);
     }
     for (let outlink of node.precedenceOutlinks) {
       this.nodeCollection.removeLink(nodeId, outlink, LinkType.Precedence);
     }
+
+    // remove links going into this node
+    for (let inlink of node.syntaxInlinks) {
+      this.nodeCollection.removeLink(inlink, nodeId, LinkType.Syntax);
+    }
+    for (let inlink of node.precedenceInlinks) {
+      this.nodeCollection.removeLink(inlink, nodeId, LinkType.Precedence);
+    }
+
+    // now the node should have no links
     this.nodeCollection.removeNode(nodeId);
   }
 
