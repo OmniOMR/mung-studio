@@ -16,6 +16,8 @@ import { ToolbeltController } from "../toolbelt/ToolbeltController";
  * or an action is to be performed with it upon clicking.
  */
 export class HighlightController implements IController {
+  public readonly controllerName = "HighlightController";
+
   private jotaiStore: JotaiStore;
 
   private readonly notationGraphStore: NotationGraphStore;

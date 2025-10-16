@@ -7,6 +7,12 @@ import { JSX } from "react";
  */
 export interface IController {
   /**
+   * Human-readable name of the controller for debugging and key-ing
+   * (use the name of the class, since c.constructor.name gets minified)
+   */
+  readonly controllerName: string;
+
+  /**
    * Readable atom that determines, whether the controller should be rendered
    * and events should be sent to it. The value must be synchronised
    * with the isEnabled field.

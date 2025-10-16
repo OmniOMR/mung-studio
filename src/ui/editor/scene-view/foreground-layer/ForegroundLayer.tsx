@@ -157,10 +157,15 @@ export function ForegroundLayer() {
         {/* This <g> element is what the zoom ctrl applies transform to */}
         <g>
           {controllers
-            .filter((c) => c.renderSVG && c.isEnabled)
+            .filter((c) => c.renderSVG)
             .map((c) => {
+              // if (!c.isEnabled) return null;
               const ControllerElement = c.renderSVG!.bind(c);
-              return <ControllerElement key={c.constructor.name} />;
+              return (
+                <g key={c.controllerName} data-controller={c.controllerName}>
+                  {c.isEnabled && <ControllerElement />}
+                </g>
+              );
             })}
 
           {/* {currentTool === EditorTool.NodeEditing && <NodeEditorOverlay />} */}

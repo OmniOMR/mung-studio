@@ -11,6 +11,8 @@ import { JSX, useEffect, useRef } from "react";
  * Controls both the PolygonFill and PolygonErase tools
  */
 export class PolygonToolsController implements IController {
+  public readonly controllerName = "PolygonToolsController";
+
   private readonly jotaiStore: JotaiStore;
 
   private readonly zoomController: ZoomController;

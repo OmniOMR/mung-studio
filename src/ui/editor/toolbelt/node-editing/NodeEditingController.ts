@@ -30,6 +30,8 @@ function getOffscreenCanvasContext(
  * Encapsulates logic for the node editing tool
  */
 export class NodeEditingController implements IController {
+  public readonly controllerName = "NodeEditingController";
+
   private readonly jotaiStore: JotaiStore;
 
   private readonly notationGraphStore: NotationGraphStore;

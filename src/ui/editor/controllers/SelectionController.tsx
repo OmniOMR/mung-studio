@@ -16,6 +16,8 @@ import { EditorTool } from "../toolbelt/EditorTool";
  * Contains logic for selecting and deselecting nodes.
  */
 export class SelectionController implements IController {
+  public readonly controllerName = "SelectionController";
+
   private jotaiStore: JotaiStore;
 
   private readonly notationGraphStore: NotationGraphStore;
