@@ -267,6 +267,18 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   accidentalParensRight: { uc: "\u{E26B}" },
   accidentalBracketLeft: { uc: "\u{E26C}" },
   accidentalBracketRight: { uc: "\u{E26D}" },
+  double_sharp: {
+    uc: "\u{E263}",
+    mpp: true,
+    notSmufl: true,
+    smuflEquivalents: ["accidentalDoubleSharp"],
+  },
+  double_flat: {
+    uc: "\u{E264}",
+    mpp: true,
+    notSmufl: true,
+    smuflEquivalents: ["accidentalDoubleFlat"],
+  },
 
   // 4.39. Articulation
   // https://w3c.github.io/smufl/latest/tables/articulation.html
