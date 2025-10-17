@@ -79,6 +79,14 @@ export class NodeEditingController implements IController {
     return this.jotaiStore.get(this.isEnabledAtom);
   }
 
+  /**
+   * Call this here or from the sub-tools to exit this tool and
+   * go back to the pointer tool
+   */
+  public exitNodeEditingTool() {
+    this.toolbeltController.setCurrentTool(EditorTool.Pointer);
+  }
+
   /////////////////////
   // Node tool state //
   /////////////////////
@@ -116,6 +124,22 @@ export class NodeEditingController implements IController {
     }
     this.jotaiStore.set(this.currentNodeToolBaseAtom, tool);
   }
+
+  //////////////////
+  // Key bindings //
+  //////////////////
+
+  public readonly keyBindings = {
+    T: () => {
+      // (T)oggles between polygon fill and erase
+      if (this.currentNodeTool !== NodeTool.PolygonFill) {
+        this.setCurrentNodeTool(NodeTool.PolygonFill);
+      } else {
+        this.setCurrentNodeTool(NodeTool.PolygonErase);
+      }
+    },
+    // Note: "Escape" is handled by sub-tools
+  };
 
   /////////////////////
   // The edited node //

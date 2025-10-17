@@ -133,6 +133,7 @@ export function useConstructContextServices(
         zoomController,
         redrawTrigger,
         nodeEditingController,
+        toolbeltController,
       ),
     [],
   );

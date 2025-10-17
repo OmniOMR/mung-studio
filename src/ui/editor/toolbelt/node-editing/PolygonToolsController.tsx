@@ -1,4 +1,4 @@
-import { Atom, atom, useAtom, useAtomValue } from "jotai";
+import { Atom, atom, useAtomValue } from "jotai";
 import { IController } from "../../controllers/IController";
 import { ZoomController } from "../../controllers/ZoomController";
 import { RedrawTrigger } from "../../controllers/RedrawTrigger";
@@ -6,6 +6,8 @@ import { NodeEditingController } from "./NodeEditingController";
 import { NodeTool } from "./NodeTool";
 import { JotaiStore } from "../../state/JotaiStore";
 import { JSX, useEffect, useRef } from "react";
+import { ToolbeltController } from "../ToolbeltController";
+import { EditorTool } from "../EditorTool";
 
 /**
  * Controls both the PolygonFill and PolygonErase tools
@@ -55,6 +57,33 @@ export class PolygonToolsController implements IController {
     this.polygonVertices = [];
   }
 
+  //////////////////
+  // Key bindings //
+  //////////////////
+
+  public readonly keyBindings = {
+    Escape: () => {
+      if (this.polygonVertices.length > 0) {
+        this.clearPolygonVertices();
+      } else {
+        this.nodeEditingController.exitNodeEditingTool();
+      }
+    },
+    Backspace: () => {
+      this.removePointFromPolygon();
+    },
+    Enter: () => {
+      this.rasterizePolygon();
+    },
+    N: () => {
+      if (this.polygonVertices.length > 0) {
+        this.rasterizePolygon();
+      } else {
+        this.nodeEditingController.exitNodeEditingTool();
+      }
+    },
+  };
+
   /////////////////////////////
   // React to mouse movement //
   /////////////////////////////
@@ -95,18 +124,6 @@ export class PolygonToolsController implements IController {
     }
   }
 
-  public onKeyDown(e: KeyboardEvent): void {
-    if (e.key === "Backspace") {
-      this.removePointFromPolygon();
-    }
-
-    // "Enter" to mimic Blender or AutoCAD,
-    // "n" to be compatible with CVAT
-    if (e.key === "Enter" || e.key === "n") {
-      this.rasterizePolygon();
-    }
-  }
-
   private addPointToPolygon() {
     // get mouse pointer position in the scene
     // TODO: refactor into a separate controller (like ZoomController)
@@ -124,6 +141,14 @@ export class PolygonToolsController implements IController {
   public removePointFromPolygon() {
     if (this.polygonVertices.length === 0) return;
     this.polygonVertices.pop();
+
+    // make sure draw is called on the next frame
+    this.redrawTrigger.requestRedrawNextFrame();
+  }
+
+  public clearPolygonVertices() {
+    if (this.polygonVertices.length === 0) return;
+    this.polygonVertices = [];
 
     // make sure draw is called on the next frame
     this.redrawTrigger.requestRedrawNextFrame();
@@ -219,6 +244,10 @@ export class PolygonToolsController implements IController {
     useEffect(() => {
       this.svgPathElement = svgPathRef.current;
       this.svgPatternElement = svgPatternRef.current;
+
+      // run the update method when the react re-renders the element
+      this.notify();
+
       return () => {
         this.svgPathElement = null;
         this.svgPatternElement = null;

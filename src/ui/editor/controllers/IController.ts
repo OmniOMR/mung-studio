@@ -1,5 +1,6 @@
 import { Atom } from "jotai";
 import { JSX } from "react";
+import { KeyBindingMap } from "tinykeys";
 
 /**
  * Interface for a controller that handles events from the scene view
@@ -39,6 +40,13 @@ export interface IController {
   readonly onDisabled?: () => void;
 
   /**
+   * Map of key bindings that will be registered and fired when
+   * the controller is enabled and the keydown event targets document body
+   * (i.e. no input control is focused). They key bindings use the tinkeys lib.
+   */
+  readonly keyBindings?: KeyBindingMap;
+
+  /**
    * Invoked when the mouse moves over the foreground layer SVG element
    */
   readonly onMouseMove?: (e: MouseEvent) => void;
@@ -55,11 +63,13 @@ export interface IController {
 
   /**
    * Invoked when a keyboard key is pressed down
+   * (a low-level keyboard API, use the tinykeys keybindings if possible)
    */
   readonly onKeyDown?: (e: KeyboardEvent) => void;
 
   /**
    * Invoked when a keyboard key is released
+   * (a low-level keyboard API, use the tinykeys keybindings if possible)
    */
   readonly onKeyUp?: (e: KeyboardEvent) => void;
 

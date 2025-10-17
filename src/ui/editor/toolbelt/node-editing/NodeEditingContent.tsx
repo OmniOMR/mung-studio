@@ -1,4 +1,3 @@
-import { EditorTool } from "../EditorTool";
 import { ToolbeltButton } from "../ToolbeltButton";
 import ArrowBackIcon from "@mui/icons-material/ArrowBack";
 import BrushIcon from "@mui/icons-material/Brush";
@@ -7,20 +6,15 @@ import EditIcon from "@mui/icons-material/Edit";
 import PentagonIcon from "@mui/icons-material/Pentagon";
 import BookmarkRemoveIcon from "@mui/icons-material/BookmarkRemove";
 import { Divider } from "@mui/joy";
-import { useCallback, useContext, useEffect } from "react";
+import { useContext } from "react";
 import { EditorContext } from "../../EditorContext";
 import { NodeTool } from "./NodeTool";
 import { useAtomValue } from "jotai";
 
 export function NodeEditingContent() {
-  const { toolbeltController, nodeEditingController } =
-    useContext(EditorContext);
+  const { nodeEditingController } = useContext(EditorContext);
 
   const nodeTool = useAtomValue(nodeEditingController.currentNodeToolAtom);
-
-  function exitNodeEditing() {
-    toolbeltController.setCurrentTool(EditorTool.Pointer);
-  }
 
   /////////////////////////
   // Equipping functions //
@@ -50,24 +44,6 @@ export function NodeEditingContent() {
     nodeEditingController.setCurrentNodeTool(NodeTool.PolygonErase);
   }
 
-  ////////////////////////
-  // Keyboard shortcuts //
-  ////////////////////////
-
-  const handleKeyDown = useCallback<(ev: KeyboardEvent) => any>((e) => {
-    if (e.key.toUpperCase() == "ESCAPE") {
-      exitNodeEditing();
-    }
-  }, []);
-
-  // register the handler
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleKeyDown]);
-
   //////////
   // View //
   //////////
@@ -77,7 +53,7 @@ export function NodeEditingContent() {
       <ToolbeltButton
         tooltip="Back to tools [Esc]"
         isSelected={false}
-        onClick={exitNodeEditing}
+        onClick={() => nodeEditingController.exitNodeEditingTool()}
       >
         <ArrowBackIcon />
       </ToolbeltButton>
@@ -109,14 +85,14 @@ export function NodeEditingContent() {
         <FilterCenterFocusIcon />
       </ToolbeltButton>
       <ToolbeltButton
-        tooltip="Fill polygon"
+        tooltip="Fill polygon [T]"
         isSelected={nodeTool === NodeTool.PolygonFill}
         onClick={equipPolygonFillTool}
       >
         <PentagonIcon />
       </ToolbeltButton>
       <ToolbeltButton
-        tooltip="Erase polygon"
+        tooltip="Erase polygon [T]"
         isSelected={nodeTool === NodeTool.PolygonErase}
         onClick={equipPolygonEraseTool}
       >

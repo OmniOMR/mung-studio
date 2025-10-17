@@ -7,6 +7,7 @@ import { SyntaxLinksToolOverlay } from "./SyntaxLinksToolOverlay";
 import { EditorContext } from "../../EditorContext";
 import { IController } from "../../controllers/IController";
 import { NodeTool } from "../../toolbelt/node-editing/NodeTool";
+import { KeyBindingMap, tinykeys } from "tinykeys";
 
 export function ForegroundLayer() {
   const {
@@ -193,14 +194,6 @@ export function ForegroundLayer() {
   );
 }
 
-interface ControllerEventBinding {
-  readonly target: WindowEventHandlers;
-  readonly eventName: string;
-  readonly eventListener: (e: any) => void;
-}
-
-type ControllerEventHook = ((e: Event) => void) | undefined;
-
 /**
  * Uses useEffect to register and unregister common interaction events
  * for the given controllers. It binds all events to the SVG element given.
@@ -213,15 +206,15 @@ function useBindControllerEvents(
     if (svgRef.current === null) return;
     const svg = svgRef.current;
 
-    // list of registered bindings
-    const bindings: ControllerEventBinding[] = [];
+    // list of functions that dispose of event bindings
+    const disposers: (() => void)[] = [];
 
-    // registers a new event binding
+    // registers a new DOM event binding
     const bind = (
       target: WindowEventHandlers,
       eventName: string,
       controller: IController,
-      controllerEventHook: ControllerEventHook,
+      controllerEventHook: ((e: Event) => void) | undefined,
     ) => {
       // wrap the hook in additional logic
       const eventListener = (e: Event) => {
@@ -233,7 +226,38 @@ function useBindControllerEvents(
       };
 
       target.addEventListener(eventName, eventListener);
-      bindings.push({ target, eventName, eventListener });
+      disposers.push(() => {
+        target.removeEventListener(eventName, eventListener);
+      });
+    };
+
+    // wrap all tinykeys handlers in additional logic
+    const wrapTinykeysHandlers = (
+      controller: IController,
+      keyBindings: KeyBindingMap,
+    ) => {
+      let wrapped = {};
+      for (const key in keyBindings) {
+        wrapped[key] = (e: KeyboardEvent) => {
+          // do not call the handler when the controller is not enabled
+          if (!controller.isEnabled) return;
+
+          // do not call the handler if the target is not the body
+          // (i.e. when the target is some <input> somewhere)
+          // (if you DO want to catch these events, use the lower-level
+          // API of onKeyDown and onKeyUp)
+          if (
+            e.target !== document.body &&
+            e.target !== document.documentElement
+          ) {
+            return;
+          }
+
+          // call the handler
+          keyBindings[key](e);
+        };
+      }
+      return wrapped;
     };
 
     // bind events
@@ -243,12 +267,17 @@ function useBindControllerEvents(
       bind(svg, "mouseup", c, c.onMouseUp?.bind(c));
       bind(window, "keydown", c, c.onKeyDown?.bind(c));
       bind(window, "keyup", c, c.onKeyUp?.bind(c));
+      if (c.keyBindings) {
+        disposers.push(
+          tinykeys(window, wrapTinykeysHandlers(c, c.keyBindings)),
+        );
+      }
     }
 
     // unbind events
     return () => {
-      for (const b of bindings) {
-        b.target.removeEventListener(b.eventName, b.eventListener);
+      for (const disposer of disposers) {
+        disposer();
       }
     };
   }, []);
