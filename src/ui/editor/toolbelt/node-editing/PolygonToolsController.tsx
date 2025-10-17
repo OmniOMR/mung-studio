@@ -66,7 +66,11 @@ export class PolygonToolsController implements IController {
       if (this.polygonVertices.length > 0) {
         this.clearPolygonVertices();
       } else {
-        this.nodeEditingController.exitNodeEditingTool();
+        // wait for the next frame to make sure the escape press is processed
+        // and ignored in the main menu controller
+        setTimeout(() => {
+          this.nodeEditingController.exitNodeEditingTool();
+        }, 0);
       }
     },
     Backspace: () => {
