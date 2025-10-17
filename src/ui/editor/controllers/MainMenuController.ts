@@ -42,7 +42,7 @@ export class MainMenuController implements IController {
     E: () => {
       this.toggleSyntaxLink();
     },
-    "Shift+E": () => {
+    Q: () => {
       this.togglePrecedenceLink();
     },
     "Shift+Delete": () => {

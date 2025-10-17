@@ -121,7 +121,7 @@ export function MainMenu(props: MainMenuProps) {
           disabled={!canToggleLink}
           onClick={controller.togglePrecedenceLink}
         >
-          Toggle precedence link {renderShortcut("Shift + E")}
+          Toggle precedence link {renderShortcut("Q")}
         </MyMenuItem>
         <MyMenuItem
           disabled={!canRemoveLinks}
