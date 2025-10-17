@@ -16,38 +16,6 @@ export function NodeEditingContent() {
 
   const nodeTool = useAtomValue(nodeEditingController.currentNodeToolAtom);
 
-  /////////////////////////
-  // Equipping functions //
-  /////////////////////////
-
-  function equipBrushTool() {
-    if (nodeTool === NodeTool.Brush) return;
-
-    nodeEditingController.setCurrentNodeTool(NodeTool.Brush);
-  }
-
-  function equipEraserTool() {
-    if (nodeTool === NodeTool.Eraser) return;
-
-    nodeEditingController.setCurrentNodeTool(NodeTool.Eraser);
-  }
-
-  function equipPolygonFillTool() {
-    if (nodeTool === NodeTool.PolygonFill) return;
-
-    nodeEditingController.setCurrentNodeTool(NodeTool.PolygonFill);
-  }
-
-  function equipPolygonEraseTool() {
-    if (nodeTool === NodeTool.PolygonErase) return;
-
-    nodeEditingController.setCurrentNodeTool(NodeTool.PolygonErase);
-  }
-
-  //////////
-  // View //
-  //////////
-
   return (
     <>
       <ToolbeltButton
@@ -64,7 +32,7 @@ export function NodeEditingContent() {
         tooltip="Brush"
         isSelected={nodeTool === NodeTool.Brush}
         isDisabled={true}
-        onClick={equipBrushTool}
+        onClick={() => nodeEditingController.setCurrentNodeTool(NodeTool.Brush)}
       >
         <BrushIcon />
       </ToolbeltButton>
@@ -72,7 +40,9 @@ export function NodeEditingContent() {
         tooltip="Erase"
         isSelected={nodeTool === NodeTool.Eraser}
         isDisabled={true}
-        onClick={equipEraserTool}
+        onClick={() =>
+          nodeEditingController.setCurrentNodeTool(NodeTool.Eraser)
+        }
       >
         <EditIcon sx={{ transform: "rotate(180deg)" }} />
       </ToolbeltButton>
@@ -87,14 +57,18 @@ export function NodeEditingContent() {
       <ToolbeltButton
         tooltip="Fill polygon [T]"
         isSelected={nodeTool === NodeTool.PolygonFill}
-        onClick={equipPolygonFillTool}
+        onClick={() =>
+          nodeEditingController.setCurrentNodeTool(NodeTool.PolygonFill)
+        }
       >
         <PentagonIcon />
       </ToolbeltButton>
       <ToolbeltButton
         tooltip="Erase polygon [T]"
         isSelected={nodeTool === NodeTool.PolygonErase}
-        onClick={equipPolygonEraseTool}
+        onClick={() =>
+          nodeEditingController.setCurrentNodeTool(NodeTool.PolygonErase)
+        }
       >
         <BookmarkRemoveIcon />
       </ToolbeltButton>

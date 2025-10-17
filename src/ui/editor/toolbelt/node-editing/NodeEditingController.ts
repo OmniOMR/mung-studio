@@ -122,6 +122,11 @@ export class NodeEditingController implements IController {
           "tool to some other tool than node editing instead.",
       );
     }
+
+    // do nothing if we're changing to the tool we currently have equipped
+    if (this.currentNodeTool === tool) return;
+
+    // change the tool
     this.jotaiStore.set(this.currentNodeToolBaseAtom, tool);
   }
 

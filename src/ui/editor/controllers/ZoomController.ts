@@ -70,13 +70,21 @@ export class ZoomController {
       };
 
       const started = (event: d3.D3ZoomEvent<any, any>) => {
-        // update atoms
-        this.jotaiStore.set(this.isGrabbingBaseAtom, true);
+        // Filter out events that come from mouse-down for grabbing,
+        // otherwise react gets flooded with synthetic scrolling events
+        // when side-scrolling on touchpad. That's not a real grab operation.
+        if (event.sourceEvent?.type === "mousedown") {
+          this.jotaiStore.set(this.isGrabbingBaseAtom, true);
+        }
       };
 
       const ended = (event: d3.D3ZoomEvent<any, any>) => {
-        // update atoms
-        this.jotaiStore.set(this.isGrabbingBaseAtom, false);
+        // Filter out events that come from mouse-down for grabbing,
+        // otherwise react gets flooded with synthetic scrolling events
+        // when side-scrolling on touchpad. That's not a real grab operation.
+        if (event.sourceEvent?.type === "mousedown") {
+          this.jotaiStore.set(this.isGrabbingBaseAtom, false);
+        }
       };
 
       const svgElement = d3.select(svgRef.current);
@@ -195,7 +203,9 @@ export class ZoomController {
   /**
    * Read-only atom that exposes, whether the user is grabbing the view
    */
-  public isGrabbingAtom: Atom<boolean> = atom((get) =>
-    get(this.isGrabbingBaseAtom),
+  public isGrabbingAtom: Atom<boolean> = atom(
+    (get) =>
+      get(this.toolbeltController.currentToolAtom) === EditorTool.Hand &&
+      get(this.isGrabbingBaseAtom),
   );
 }

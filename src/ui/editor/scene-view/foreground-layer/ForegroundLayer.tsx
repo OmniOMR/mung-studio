@@ -7,7 +7,7 @@ import { SyntaxLinksToolOverlay } from "./SyntaxLinksToolOverlay";
 import { EditorContext } from "../../EditorContext";
 import { IController } from "../../controllers/IController";
 import { NodeTool } from "../../toolbelt/node-editing/NodeTool";
-import { KeyBindingMap, tinykeys } from "tinykeys";
+import { createKeybindingsHandler, KeyBindingMap } from "tinykeys";
 
 export function ForegroundLayer() {
   const {
@@ -31,6 +31,7 @@ export function ForegroundLayer() {
   const controllers: IController[] = [
     highlightController,
     selectionController,
+    toolbeltController,
     nodeEditingController,
     polygonToolsController,
     mainMenuController,
@@ -43,7 +44,7 @@ export function ForegroundLayer() {
   );
 
   // feeds mouse-move/up/down events to the controllers
-  useBindControllerEvents(controllers, svgRef);
+  useBindControllerEvents(controllers, svgRef, controllerEnablednessList);
 
   // invokes update and draw for all controllers
   const draw = useCallback(() => {
@@ -203,13 +204,23 @@ export function ForegroundLayer() {
 function useBindControllerEvents(
   controllers: IController[],
   svgRef: RefObject<SVGSVGElement | null>,
+  controllerEnablednessList: boolean[],
 ): void {
   useEffect(() => {
     if (svgRef.current === null) return;
     const svg = svgRef.current;
 
+    // bind only with controllers that are enabled according to react
+    // (which is delayed based on react rendering, necessary to work with jotai)
+    const enabledControllers = controllers.filter(
+      (c, i) => controllerEnablednessList[i],
+    );
+
     // list of functions that dispose of event bindings
     const disposers: (() => void)[] = [];
+
+    // tinykeys keydown event handlers, one for each controller
+    const tinykeysHandlers: EventListener[] = [];
 
     // registers a new DOM event binding
     const bind = (
@@ -233,8 +244,8 @@ function useBindControllerEvents(
       });
     };
 
-    // wrap all tinykeys handlers in additional logic
-    const wrapTinykeysHandlers = (
+    // wrap all tinykeys key bindings in additional logic
+    const wrapTinykeysKeyBindings = (
       controller: IController,
       keyBindings: KeyBindingMap,
     ) => {
@@ -263,24 +274,36 @@ function useBindControllerEvents(
     };
 
     // bind events
-    for (const c of controllers) {
+    for (const c of enabledControllers) {
       bind(svg, "mousemove", c, c.onMouseMove?.bind(c));
       bind(svg, "mousedown", c, c.onMouseDown?.bind(c));
       bind(svg, "mouseup", c, c.onMouseUp?.bind(c));
       bind(window, "keydown", c, c.onKeyDown?.bind(c));
       bind(window, "keyup", c, c.onKeyUp?.bind(c));
+    }
+
+    // bind tinykeys through a single "addEventListener" call
+    // (it must be singular to prevent premature react re-renders)
+    for (const c of enabledControllers) {
       if (c.keyBindings) {
-        disposers.push(
-          tinykeys(window, wrapTinykeysHandlers(c, c.keyBindings)),
+        tinykeysHandlers.push(
+          createKeybindingsHandler(wrapTinykeysKeyBindings(c, c.keyBindings)),
         );
       }
     }
+    const singularTinykeysListener = (e: KeyboardEvent) => {
+      for (const handler of tinykeysHandlers) {
+        handler(e);
+      }
+    };
+    window.addEventListener("keydown", singularTinykeysListener);
 
     // unbind events
     return () => {
       for (const disposer of disposers) {
         disposer();
       }
+      window.removeEventListener("keydown", singularTinykeysListener);
     };
-  }, []);
+  }, controllerEnablednessList);
 }
