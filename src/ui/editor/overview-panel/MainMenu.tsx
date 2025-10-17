@@ -148,7 +148,7 @@ export function MainMenu(props: MainMenuProps) {
           disabled={!canClearSelection}
           onClick={controller.clearSelection}
         >
-          Clear selection
+          Clear selection {renderShortcut("Esc")}
         </MyMenuItem>
       </Menu>
     </Dropdown>

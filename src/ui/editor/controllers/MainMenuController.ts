@@ -52,6 +52,9 @@ export class MainMenuController implements IController {
     "Shift+Delete": () => {
       this.removePartiallySelectedLinks();
     },
+    Escape: () => {
+      this.clearSelection();
+    },
   };
 
   //////////////////////////
@@ -73,7 +76,9 @@ export class MainMenuController implements IController {
   );
 
   public canClearSelectionAtom = atom(
-    (get) => get(this.selectionStore.selectedNodeIdsAtom).length > 0,
+    (get) =>
+      get(this.selectionStore.selectedNodeIdsAtom).length > 0 &&
+      get(this.toolbeltController.currentToolAtom) !== EditorTool.NodeEditing,
   );
 
   ////////////////////////////
