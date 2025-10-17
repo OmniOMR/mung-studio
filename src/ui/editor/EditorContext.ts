@@ -16,6 +16,7 @@ import { SelectionController } from "./controllers/SelectionController";
 import { RedrawTrigger } from "./controllers/RedrawTrigger";
 import { PolygonToolsController } from "./toolbelt/node-editing/PolygonToolsController";
 import { NodeEditingController } from "./toolbelt/node-editing/NodeEditingController";
+import { MainMenuController } from "./controllers/MainMenuController";
 
 /**
  * All fields present in the editor component's global context
@@ -36,6 +37,7 @@ export interface EditorContextState {
   readonly selectionController: SelectionController;
   readonly nodeEditingController: NodeEditingController;
   readonly polygonToolsController: PolygonToolsController;
+  readonly mainMenuController: MainMenuController;
 }
 
 /**
@@ -133,6 +135,16 @@ export function useConstructContextServices(
         zoomController,
         redrawTrigger,
         nodeEditingController,
+      ),
+    [],
+  );
+
+  const mainMenuController = useMemo(
+    () =>
+      new MainMenuController(
+        jotaiStore,
+        notationGraphStore,
+        selectionStore,
         toolbeltController,
       ),
     [],
@@ -154,6 +166,7 @@ export function useConstructContextServices(
     selectionController,
     nodeEditingController,
     polygonToolsController,
+    mainMenuController,
   };
 }
 

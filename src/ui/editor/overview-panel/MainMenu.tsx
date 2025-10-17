@@ -16,7 +16,7 @@ import {
 import { ClickAwayListener, MenuItemTypeMap, Popper } from "@mui/material";
 import { useCallback, useContext, useEffect } from "react";
 import MenuIcon from "@mui/icons-material/Menu";
-import { useAtomValue } from "jotai";
+import { useAtom, useAtomValue } from "jotai";
 import {
   DefaultComponentProps,
   OverrideProps,
@@ -72,17 +72,16 @@ export interface MainMenuProps {
 }
 
 export function MainMenu(props: MainMenuProps) {
-  const { notationGraphStore, selectionStore } = useContext(EditorContext);
-
-  const selectedNodeIds = useAtomValue(selectionStore.selectedNodeIdsAtom);
+  const { mainMenuController } = useContext(EditorContext);
+  const controller = mainMenuController;
 
   //////////////////////////
   // Action preconditions //
   //////////////////////////
 
-  const canRemoveLinks = selectedNodeIds.length > 0;
-  const canToggleLink = selectedNodeIds.length == 2;
-  const canClearSelection = selectedNodeIds.length > 0;
+  const canRemoveLinks = useAtomValue(controller.canRemoveLinksAtom);
+  const canToggleLink = useAtomValue(controller.canToggleLinkAtom);
+  const canClearSelection = useAtomValue(controller.canClearSelectionAtom);
 
   ////////////////////////////
   // Action implementations //
@@ -91,59 +90,6 @@ export function MainMenu(props: MainMenuProps) {
   function backToFiles() {
     props.onClose();
   }
-
-  function toggleSyntaxLink() {
-    if (!canToggleLink) return;
-    const fromId = selectionStore.selectedNodeIds[0];
-    const toId = selectionStore.selectedNodeIds[1];
-    notationGraphStore.toggleLink(fromId, toId, LinkType.Syntax);
-  }
-
-  function togglePrecedenceLink() {
-    if (!canToggleLink) return;
-    const fromId = selectionStore.selectedNodeIds[0];
-    const toId = selectionStore.selectedNodeIds[1];
-    notationGraphStore.toggleLink(fromId, toId, LinkType.Precedence);
-  }
-
-  function removePartiallySelectedLinks() {
-    if (!canRemoveLinks) return;
-    const links = selectionStore.partiallySelectedLinks;
-    for (const link of links) {
-      notationGraphStore.removeLink(link.fromId, link.toId, link.type);
-    }
-  }
-
-  function clearSelection() {
-    if (!canClearSelection) return;
-    selectionStore.clearSelection();
-  }
-
-  ////////////////////////
-  // Keyboard shortcuts //
-  ////////////////////////
-
-  const onKeydown = (e: KeyboardEvent) => {
-    if (e.key.toUpperCase() === "E" && !e.shiftKey) {
-      toggleSyntaxLink();
-      // e.preventDefault();
-    }
-    if (e.key.toUpperCase() === "E" && e.shiftKey) {
-      togglePrecedenceLink();
-      // e.preventDefault();
-    }
-    if (e.key.toUpperCase() === "DELETE" && e.shiftKey) {
-      removePartiallySelectedLinks();
-      // e.preventDefault();
-    }
-  };
-
-  useEffect(() => {
-    window.addEventListener("keydown", onKeydown);
-    return () => {
-      window.removeEventListener("keydown", onKeydown);
-    };
-  });
 
   ///////////////
   // Rendering //
@@ -165,15 +111,21 @@ export function MainMenu(props: MainMenuProps) {
         <MyListDivider />
         <MyCategoryTitle>Links</MyCategoryTitle>
 
-        <MyMenuItem disabled={!canToggleLink} onClick={toggleSyntaxLink}>
+        <MyMenuItem
+          disabled={!canToggleLink}
+          onClick={controller.toggleSyntaxLink}
+        >
           Toggle syntax link {renderShortcut("E")}
         </MyMenuItem>
-        <MyMenuItem disabled={!canToggleLink} onClick={togglePrecedenceLink}>
+        <MyMenuItem
+          disabled={!canToggleLink}
+          onClick={controller.togglePrecedenceLink}
+        >
           Toggle precedence link {renderShortcut("Shift + E")}
         </MyMenuItem>
         <MyMenuItem
           disabled={!canRemoveLinks}
-          onClick={removePartiallySelectedLinks}
+          onClick={controller.removePartiallySelectedLinks}
         >
           Remove partially selected links {renderShortcut("Shift + Del")}
         </MyMenuItem>
@@ -181,7 +133,10 @@ export function MainMenu(props: MainMenuProps) {
         <MyListDivider />
         <MyCategoryTitle>Select</MyCategoryTitle>
 
-        <MyMenuItem disabled={!canClearSelection} onClick={clearSelection}>
+        <MyMenuItem
+          disabled={!canClearSelection}
+          onClick={controller.clearSelection}
+        >
           Clear selection
         </MyMenuItem>
       </Menu>

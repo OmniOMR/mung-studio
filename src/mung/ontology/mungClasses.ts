@@ -394,9 +394,6 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   restWholeLegerLine: { uc: "\u{E4F4}" },
   restHalfLegerLine: { uc: "\u{E4F5}" },
 
-  // TODO:
-  ///////////////////////////////////////////////////////////////////
-
   // 4.42. Bar repeats
   // https://w3c.github.io/smufl/latest/tables/bar-repeats.html
   repeat1Bar: { uc: "\u{E500}", mpp: true },

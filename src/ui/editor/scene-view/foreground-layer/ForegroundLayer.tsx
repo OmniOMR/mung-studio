@@ -20,6 +20,7 @@ export function ForegroundLayer() {
     selectionController,
     redrawTrigger,
     polygonToolsController,
+    mainMenuController,
   } = useContext(EditorContext);
 
   const svgRef = useRef<SVGSVGElement | null>(null);
@@ -32,6 +33,7 @@ export function ForegroundLayer() {
     selectionController,
     nodeEditingController,
     polygonToolsController,
+    mainMenuController,
   ];
 
   // rendering uses isEnabled properties so we need to listen to their changes,
