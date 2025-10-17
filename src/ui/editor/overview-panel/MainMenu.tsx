@@ -79,6 +79,7 @@ export function MainMenu(props: MainMenuProps) {
   // Action preconditions //
   //////////////////////////
 
+  const canRemoveNodes = useAtomValue(controller.canRemoveNodesAtom);
   const canRemoveLinks = useAtomValue(controller.canRemoveLinksAtom);
   const canToggleLink = useAtomValue(controller.canToggleLinkAtom);
   const canClearSelection = useAtomValue(controller.canClearSelectionAtom);
@@ -107,6 +108,16 @@ export function MainMenu(props: MainMenuProps) {
         // open={true}
       >
         <MyMenuItem onClick={backToFiles}>Back to files</MyMenuItem>
+
+        <MyListDivider />
+        <MyCategoryTitle>Nodes</MyCategoryTitle>
+
+        <MyMenuItem
+          disabled={!canRemoveNodes}
+          onClick={controller.removeSelectedNodes}
+        >
+          Remove selected nodes {renderShortcut("Del")}
+        </MyMenuItem>
 
         <MyListDivider />
         <MyCategoryTitle>Links</MyCategoryTitle>

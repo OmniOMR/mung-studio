@@ -5,6 +5,7 @@ import { SelectionStore } from "../state/selection-store/SelectionStore";
 import { JotaiStore } from "../state/JotaiStore";
 import { LinkType } from "../../../mung/LinkType";
 import { ToolbeltController } from "../toolbelt/ToolbeltController";
+import { EditorTool } from "../toolbelt/EditorTool";
 
 /**
  * Implements the logic and keyboard shortcuts behind actions from
@@ -45,6 +46,9 @@ export class MainMenuController implements IController {
     Q: () => {
       this.togglePrecedenceLink();
     },
+    Delete: () => {
+      this.removeSelectedNodes();
+    },
     "Shift+Delete": () => {
       this.removePartiallySelectedLinks();
     },
@@ -53,6 +57,12 @@ export class MainMenuController implements IController {
   //////////////////////////
   // Action preconditions //
   //////////////////////////
+
+  public canRemoveNodesAtom = atom(
+    (get) =>
+      get(this.selectionStore.selectedNodeIdsAtom).length > 0 &&
+      get(this.toolbeltController.currentToolAtom) !== EditorTool.NodeEditing,
+  );
 
   public canRemoveLinksAtom = atom(
     (get) => get(this.selectionStore.selectedNodeIdsAtom).length > 0,
@@ -69,6 +79,13 @@ export class MainMenuController implements IController {
   ////////////////////////////
   // Action implementations //
   ////////////////////////////
+
+  public removeSelectedNodes(): void {
+    if (!this.jotaiStore.get(this.canRemoveNodesAtom)) return;
+    for (const nodeId of this.selectionStore.selectedNodeIds) {
+      this.notationGraphStore.removeNodeWithLinks(nodeId);
+    }
+  }
 
   public toggleSyntaxLink(): void {
     if (!this.jotaiStore.get(this.canToggleLinkAtom)) return;
