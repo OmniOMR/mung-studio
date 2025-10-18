@@ -64,7 +64,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   // https://w3c.github.io/smufl/latest/tables/staff-brackets-and-dividers.html
   instrumentName: { uc: "Pno", mpp: true, notSmufl: true },
   instrumentSpecific: { uc: "?", mpp: true, notSmufl: true },
-  systemSeparator: { uc: "?", mpp: true, notSmufl: true },
+  systemSeparator: { uc: "//", mpp: true, notSmufl: true },
   staffGrouping: {
     uc: "\u{E000}",
     mpp: true,
@@ -291,7 +291,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     uc: "\u{E4A0}",
     mpp: true,
     notSmufl: true,
-    smuflEquivalents: ["articAccentAbove"],
+    smuflEquivalents: ["articAccentAbove", "articAccentBelow"],
   },
   articulationMarcatoAbove: {
     uc: "\u{E4AC}",
@@ -309,13 +309,13 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     uc: "\u{E4A2}",
     mpp: true,
     notSmufl: true,
-    smuflEquivalents: ["articStaccatoAbove"],
+    smuflEquivalents: ["articStaccatoAbove", "articStaccatoBelow"],
   },
   articulationTenuto: {
     uc: "\u{E4A4}",
     mpp: true,
     notSmufl: true,
-    smuflEquivalents: ["articTenutoAbove"],
+    smuflEquivalents: ["articTenutoAbove", "articTenutoBelow"],
   },
   articAccentAbove: { uc: "\u{E4A0}" },
   articAccentBelow: { uc: "\u{E4A1}" },
@@ -593,7 +593,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
 
   // 4.95. Multi-segment lines
   // https://w3c.github.io/smufl/latest/tables/multi-segment-lines.html
-  wiggleTrill: { uc: "\u{EAA4}", mpp: true },
+  wiggleTrill: { uc: "\u{EAA4}\u{EAA4}\u{EAA4}", mpp: true },
   dottedHorizontalSpanner: { uc: "--", mpp: true },
   horizontalSpanner: { uc: "-", mpp: true },
   glissando: { uc: "/", mpp: true },
