@@ -84,7 +84,12 @@ export class NodeEditingController implements IController {
    * go back to the pointer tool
    */
   public exitNodeEditingTool() {
+    // exit the node editing mode
     this.toolbeltController.setCurrentTool(EditorTool.Pointer);
+
+    // and deselect the current node, so that the annotator can
+    // continue and right away start creating a new node
+    this.selectionStore.changeSelection([]);
   }
 
   /////////////////////

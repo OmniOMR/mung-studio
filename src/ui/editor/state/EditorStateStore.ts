@@ -28,7 +28,7 @@ export class EditorStateStore {
 
   // atom that manages display of nodes
   public readonly nodeDisplayModeAtom: PrimitiveAtom<NodeDisplayMode> = atom(
-    NodeDisplayMode.Bboxes,
+    NodeDisplayMode.PolygonsAndMasks,
   );
 
   // atom that manages display of syntax links
