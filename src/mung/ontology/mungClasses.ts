@@ -79,6 +79,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     smuflEquivalents: ["systemDivider"],
   },
   systemDivider: { uc: "\u{E007}" },
+  splitBarDivider: { uc: "\u{E00A}" },
 
   // 4.2. Staves
   // https://w3c.github.io/smufl/latest/tables/staves.html
