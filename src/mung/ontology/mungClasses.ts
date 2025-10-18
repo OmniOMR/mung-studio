@@ -171,6 +171,11 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   timeSig9: { uc: "\u{E089}" },
   timeSigCommon: { uc: "\u{E08A}", mpp: true },
   timeSigCutCommon: { uc: "\u{E08B}", mpp: true },
+  timeSigPlus: { uc: "\u{E08C}" },
+  timeSigFractionalSlash: { uc: "\u{E08E}" },
+  timeSigEquals: { uc: "\u{E08F}" },
+  timeSigMinus: { uc: "\u{E090}" },
+  timeSigMultiply: { uc: "\u{E091}" },
 
   // 4.7. Noteheads
   // https://w3c.github.io/smufl/latest/tables/noteheads.html
