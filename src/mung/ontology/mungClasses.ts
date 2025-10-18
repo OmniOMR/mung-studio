@@ -79,6 +79,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   staffLine: {
     uc: "\u{E016}\u{2800}",
     mpp: true,
+    notSmufl: true,
     smuflEquivalents: ["staff1Line"],
   },
   staffSpace: { uc: "\u{E011}", mpp: true, notSmufl: true },
