@@ -133,20 +133,38 @@ export class HighlightController implements IController {
   public renderSVG(): JSX.Element | null {
     const highlightedNode = useAtomValue(this.highlightedNodeAtom);
 
+    if (highlightedNode === null) {
+      return null;
+    }
+
     // render the highlight rectangle
     return (
       <>
-        {highlightedNode && (
-          <rect
-            x={highlightedNode.left}
-            y={highlightedNode.top}
-            width={highlightedNode.width}
-            height={highlightedNode.height}
-            fill="none"
-            stroke="white"
-            strokeWidth="calc(var(--scene-screen-pixel) * 2)"
-          />
-        )}
+        <text
+          x={highlightedNode.left + highlightedNode.width}
+          y={highlightedNode.top}
+          fill="white"
+          fontSize="calc(var(--scene-screen-pixel) * 16)"
+          fontFamily="monospace"
+          fontWeight="700"
+          style={{
+            transform:
+              "translateY(calc(var(--scene-screen-pixel) * 15px))" +
+              "translateX(calc(var(--scene-screen-pixel) * 10px))",
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.4)",
+          }}
+        >
+          {highlightedNode.className}
+        </text>
+        <rect
+          x={highlightedNode.left}
+          y={highlightedNode.top}
+          width={highlightedNode.width}
+          height={highlightedNode.height}
+          fill="none"
+          stroke="white"
+          strokeWidth="calc(var(--scene-screen-pixel) * 2)"
+        />
       </>
     );
   }
