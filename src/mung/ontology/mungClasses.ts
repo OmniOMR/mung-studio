@@ -64,7 +64,6 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   // https://w3c.github.io/smufl/latest/tables/staff-brackets-and-dividers.html
   instrumentName: { uc: "Pno", mpp: true, notSmufl: true },
   instrumentSpecific: { uc: "?", mpp: true, notSmufl: true },
-  systemSeparator: { uc: "//", mpp: true, notSmufl: true },
   staffGrouping: {
     uc: "\u{E000}",
     mpp: true,
@@ -73,6 +72,13 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   },
   brace: { uc: "\u{E000}", mpp: true },
   bracket: { uc: "\u{E002}", mpp: true },
+  systemSeparator: {
+    uc: "\u{E007}",
+    mpp: true,
+    notSmufl: true,
+    smuflEquivalents: ["systemDivider"],
+  },
+  systemDivider: { uc: "\u{E007}" },
 
   // 4.2. Staves
   // https://w3c.github.io/smufl/latest/tables/staves.html
