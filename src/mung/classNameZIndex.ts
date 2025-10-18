@@ -92,6 +92,11 @@ const lookupTable = {
   timeSig9: 5_005,
   timeSigCommon: 5_005,
   timeSigCutCommon: 5_005,
+  timeSigPlus: 5_005,
+  timeSigFractionalSlash: 5_005,
+  timeSigEquals: 5_005,
+  timeSigMinus: 5_005,
+  timeSigMultiply: 5_005,
   // accidentals for key signature are listed below (rendered above)
 
   // slurs, ties, spanners
