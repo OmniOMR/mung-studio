@@ -9,6 +9,10 @@ The MUSCIMA++ v2.0 dataset: https://github.com/OMR-Research/muscima-pp/releases/
 
 ## Documentation
 
+- [User Manual](docs/user-manual/user-manual.md)
+
+Development documentation:
+
 - [Folder structure](docs/folder-structure.md)
 - [Architecture](docs/architecture.md)
 - [Editor component](docs/editor-component.md)
