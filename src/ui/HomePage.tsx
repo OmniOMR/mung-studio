@@ -10,6 +10,7 @@ import ChecklistIcon from "@mui/icons-material/Checklist";
 import SchoolIcon from "@mui/icons-material/School";
 import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";
 import ElderlyIcon from "@mui/icons-material/Elderly";
+import ErrorIcon from "@mui/icons-material/Error";
 
 import packageJson from "../../package.json";
 import { JSX } from "react";
@@ -17,6 +18,8 @@ const VERSION = packageJson.version;
 
 const HAS_SIMPLE_PHP_BACKEND =
   process.env["SIMPLE_PHP_BACKEND_URL"] !== undefined;
+
+const DATASET_ERRATA_URL = process.env["DATASET_ERRATA_URL"] || null;
 
 export function HomePage() {
   return (
@@ -66,6 +69,16 @@ export function HomePage() {
             linkTo="performance-testing"
           />
         </Grid>
+        {DATASET_ERRATA_URL && (
+          <Grid size={12}>
+            <ClickableCard
+              title="Dataset Errata"
+              description="Report a document issue you cannot fix because: (1) You don't know how to solve the issue yourself (2) The issue is in a document that was not assigned to you (3) MuNG Studio is missing some capability"
+              icon={<ErrorIcon />}
+              linkTo={DATASET_ERRATA_URL}
+            />
+          </Grid>
+        )}
       </Grid>
 
       <Typography level="h2" gutterBottom>
