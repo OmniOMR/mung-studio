@@ -94,7 +94,33 @@ We'll start by learning how to move the viewport.
 
 ### Scene rendering options
 
-TODO: Global visibility options (bounding box, mask, none) (links)
+In the *Overview Panel* on the left, there are options that control the way, nodes are rendered in the *Scene View*:
+
+<blockquote><img src="img/scene-rendering-options.png" width="300"/></blockquote>
+
+The first three buttons control the rendering of nodes. It consists of three modes:
+
+- **Bounding boxes:** Runs fast even on slow hardware, masks are not visible.
+- **Masks:** (default) Masks are visible, may be slow when viewing the whole page.
+- **Invisible:** Nodes are completely hidden.
+
+<blockquote>
+    <img src="img/view-bboxes.png" height="130"/>
+    <img src="img/view-masks.png" height="130"/>
+    <img src="img/view-invisible.png" height="130"/>
+</blockquote>
+
+By default, use the *Masks* option to easily spot mistakes with mask annotations. Only when MuNG Studio is slow on your device, choose the other two options.
+
+The second set of buttons controls notation graph link visibility:
+
+<blockquote>
+    <img src="img/view-syntax.png" height="130"/>
+    <img src="img/view-precedence.png" height="130"/>
+    <img src="img/view-all-links.png" height="130"/>
+</blockquote>
+
+You can toggle these on/off to aid readability of the *Scene View*.
 
 
 ### Toolbelt overview
