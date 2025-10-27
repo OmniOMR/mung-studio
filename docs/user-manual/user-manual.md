@@ -1,6 +1,8 @@
 # MuNG Studio User Manual
 
-- [Where to try it out](#where-to-try-it-out)
+This document teaches you how to use the MuNG Studio annotation tool.
+
+- [Openning a document](#openning-a-document)
 - [Overview](#overview)
 - [Document saving](#document-saving)
 - [Basic controls](#basic-controls)
@@ -14,13 +16,23 @@
     - ...
 
 
-## Where to try it out
+## Openning a document
 
-When you first open MuNG Studio at https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/, you can choose from a number of document sources. You have likely received an access token for the *Simple Backend*. Start by clicking on that card.
+MuNG Studio is deployed at this address:
+
+> **MuNG Studio:** https://ufallab.ms.mff.cuni.cz/~mayer/mung-studio/
+
+When you first open MuNG Studio, you can choose from a number of document sources (e.g. documents on your device). In this user manual I assume you are an annotator on some project and so your documents will live in the *Simple Backend* source. You have likely received an access token for the *Simple Backend* via email from the project administrator. To open a document, start by clicking on the *Simple Backend* card:
+
+<img src="img/home-page.png" width="620" style="border: 1px solid #e8e8e8"/>
 
 In the *Simple Backend*, enter your token and save it. The token will be stored in your web browser, so you won't need to re-insert it the next time you come. You will see a list of all the documents we have collectively annotated (or are still working on).
 
+<img src="img/backend-user-token.png" width="620" style="border: 1px solid #e8e8e8"/>
+
 At the beginning of the list, there are documents whose name start with `-0- ...`. These are test documents you can open and play with. If you destroy them, no problem, that's what they are intended for.
+
+<img src="img/testing-documents.png" width="620" style="border: 1px solid #e8e8e8"/>
 
 
 ## Overview
