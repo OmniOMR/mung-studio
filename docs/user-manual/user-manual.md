@@ -6,7 +6,11 @@ This document teaches you how to use the MuNG Studio annotation tool.
 - [Overview](#overview)
 - [Document saving](#document-saving)
 - [Basic controls](#basic-controls)
-- [Selecting nodes](#selecting-nodes)
+    - [Moving the viewport](#moving-the-viewport)
+    - [Scene rendering options](#scene-rendering-options)
+    - [Toolbelt overview](#toolbelt-overview)
+    - [Selecting nodes](#selecting-nodes)
+    - [Class-based node visibility options](#class-based-node-visibility-options)
 - [Annotating masks](#annotating-masks)
     - [Creating new node](#creating-new-node)
     - [Modifying existing node mask](#modifying-existing-node-mask)
@@ -34,6 +38,7 @@ At the beginning of the list, there are documents whose name start with `-0- ...
 
 <blockquote><img src="img/testing-documents.png" width="620"/></blockquote>
 
+Click on a document to open it. It will open in a new tab of the browser, so you can have more than one document open at one time.
 
 ## Overview
 
@@ -42,6 +47,8 @@ MuNG Studio consists of three panels:
 - Overview Panel (left)
 - Scene View (center)
 - Inspector Panel (right)
+
+<blockquote><img src="img/top-level-panels.png" width="620"/></blockquote>
 
 The *Overview Panel* displays information about the whole document. It lets you control symbol visibility and rendering modes.
 
@@ -63,17 +70,34 @@ MuNG Studio automatically creates backups of individual documents, so in case of
 
 ## Basic controls
 
-Moving the viewport:
 
-- **Touchpad:**
-    - Two-finger scroll in all 4 directions
-- **Mouse:**
-    - Wheel-button click & drag
-    - Wheel scroll, scrolls up/down
-        - With Shift scrolls sideways
-        - With Ctrl zooms in/out
+### Moving the viewport
+
+We'll start by learning how to move the viewport.
+
+**Move with touchpad:** Place two fingers on your touchpad and move them around. The *Scene View* will move accordingly.
+
+<blockquote><img src="img/touchpad-two-finger-movement.png" height="150"/></blockquote>
+
+**Move with mouse:** Press down the <kbd>🖱️ Mouse Wheel</kbd> to grab the *Scene View* and move the mouse around. The *Scene View* will move accordingly.
+
+<blockquote><img src="img/mouse-wheel-grab.png" height="150"/></blockquote>
+
+**Zooming:** Hold <kbd>Ctrl</kbd> or <kbd>Command ⌘</kbd> and scroll up/down with the <kbd>🖱️ Mouse Wheel</kbd> or two-finger/edge scrolling on touchpad. The *Scene View* will zoom in/out.
+
+<blockquote><img src="img/zooming.png" height="150"/></blockquote>
+
+**Scrolling:** When scrolling with the <kbd>🖱️ Mouse Wheel</kbd> or the touchpad, the *Scene View* will move up/down. Hold <kbd>Shift</kbd> to move sideways instead.
+
+**The hand tool:** You can pick up the *Hand Tool* by pressing <kbd>H</kbd>. Then you can click-and-drag the *Scene View* around. You can exit the *Hand Tool* by pressing <kbd>V</kbd> (picking back up the *Pointer Tool*).
+
+
+### Scene rendering options
 
 TODO: Global visibility options (bounding box, mask, none) (links)
+
+
+### Toolbelt overview
 
 Tools in the lower toolbelt:
 - Cursor (V), selecting objects
@@ -83,7 +107,7 @@ Tools in the lower toolbelt:
 - Precedence links (P), annotating precedence links
 
 
-## Selecting nodes
+### Selecting nodes
 
 Make sure you have the *Pointer Tool* (`[V]` key).
 
@@ -96,6 +120,11 @@ You can select multiple nodes by holding the `[Shift]` key and clicking. Clickin
 Alternate way to select multiple nodes is to drag-select a rectangular area. Click and hold, and move the mouse to select multiple nodes. All nodes touching the rectangle will become selected.
 
 This method selects all nodes if there are many nodes on top of one another. It is one of the ways to select a lower node, obstructed by an upper node - select both by dragging and then deselect the top one with `[Shift]` + click.
+
+
+### Class-based node visibility options
+
+TODO ...
 
 
 ## Annotating masks
