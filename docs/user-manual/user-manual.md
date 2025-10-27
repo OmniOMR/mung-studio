@@ -168,7 +168,21 @@ This method selects all nodes if there are many nodes on top of one another. It 
 
 ### Class-based node visibility options
 
-TODO ...
+In the *Overview Panel* (left) there's a section that lets you control visibility of indivial classes of nodes. You can adjust these to hide away nodes that obstruct the scene view or only display nodes that are interesting for your current annotation situation.
+
+<blockquote><img src="img/classes-panel.png" width="250"/></blockquote>
+
+The default visibility settings display almost all classes, except for the large ones that would clutter the *Scene View*. To make sure you see everything in the document, click on the eye button to show all classes:
+
+<blockquote><img src="img/classes-show-all.png" width="620"/></blockquote>
+
+Similarly, you can hide all classes with the second button and then click on individual classes to make them visible again:
+
+<blockquote><img src="img/classes-hide-all-except-one.png" width="620"/></blockquote>
+
+The third button (three vertical dots) contains visibility presets for various actions. For example, there is a preset to display only those classes that participate in the <kbd>🟢 precedence</kbd> graph:
+
+<blockquote><img src="img/classes-precedence.png" width="620"/></blockquote>
 
 
 ## Annotating masks
@@ -259,3 +273,13 @@ You must have exactly 2 nodes selected, otherwise pressing the key does nothing.
 Sometimes you may want to clear and re-annotate a portion of the links. You can select any number of nodes and press <kbd>Shift</kbd> + <kbd>Del</kbd>. It will remove all links that lead from, to, or between the selected nodes.
 
 <blockquote><img src="img/remove-partially-selected-links.png" width="300"/></blockquote>
+
+
+### Syntax links tool
+
+TODO
+
+
+### Precedence links tool
+
+TODO
