@@ -16,8 +16,11 @@ This document teaches you how to use the MuNG Studio annotation tool.
     - [Modifying existing node mask](#modifying-existing-node-mask)
     - [Changing existing node class](#changing-existing-node-class)
     - [Deleting a node](#changing-existing-node-class)
-- Annotating notation graph
-    - ...
+- [Annotating links](#annotating-links)
+    - [Toggling individual links](#toggling-individual-links)
+    - [Removing all links from selection](#removing-all-links-from-selection)
+    - Syntax links tool
+    - Precedence links tool
 
 
 ## Openning a document
@@ -228,4 +231,31 @@ Select a node and then press the <kbd>Del</kbd> key.
 
 ## Annotating links
 
-TODO
+Once all masks are annotated, you can start annotating *Notation Graph* links.
+
+
+### Toggling individual links
+
+The simplest way to do a quick fix or change of the links graph is to select two nodes and toggle the link in between them:
+
+1. Select the start node for the link (<kbd>Left Mouse Button</kbd> click).
+2. Select the target node for the link (<kbd>Shift</kbd> + <kbd>Left Mouse Button</kbd> click).
+3. Press <kbd>E</kbd> to toggle a <kbd>🔴 syntax</kbd> link.
+4. Press <kbd>Q</kbd> to toggle a <kbd>🟢 precedence</kbd> link.
+
+<blockquote>
+    <img src="img/link-toggle-none.png" height="100"/>
+    <img src="img/link-toggle-syntax.png" height="100"/>
+    <img src="img/link-toggle-precedence.png" height="100"/>
+</blockquote>
+
+The order in which you select the two nodes DOES matter. It dictates the direction of the link.
+
+You must have exactly 2 nodes selected, otherwise pressing the key does nothing.
+
+
+### Removing all links from selection
+
+Sometimes you may want to clear and re-annotate a portion of the links. You can select any number of nodes and press <kbd>Shift</kbd> + <kbd>Del</kbd>. It will remove all links that lead from, to, or between the selected nodes.
+
+<blockquote><img src="img/remove-partially-selected-links.png" width="300"/></blockquote>
