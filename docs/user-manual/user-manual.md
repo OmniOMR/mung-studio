@@ -170,42 +170,60 @@ TODO ...
 
 ## Annotating masks
 
+Annotation of an empty document always starts by first annotating nodes and their masks. This section describes possible operations with nodes.
+
 
 ### Creating new node
 
-1. Select the *Node Editing Tool* (`[N]` key).
-2. Click on the screen to create polygon (left mouse button).
-3. Once the polygon is done, commit the polygon by pressing `[N]` or `[Enter]`.
-4. Close the *Node Editing Tool* by pressing `[N]` again.
+1. Select the *Node Editing Tool* (<kbd>N</kbd> key).
+2. Click on the screen to create polygon (<kbd>Left Mouse Button</kbd>).
+
+<blockquote><img src="img/masks-creating-polygon.png" width="620"/></blockquote>
+
+3. Once the polygon is done, commit the polygon by pressing <kbd>N</kbd> or <kbd>Enter</kbd>.
+
+<blockquote><img src="img/masks-commited-polygon.png" width="620"/></blockquote>
+
+4. Close the *Node Editing Tool* by pressing <kbd>N</kbd> or <kbd>Enter</kbd> again.
+
+<blockquote><img src="img/masks-created-node.png" width="620"/></blockquote>
 
 The class used for the node is shown in the *Inspector Panel* on the right. You can change the value and it will be remembered for future nodes to be created.
+
+<blockquote><img src="img/masks-change-classname.png" width="620"/></blockquote>
 
 
 ### Modifying existing node mask
 
 1. Select the node.
-2. Enter the *Node Editing Tool* (`[N]` key).
+2. Enter the *Node Editing Tool* (<kbd>N</kbd> key).
 
-Now you can add polygons to the mask by repeatedly drawing a polygon and committing it. You can erase a polygon using the polygon erase tool. Drawing and erasing can be toggled by pressing `[T]`.
+Now you can add polygons to the mask by repeatedly drawing a polygon and committing it. You can erase a polygon using the polygon erase tool. Drawing and erasing can be toggled by pressing <kbd>T</kbd>.
 
-You can remove the last polygon point by clicking with the right mouse button.
+<blockquote><img src="img/masks-erasing-polygon.png" width="620"/></blockquote>
+<blockquote><img src="img/masks-mask-with-hole.png" width="620"/></blockquote>
 
-You can cancel a partial polygon by pressing `[Esc]` key.
+You can remove the last polygon point by clicking with the <kbd>Right Mouse Button</kbd>.
 
-You can also exit the Node Editing tool by pressing `[Esc]`.
+You can cancel a partial polygon by pressing <kbd>Esc</kbd> key.
+
+You can also exit the *Node Editing* tool by pressing <kbd>Esc</kbd>.
 
 
 ### Changing existing node class
 
 1. Select the node
-2. Enter the *Node Editing Tool* (`[N]` key).
-3. In the *Inspector Panel* (right, up) change the node class (submit with enter)
-4. Exit the *Node Editing Tool* via `[Esc]` or `[N]`.
+2. Enter the *Node Editing Tool* (<kbd>N</kbd> key).
+3. In the *Inspector Panel* (right, up) change the node class (submit with <kbd>Enter</kbd>)
+
+<blockquote><img src="img/masks-class-picker-detail.png" width="620"/></blockquote>
+
+4. Exit the *Node Editing Tool* via <kbd>Esc</kbd> or <kbd>N</kbd>.
 
 
 ### Deleting a node
 
-Select a node and then press the `[Del]` key.
+Select a node and then press the <kbd>Del</kbd> key.
 
 
 ## Annotating links
