@@ -112,7 +112,7 @@ The first three buttons control the rendering of nodes. It consists of three mod
 
 By default, use the *Masks* option to easily spot mistakes with mask annotations. Only when MuNG Studio is slow on your device, choose the other two options.
 
-The second set of buttons controls notation graph link visibility:
+The second set of buttons controls *Notation Graph* link visibility. You can toggle <kbd>🔴 syntax</kbd> and <kbd>🟢 precedence</kbd> links independently:
 
 <blockquote>
     <img src="img/view-syntax.png" height="130"/>
@@ -125,27 +125,42 @@ You can toggle these on/off to aid readability of the *Scene View*.
 
 ### Toolbelt overview
 
-Tools in the lower toolbelt:
-- Cursor (V), selecting objects
-- Hand (H), moving the screen disabled interactions with the scene
-- Node editing (N), creating and modifying nodes
-- Syntax links (L), annotating syntax links
-- Precedence links (P), annotating precedence links
+At the bottom of the *Scene View* there is the *Toolbelt* with the following tools:
+
+- Cursor <kbd>V</kbd>, selecting objects
+- Hand <kbd>H</kbd>, moving the screen disabled interactions with the scene
+- Node editing <kbd>N</kbd>, creating and modifying nodes
+- Syntax links <kbd>L</kbd>, annotating syntax links
+- Precedence links <kbd>P</kbd>, annotating precedence links
+
+<blockquote><img src="img/toolbelt.png" width="620"/></blockquote>
+
+The *Cursor* and *Hand* tools are meant for exploring the document, selecting nodes and performing basic operations (deleting nodes, toggling individual edges).
+
+The *Node Editing* tool is more explored in the [Annotating masks](#annotating-masks) section. It is used to create and update nodes.
+
+The *Syntax Links* and *Precedence Links* tools are very similar and both are intended for fast insertion of the respective link types. These should be used when annotating *Notation Graph* links from scratch for a new document. They are more explored in the [Annotating links](#annotating-links) section.
 
 
 ### Selecting nodes
 
-Make sure you have the *Pointer Tool* (`[V]` key).
+Make sure you have the *Pointer Tool* (<kbd>V</kbd> key).
 
-When you click on a node (left mouse button), it becomes selected. When you click on it again, it deselects.
+When you click on a node (<kbd>Left Mouse Button</kbd>), it becomes selected. When you click on it again, it deselects.
 
-Click on the background to deselect nodes. You can also press the `[Esc]` key.
+<img src="img/selected-node.png" width="150"/>
 
-You can select multiple nodes by holding the `[Shift]` key and clicking. Clicking on an already selected node removes it from the selection.
+Click on the background to deselect nodes. You can also press the <kbd>Esc</kbd> key.
+
+You can select multiple nodes by holding the <kbd>Shift</kbd> key and clicking. Clicking on an already selected node removes it from the selection.
+
+<img src="img/multiple-selected-nodes.png" width="150"/>
 
 Alternate way to select multiple nodes is to drag-select a rectangular area. Click and hold, and move the mouse to select multiple nodes. All nodes touching the rectangle will become selected.
 
-This method selects all nodes if there are many nodes on top of one another. It is one of the ways to select a lower node, obstructed by an upper node - select both by dragging and then deselect the top one with `[Shift]` + click.
+<img src="img/drag-select.png" width="200"/>
+
+This method selects all nodes if there are many nodes on top of one another. It is one of the ways to select a lower node, obstructed by an upper node - select both by dragging and then deselect the top one with <kbd>Shift</kbd> + click.
 
 
 ### Class-based node visibility options
@@ -191,3 +206,8 @@ You can also exit the Node Editing tool by pressing `[Esc]`.
 ### Deleting a node
 
 Select a node and then press the `[Del]` key.
+
+
+## Annotating links
+
+TODO
