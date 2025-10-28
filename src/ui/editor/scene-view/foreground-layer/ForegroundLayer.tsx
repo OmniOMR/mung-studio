@@ -234,6 +234,18 @@ function useBindControllerEvents(
         // don't invoke if not enabled
         if (!controller.isEnabled) return;
 
+        // for mousedown events:
+        // don't invoke if there's some <input> somewhere focused
+        // (we are returning focus back to the scene view now, skip any actions)
+        if (e.type === "mousedown") {
+          if (
+            document.activeElement !== document.body &&
+            document.activeElement !== document.documentElement
+          ) {
+            return;
+          }
+        }
+
         // invoke if hook exists
         controllerEventHook?.(e);
       };
