@@ -82,7 +82,7 @@ export class ZoomController {
         // Filter out events that come from mouse-down for grabbing,
         // otherwise react gets flooded with synthetic scrolling events
         // when side-scrolling on touchpad. That's not a real grab operation.
-        if (event.sourceEvent?.type === "mousedown") {
+        if (event.sourceEvent?.type === "mouseup") {
           this.jotaiStore.set(this.isGrabbingBaseAtom, false);
         }
       };
@@ -203,9 +203,7 @@ export class ZoomController {
   /**
    * Read-only atom that exposes, whether the user is grabbing the view
    */
-  public isGrabbingAtom: Atom<boolean> = atom(
-    (get) =>
-      get(this.toolbeltController.currentToolAtom) === EditorTool.Hand &&
-      get(this.isGrabbingBaseAtom),
+  public isGrabbingAtom: Atom<boolean> = atom((get) =>
+    get(this.isGrabbingBaseAtom),
   );
 }
