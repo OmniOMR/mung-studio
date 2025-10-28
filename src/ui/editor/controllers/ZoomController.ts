@@ -65,6 +65,14 @@ export class ZoomController {
         // update state
         this._currentTransform = transform;
 
+        // update dragged delta if dragging
+        if (this._grabStartTransform) {
+          this._grabDraggedDelta = new DOMPoint(
+            this._grabStartTransform.x - transform.x,
+            this._grabStartTransform.y - transform.y,
+          );
+        }
+
         // emit events
         this._onTransformChange.dispatch(transform);
       };
@@ -75,6 +83,7 @@ export class ZoomController {
         // when side-scrolling on touchpad. That's not a real grab operation.
         if (event.sourceEvent?.type === "mousedown") {
           this.jotaiStore.set(this.isGrabbingBaseAtom, true);
+          this._grabStartTransform = event.transform;
         }
       };
 
@@ -84,6 +93,8 @@ export class ZoomController {
         // when side-scrolling on touchpad. That's not a real grab operation.
         if (event.sourceEvent?.type === "mouseup") {
           this.jotaiStore.set(this.isGrabbingBaseAtom, false);
+          this._grabStartTransform = null;
+          this._grabDraggedDelta = null;
         }
       };
 
@@ -206,4 +217,11 @@ export class ZoomController {
   public isGrabbingAtom: Atom<boolean> = atom((get) =>
     get(this.isGrabbingBaseAtom),
   );
+
+  // tracking grabbed delta for MousePointerController to adjust
+  private _grabStartTransform: d3.ZoomTransform | null = null;
+  private _grabDraggedDelta: DOMPointReadOnly | null = null;
+  public get grabDraggedDelta(): DOMPointReadOnly | null {
+    return this._grabDraggedDelta;
+  }
 }

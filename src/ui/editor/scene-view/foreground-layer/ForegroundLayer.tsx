@@ -16,6 +16,7 @@ export function ForegroundLayer() {
     toolbeltController,
     nodeEditingController,
     zoomController,
+    mousePointerController,
     highlightController,
     selectionController,
     redrawTrigger,
@@ -29,6 +30,7 @@ export function ForegroundLayer() {
 
   // defines which controllers and in what order are they going to be rendered
   const controllers: IController[] = [
+    mousePointerController,
     highlightController,
     selectionController,
     toolbeltController,

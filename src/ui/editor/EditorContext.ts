@@ -17,6 +17,7 @@ import { RedrawTrigger } from "./controllers/RedrawTrigger";
 import { PolygonToolsController } from "./toolbelt/node-editing/PolygonToolsController";
 import { NodeEditingController } from "./toolbelt/node-editing/NodeEditingController";
 import { MainMenuController } from "./controllers/MainMenuController";
+import { MousePointerController } from "./controllers/MousePointerController";
 
 /**
  * All fields present in the editor component's global context
@@ -33,6 +34,7 @@ export interface EditorContextState {
   readonly redrawTrigger: RedrawTrigger;
   readonly toolbeltController: ToolbeltController;
   readonly zoomController: ZoomController;
+  readonly mousePointerController: MousePointerController;
   readonly highlightController: HighlightController;
   readonly selectionController: SelectionController;
   readonly nodeEditingController: NodeEditingController;
@@ -87,6 +89,11 @@ export function useConstructContextServices(
     [],
   );
 
+  const mousePointerController = useMemo(
+    () => new MousePointerController(zoomController),
+    [],
+  );
+
   const highlightController = useMemo(
     () =>
       new HighlightController(
@@ -133,6 +140,7 @@ export function useConstructContextServices(
       new PolygonToolsController(
         jotaiStore,
         zoomController,
+        mousePointerController,
         redrawTrigger,
         nodeEditingController,
       ),
@@ -162,6 +170,7 @@ export function useConstructContextServices(
     redrawTrigger,
     toolbeltController,
     zoomController,
+    mousePointerController,
     highlightController,
     selectionController,
     nodeEditingController,

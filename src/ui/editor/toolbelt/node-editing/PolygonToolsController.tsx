@@ -8,6 +8,7 @@ import { JotaiStore } from "../../state/JotaiStore";
 import { JSX, useEffect, useRef } from "react";
 import { ToolbeltController } from "../ToolbeltController";
 import { EditorTool } from "../EditorTool";
+import { MousePointerController } from "../../controllers/MousePointerController";
 
 /**
  * Controls both the PolygonFill and PolygonErase tools
@@ -18,22 +19,28 @@ export class PolygonToolsController implements IController {
   private readonly jotaiStore: JotaiStore;
 
   private readonly zoomController: ZoomController;
+  private readonly mousePointerController: MousePointerController;
   private readonly redrawTrigger: RedrawTrigger;
   private readonly nodeEditingController: NodeEditingController;
 
   constructor(
     jotaiStore: JotaiStore,
     zoomController: ZoomController,
+    mousePointerController: MousePointerController,
     redrawTrigger: RedrawTrigger,
     nodeEditingController: NodeEditingController,
   ) {
     this.jotaiStore = jotaiStore;
     this.zoomController = zoomController;
+    this.mousePointerController = mousePointerController;
     this.redrawTrigger = redrawTrigger;
     this.nodeEditingController = nodeEditingController;
 
     // redraw when source data changes
     this.zoomController.onTransformChange.subscribe(this.notify.bind(this));
+    this.mousePointerController.onScenePointerChange.subscribe(
+      this.notify.bind(this),
+    );
   }
 
   private notify() {
@@ -89,32 +96,13 @@ export class PolygonToolsController implements IController {
   };
 
   /////////////////////////////
-  // React to mouse movement //
-  /////////////////////////////
-
-  // TODO: refactor into a separate controller (like ZoomController)
-
-  // position of the mouse pointer over the scene view in screen space
-  private pointerOffsetX: number = 0;
-  private pointerOffsetY: number = 0;
-
-  public onMouseMove(e: MouseEvent): void {
-    // store mouse pointer position in scene space
-    this.pointerOffsetX = e.offsetX;
-    this.pointerOffsetY = e.offsetY;
-
-    // make sure draw is called on the next frame
-    this.redrawTrigger.requestRedrawNextFrame();
-  }
-
-  /////////////////////////////
   // Building up the polygon //
   /////////////////////////////
 
   /**
    * Vertices of the draw polygon in scene space units
    */
-  private polygonVertices: DOMPoint[] = [];
+  private polygonVertices: DOMPointReadOnly[] = [];
 
   public onMouseDown(e: MouseEvent): void {
     // LMB: add point
@@ -129,14 +117,8 @@ export class PolygonToolsController implements IController {
   }
 
   private addPointToPolygon() {
-    // get mouse pointer position in the scene
-    // TODO: refactor into a separate controller (like ZoomController)
-    const t = this.zoomController.currentTransform;
-    const pointerSceneX = t.invertX(this.pointerOffsetX);
-    const pointerSceneY = t.invertY(this.pointerOffsetY);
-
-    // add the point to the polygon
-    this.polygonVertices.push(new DOMPoint(pointerSceneX, pointerSceneY));
+    // add the point under mouse pointer in scene space to the polygon
+    this.polygonVertices.push(this.mousePointerController.scenePointer);
 
     // make sure draw is called on the next frame
     this.redrawTrigger.requestRedrawNextFrame();
@@ -214,12 +196,8 @@ export class PolygonToolsController implements IController {
 
     if (this.polygonVertices.length > 0 && includePointer) {
       // get mouse pointer position in the scene
-      // TODO: refactor into a separate controller (like ZoomController)
-      const t = this.zoomController.currentTransform;
-      const pointerSceneX = t.invertX(this.pointerOffsetX);
-      const pointerSceneY = t.invertY(this.pointerOffsetY);
-
-      d += "L " + pointerSceneX + "," + pointerSceneY + " ";
+      const scenePointer = this.mousePointerController.scenePointer;
+      d += "L " + scenePointer.x + "," + scenePointer.y + " ";
     }
 
     // close the path
