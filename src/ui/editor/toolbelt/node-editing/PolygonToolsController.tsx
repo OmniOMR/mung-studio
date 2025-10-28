@@ -77,7 +77,7 @@ export class PolygonToolsController implements IController {
       this.removePointFromPolygon();
     },
     Enter: () => {
-      this.rasterizePolygon();
+      this.keyBindings.N(); // just do whatever N does
     },
     N: () => {
       if (this.polygonVertices.length > 0) {
