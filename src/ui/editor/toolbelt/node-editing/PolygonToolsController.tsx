@@ -175,7 +175,7 @@ export class PolygonToolsController implements IController {
         ctx.globalCompositeOperation = "destination-out";
         ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
       }
-      ctx.fill(new Path2D(this.buildPolygonPathData(false)), "evenodd");
+      ctx.fill(new Path2D(this.buildPolygonPathData(false)), "nonzero");
     });
 
     // reset the polygon state
