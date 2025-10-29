@@ -87,16 +87,16 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     uc: "\u{E016}\u{2800}",
     mpp: true,
     notSmufl: true,
-    smuflEquivalents: ["staff1Line"],
+    otherSmuflDivergenceJustification:
+      "Cannot be rendered using a font. " +
+      "The staff1Line class is a different thing semantically.",
   },
   staffSpace: { uc: "\u{E011}", mpp: true, notSmufl: true },
-  staff1Line: { uc: "\u{E016}\u{2800}", mpp: true },
   staff: {
     uc: "\u{E01A}\u{2800}",
     mpp: true,
     smuflEquivalents: ["staff5Lines"],
   },
-  staff5Lines: { uc: "\u{E01A}\u{2800}" },
   legerLine: { uc: "\u{E022}", mpp: true },
 
   // 4.3. Barlines
