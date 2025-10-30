@@ -333,6 +333,8 @@ const lookupTable = {
   articStaccatoBelow: 10_200,
   articTenutoAbove: 10_200,
   articTenutoBelow: 10_200,
+  articStaccatissimoAbove: 10_200,
+  articStaccatissimoBelow: 10_200,
   articMarcatoAbove: 10_200,
   articMarcatoBelow: 10_200,
 

@@ -331,6 +331,8 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   articStaccatoBelow: { uc: "\u{E4A3}" },
   articTenutoAbove: { uc: "\u{E4A4}" },
   articTenutoBelow: { uc: "\u{E4A5}" },
+  articStaccatissimoAbove: { uc: "\u{E4A6}" },
+  articStaccatissimoBelow: { uc: "\u{E4A7}" },
   articMarcatoAbove: { uc: "\u{E4AC}" },
   articMarcatoBelow: { uc: "\u{E4AD}" },
 
