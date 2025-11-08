@@ -14,7 +14,7 @@ export interface GLBuffer {
 }
 
 export class GLRenderer {
-
+  
   private gl: WebGL2RenderingContext;
   private drawables: GLDrawable[] = [];
   private transform: d3.ZoomTransform = d3.zoomIdentity;
@@ -286,6 +286,10 @@ export class GLRenderer {
 
   public drawArrayByBuffer(primitiveType: GLenum, buffer: GLBuffer) {
     this.drawArray(primitiveType, 0, buffer.numVertices());
+  }
+
+  public queryMaxTextureSize(): number {
+    return this.gl.getParameter(this.gl.MAX_TEXTURE_SIZE);
   }
 }
 

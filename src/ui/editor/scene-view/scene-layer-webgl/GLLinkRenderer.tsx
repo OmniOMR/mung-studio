@@ -399,7 +399,6 @@ class LinkGeometryDrawable implements GLDrawable {
   }
 
   private onZoom(transform: ZoomTransform): void {
-    console.log(transform.k);
     this.setScale(1.0 / transform.k);
   }
 
