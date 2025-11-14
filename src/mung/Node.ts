@@ -74,6 +74,15 @@ export interface Node {
   readonly decodedMask: ImageData | null;
 
   /**
+   * Some node classes can contain textual transcription of their content
+   * (especially nodes that represent text). This field holds that value.
+   * Null means no transcription is provided for the node. Empty string
+   * is stored in the XML as an existing, but empty <DataItem> element.
+   * However the UI of MuNG Studio automatically converts empty strings to null.
+   */
+  readonly textTranscription: string | null;
+
+  /**
    * Additional data present in the <Data> XML element, which has not
    * been parsed into other fields of the Node instance.
    */

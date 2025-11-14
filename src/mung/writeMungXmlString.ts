@@ -134,6 +134,13 @@ function prepareDataItems(node: Node): DataItems {
     };
   }
 
+  if (node.textTranscription !== null) {
+    dataItems["text_transcription"] = {
+      type: "str",
+      value: node.textTranscription,
+    };
+  }
+
   return dataItems;
 }
 

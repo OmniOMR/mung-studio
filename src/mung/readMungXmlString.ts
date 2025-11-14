@@ -46,24 +46,27 @@ function readNodeFromXmlElement(element: Element): Node {
   const precedenceOutlinks = parseIntList(
     dataItems["precedence_outlinks"]?.value,
   );
+  delete dataItems["precedence_outlinks"];
   const precedenceInlinks = parseIntList(
     dataItems["precedence_inlinks"]?.value,
   );
-  delete dataItems["precedence_outlinks"];
   delete dataItems["precedence_inlinks"];
+  const textTranscription = dataItems["text_transcription"]?.value || null;
+  delete dataItems["text_transcription"];
 
   return {
     id: parseInt(element.querySelector("Id")?.innerHTML || "NaN"),
     className: element.querySelector("ClassName")?.innerHTML || "unknown",
     top: parseInt(element.querySelector("Top")?.innerHTML || "NaN"),
     left: parseInt(element.querySelector("Left")?.innerHTML || "NaN"),
-    width: width,
-    height: height,
+    width,
+    height,
     syntaxOutlinks: parseIntList(element.querySelector("Outlinks")?.innerHTML),
     syntaxInlinks: parseIntList(element.querySelector("Inlinks")?.innerHTML),
     precedenceOutlinks,
     precedenceInlinks,
-    decodedMask: decodedMask,
+    decodedMask,
+    textTranscription,
     data: dataItems,
     polygon: null,
   };
