@@ -35,14 +35,22 @@ export function readMungXmlString(xml: string): MungFile {
 }
 
 function readNodeFromXmlElement(element: Element): Node {
-  const dataItems = parseDataItems(element);
-
   const width = parseInt(element.querySelector("Width")?.innerHTML || "NaN");
   const height = parseInt(element.querySelector("Height")?.innerHTML || "NaN");
   const maskString = element.querySelector("Mask")?.textContent || null;
 
   const decodedMask =
     maskString !== null ? decodeRleMaskString(maskString, width, height) : null;
+
+  const dataItems = parseDataItems(element);
+  const precedenceOutlinks = parseIntList(
+    dataItems["precedence_outlinks"]?.value,
+  );
+  const precedenceInlinks = parseIntList(
+    dataItems["precedence_inlinks"]?.value,
+  );
+  delete dataItems["precedence_outlinks"];
+  delete dataItems["precedence_inlinks"];
 
   return {
     id: parseInt(element.querySelector("Id")?.innerHTML || "NaN"),
@@ -53,9 +61,10 @@ function readNodeFromXmlElement(element: Element): Node {
     height: height,
     syntaxOutlinks: parseIntList(element.querySelector("Outlinks")?.innerHTML),
     syntaxInlinks: parseIntList(element.querySelector("Inlinks")?.innerHTML),
-    precedenceOutlinks: parseIntList(dataItems["precedence_outlinks"]?.value),
-    precedenceInlinks: parseIntList(dataItems["precedence_inlinks"]?.value),
+    precedenceOutlinks,
+    precedenceInlinks,
     decodedMask: decodedMask,
+    data: dataItems,
     polygon: null,
   };
 }

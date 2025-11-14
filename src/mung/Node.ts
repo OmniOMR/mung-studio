@@ -1,3 +1,5 @@
+import { DataItems } from "./DataItems";
+
 /**
  * Represents a single MuNG Node (annotated object).
  *
@@ -70,6 +72,12 @@ export interface Node {
    * entire bounding box.
    */
   readonly decodedMask: ImageData | null;
+
+  /**
+   * Additional data present in the <Data> XML element, which has not
+   * been parsed into other fields of the Node instance.
+   */
+  readonly data: DataItems;
 
   // TODO: remove this, since it's obsolete
   readonly polygon: number[] | null;

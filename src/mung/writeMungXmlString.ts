@@ -118,7 +118,7 @@ function createXmlElementForMungNode(
 }
 
 function prepareDataItems(node: Node): DataItems {
-  const dataItems: DataItems = {};
+  const dataItems: DataItems = { ...node.data };
 
   if (node.precedenceInlinks.length > 0) {
     dataItems["precedence_inlinks"] = {

@@ -62,19 +62,8 @@ export function InspectorPanel() {
               selected node IDs: {JSON.stringify(selectedNodeIds)}
               <pre>
                 {JSON.stringify(
-                  selectedNodes,
-                  [
-                    "id",
-                    "className",
-                    "top",
-                    "left",
-                    "width",
-                    "height",
-                    "syntaxOutlinks",
-                    "syntaxInlinks",
-                    "precedenceOutlinks",
-                    "precedenceInlinks",
-                  ],
+                  selectedNodes.map((n) => ({ ...n, decodedMask: undefined })),
+                  null,
                   2,
                 )}
               </pre>
