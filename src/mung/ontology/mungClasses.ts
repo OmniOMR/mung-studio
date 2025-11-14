@@ -178,12 +178,15 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   timeSig8: { uc: "\u{E088}" },
   timeSig9: { uc: "\u{E089}" },
   timeSigCommon: { uc: "\u{E08A}", mpp: true },
+  mensuralProlationCombiningDot: { uc: "\u{E914}", mpp: true },
   timeSigCutCommon: { uc: "\u{E08B}", mpp: true },
-  timeSigPlus: { uc: "\u{E08C}" },
+  timeSigSlash: { uc: "\u{EC84}" },
   timeSigFractionalSlash: { uc: "\u{E08E}" },
+  timeSigPlus: { uc: "\u{E08C}" },
   timeSigEquals: { uc: "\u{E08F}" },
   timeSigMinus: { uc: "\u{E090}" },
   timeSigMultiply: { uc: "\u{E091}" },
+  timeSigX: { uc: "\u{E09C}" },
 
   // 4.7. Noteheads
   // https://w3c.github.io/smufl/latest/tables/noteheads.html
@@ -229,13 +232,21 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
 
   // 4.16. Tremolos
   // https://w3c.github.io/smufl/latest/tables/tremolos.html
+  tremoloBeam: {
+    uc: "\u{E1F1} \u{E1FA}\u{E1F1}",
+    notSmufl: true,
+    otherSmuflDivergenceJustification: "Cannot be rendered using a font",
+  },
   tremoloMark: {
-    uc: "\u{E220}",
+    uc: "\u{E1F1} \u{E1FA}\u{E1F1}",
     mpp: true,
     notSmufl: true,
-    smuflEquivalents: ["tremolo1"],
   },
-  multipleNoteTremolo: { uc: "\u{E220}", mpp: true, notSmufl: true },
+  multipleNoteTremolo: {
+    uc: "\u{E1F1} \u{E1FA}\u{E1F1}",
+    mpp: true,
+    notSmufl: true,
+  },
   singleNoteTremolo: { uc: "\u{E220}", mpp: true, notSmufl: true },
   tremolo1: { uc: "\u{E220}" },
   tremolo2: { uc: "\u{E221}" },
@@ -547,13 +558,15 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
 
   // 4.75. Tuplets
   // https://w3c.github.io/smufl/latest/tables/tuplets.html
-  tuple: {
-    uc: "\u{E201}\u{E202}\u{E203}",
+  tuplet: {
+    // "tuple" is deprecated
+    uc: "\u{E1F0}\u{E201}\u{E1F0}\u{E202}\u{E1F0}\u{E203}",
     mpp: true,
     notSmufl: true,
     composite: true,
   },
-  tupleBracket: {
+  tupletBracket: {
+    // "tupleBracket" is deprecated
     uc: "\u{E201} \u{E203}",
     mpp: true,
     notSmufl: true,
