@@ -2,13 +2,17 @@ import { atom, getDefaultStore, WritableAtom } from "jotai";
 import { NotationGraphStore } from "./notation-graph-store/NotationGraphStore";
 import { SignalAtomWrapper } from "./SignalAtomWrapper";
 import { SignalAtomCollection } from "./SignalAtomCollection";
-import { ISignal, ISimpleEvent, SignalDispatcher, SimpleEventDispatcher } from "strongly-typed-events";
+import { ISimpleEvent, SimpleEventDispatcher } from "strongly-typed-events";
 
 /**
  * Class names that should be hidden in the default visibility state.
  * Those not listed here are visible by default.
  */
-export const DEFAULT_HIDDEN_CLASSES = new Set(["staffLine", "staff"]);
+export const DEFAULT_HIDDEN_CLASSES = new Set([
+  "staffLine",
+  "staffSpace",
+  "staff",
+]);
 
 /**
  * Classes that should be visible when doing precedence link annotation
@@ -31,17 +35,30 @@ export const PRECEDENCE_LINK_ANNOTATION_CLASSES = new Set([
   "noteheadSlashWhiteWhole",
   "noteheadSlashWhiteHalf",
 
+  // gracenote noteheads (have their own disjoint precedence graph)
+  "noteheadWholeSmall",
+  "noteheadHalfSmall",
+  "noteheadBlackSmall",
+  "noteheadFullSmall",
+
   // rests
   "multiMeasureRest",
   "restMaxima",
   "restLonga",
   "restDoubleWhole",
+  "restBreve",
   "restWhole",
+  "restSemibreve",
   "restHalf",
+  "restMinim",
   "restQuarter",
+  "restCrotchet",
   "rest8th",
+  "restQuaver",
   "rest16th",
+  "restSemiquaver",
   "rest32nd",
+  "restDemisemiquaver",
   "rest64th",
   "rest128th",
   "rest256th",
@@ -51,7 +68,12 @@ export const PRECEDENCE_LINK_ANNOTATION_CLASSES = new Set([
   "restDoubleWholeLegerLine",
   "restWholeLegerLine",
   "restHalfLegerLine",
+
+  // bar repeats
+  "repeatOneBar",
   "repeat1Bar",
+  "repeat2Bar",
+  "repeat4Bar",
 ]);
 
 /**

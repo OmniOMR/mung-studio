@@ -1,8 +1,8 @@
 import { Card, Stack } from "@mui/joy";
-import { EditorTool } from "../state/EditorStateStore";
+import { EditorTool } from "./EditorTool";
 import { ToolsContent } from "./ToolsContent";
 import { useAtomValue } from "jotai";
-import { NodeEditingContent } from "./NodeEditingContent";
+import { NodeEditingContent } from "./node-editing/NodeEditingContent";
 import { useContext } from "react";
 import { EditorContext } from "../EditorContext";
 
@@ -10,9 +10,9 @@ import { EditorContext } from "../EditorContext";
  * The panel at the bottom of the scene view that lets the user select tools.
  */
 export function Toolbelt() {
-  const { editorStateStore } = useContext(EditorContext);
+  const { toolbeltController } = useContext(EditorContext);
 
-  const tool = useAtomValue(editorStateStore.currentToolAtom);
+  const tool = useAtomValue(toolbeltController.currentToolAtom);
 
   return (
     <Card

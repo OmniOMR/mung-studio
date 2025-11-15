@@ -13,6 +13,7 @@ import { SyntaxLinksToolPanel } from "./SyntaxLinksToolPanel";
 import { PrecedenceLinksToolPanel } from "./PrecedenceLinksToolPanel";
 import { useContext } from "react";
 import { EditorContext } from "../EditorContext";
+import { NodeEditingToolPanel } from "./NodeEditingToolPanel";
 
 /**
  * The right-side panel, showing details about selected nodes.
@@ -47,6 +48,8 @@ export function InspectorPanel() {
         }}
       >
         <AccordionGroup>
+          <NodeEditingToolPanel />
+
           <SyntaxLinksToolPanel />
 
           <PrecedenceLinksToolPanel />
@@ -59,19 +62,8 @@ export function InspectorPanel() {
               selected node IDs: {JSON.stringify(selectedNodeIds)}
               <pre>
                 {JSON.stringify(
-                  selectedNodes,
-                  [
-                    "id",
-                    "className",
-                    "top",
-                    "left",
-                    "width",
-                    "height",
-                    "syntaxOutlinks",
-                    "syntaxInlinks",
-                    "precedenceOutlinks",
-                    "precedenceInlinks",
-                  ],
+                  selectedNodes.map((n) => ({ ...n, decodedMask: undefined })),
+                  null,
                   2,
                 )}
               </pre>

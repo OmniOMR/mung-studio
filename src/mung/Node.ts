@@ -1,3 +1,5 @@
+import { DataItems } from "./DataItems";
+
 /**
  * Represents a single MuNG Node (annotated object).
  *
@@ -65,15 +67,27 @@ export interface Node {
   readonly precedenceInlinks: number[];
 
   /**
-   * The binary pixel mask in its string representation in the XML file.
-   * This is a temporary field before proper mask decoding is implemented.
-   *
+   * Decoded pixels of the node mask.
    * When null, the annotated symbol is understood to occupy the
    * entire bounding box.
    */
-  readonly maskString: string | null;
-
   readonly decodedMask: ImageData | null;
 
+  /**
+   * Some node classes can contain textual transcription of their content
+   * (especially nodes that represent text). This field holds that value.
+   * Null means no transcription is provided for the node. Empty string
+   * is stored in the XML as an existing, but empty <DataItem> element.
+   * However the UI of MuNG Studio automatically converts empty strings to null.
+   */
+  readonly textTranscription: string | null;
+
+  /**
+   * Additional data present in the <Data> XML element, which has not
+   * been parsed into other fields of the Node instance.
+   */
+  readonly data: DataItems;
+
+  // TODO: remove this, since it's obsolete
   readonly polygon: number[] | null;
 }

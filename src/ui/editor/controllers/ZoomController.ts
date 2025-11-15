@@ -1,19 +1,16 @@
 import * as d3 from "d3";
-import { atom, Atom, getDefaultStore } from "jotai";
+import { atom, Atom } from "jotai";
 import { RefObject, useEffect } from "react";
 import { ISimpleEvent, SimpleEventDispatcher } from "strongly-typed-events";
 import { JotaiStore } from "../state/JotaiStore";
+import { isMacish } from "../../../utils/isMacish";
+import { ToolbeltController } from "../toolbelt/ToolbeltController";
+import { EditorTool } from "../toolbelt/EditorTool";
 
 /**
  * Function signature for transform change event listener
  */
 export type OnTransformChangeListener = (transform: d3.ZoomTransform) => void;
-
-/**
- * Predicate that is used by the zoomer to query, whether the hand tool
- * is active and thus whether to drag screen with LMB
- */
-export type IsHandToolActivePredicate = () => boolean;
 
 /**
  * D3 zoom transform that represent no transform
@@ -24,8 +21,15 @@ export const IDENTITY_TRANSFORM = new d3.ZoomTransform(1, 0, 0);
  * Encapsulates D3 zoom behaviour, exposes its state as if it was a store
  * and provides hooks for embedding the behaviour into react components.
  */
-export class Zoomer {
-  private jotaiStore: JotaiStore = getDefaultStore();
+export class ZoomController {
+  private jotaiStore: JotaiStore;
+
+  private toolbeltController: ToolbeltController;
+
+  constructor(jotaiStore: JotaiStore, toolbeltController: ToolbeltController) {
+    this.jotaiStore = jotaiStore;
+    this.toolbeltController = toolbeltController;
+  }
 
   ///////////
   // State //
@@ -47,12 +51,9 @@ export class Zoomer {
   ////////////////
 
   /**
-   * React hook that attaches the D3 zoom behaviour to and SVG element
+   * React hook that attaches the D3 zoom behaviour to an SVG element
    */
-  public useZoomer(
-    svgRef: RefObject<SVGSVGElement | null>,
-    isHandToolActivePredicate: IsHandToolActivePredicate,
-  ) {
+  public useZoomController(svgRef: RefObject<SVGSVGElement | null>) {
     useEffect(() => {
       if (svgRef.current === null) return;
 
@@ -64,18 +65,37 @@ export class Zoomer {
         // update state
         this._currentTransform = transform;
 
+        // update dragged delta if dragging
+        if (this._grabStartTransform) {
+          this._grabDraggedDelta = new DOMPoint(
+            this._grabStartTransform.x - transform.x,
+            this._grabStartTransform.y - transform.y,
+          );
+        }
+
         // emit events
         this._onTransformChange.dispatch(transform);
       };
 
       const started = (event: d3.D3ZoomEvent<any, any>) => {
-        // update atoms
-        this.jotaiStore.set(this.isGrabbingBaseAtom, true);
+        // Filter out events that come from mouse-down for grabbing,
+        // otherwise react gets flooded with synthetic scrolling events
+        // when side-scrolling on touchpad. That's not a real grab operation.
+        if (event.sourceEvent?.type === "mousedown") {
+          this.jotaiStore.set(this.isGrabbingBaseAtom, true);
+          this._grabStartTransform = event.transform;
+        }
       };
 
       const ended = (event: d3.D3ZoomEvent<any, any>) => {
-        // update atoms
-        this.jotaiStore.set(this.isGrabbingBaseAtom, false);
+        // Filter out events that come from mouse-down for grabbing,
+        // otherwise react gets flooded with synthetic scrolling events
+        // when side-scrolling on touchpad. That's not a real grab operation.
+        if (event.sourceEvent?.type === "mouseup") {
+          this.jotaiStore.set(this.isGrabbingBaseAtom, false);
+          this._grabStartTransform = null;
+          this._grabDraggedDelta = null;
+        }
       };
 
       const svgElement = d3.select(svgRef.current);
@@ -86,11 +106,7 @@ export class Zoomer {
         .on("start", started)
         .on("end", ended);
       svgElement.call(zoom);
-      this.customizeD3ZoomBehaviour(
-        svgElement,
-        zoom,
-        isHandToolActivePredicate,
-      );
+      this.customizeD3ZoomBehaviour(svgElement, zoom);
     }, []);
   }
 
@@ -100,7 +116,6 @@ export class Zoomer {
   private customizeD3ZoomBehaviour(
     svgElement: d3.Selection<SVGSVGElement, unknown, null, undefined>,
     zoom: d3.ZoomBehavior<Element, unknown>,
-    isHandToolActivePredicate: IsHandToolActivePredicate,
   ) {
     // disable double-click zooming
     svgElement.on("dblclick.zoom", null);
@@ -108,10 +123,12 @@ export class Zoomer {
     // mouse dragging will be done with the middle mouse button
     // or with the primary button while the hand tool is active
     zoom.filter((event: MouseEvent) => {
+      const isHandToolActive =
+        this.toolbeltController.currentTool === EditorTool.Hand;
       return (
         event.type === "wheel" ||
         event.type.startsWith("touch") ||
-        (isHandToolActivePredicate() && event.button == 0) ||
+        (isHandToolActive && event.button == 0) ||
         event.button == 1
       );
     });
@@ -119,7 +136,7 @@ export class Zoomer {
     // require CTRL key be pressed for wheel zooming
     const originalD3WheelZoomHandler = svgElement.on("wheel.zoom");
     svgElement.on("wheel.zoom", function (event: WheelEvent) {
-      if (event.ctrlKey) {
+      if (isMacish() ? event.metaKey : event.ctrlKey) {
         originalD3WheelZoomHandler?.call(this, event);
       }
     });
@@ -139,7 +156,7 @@ export class Zoomer {
       return event.deltaMode === 1 ? 25 : event.deltaMode ? 500 : 1;
     }
     svgElement.on("wheel.custom-pan", function (event: WheelEvent) {
-      if (event.ctrlKey) return;
+      if (isMacish() ? event.metaKey : event.ctrlKey) return;
       const transform = svgElement.property("__zoom") as d3.ZoomTransform;
       const scale = (1 / transform.k) * panningDeltaScale(event);
       if (event.shiftKey) {
@@ -200,4 +217,11 @@ export class Zoomer {
   public isGrabbingAtom: Atom<boolean> = atom((get) =>
     get(this.isGrabbingBaseAtom),
   );
+
+  // tracking grabbed delta for MousePointerController to adjust
+  private _grabStartTransform: d3.ZoomTransform | null = null;
+  private _grabDraggedDelta: DOMPointReadOnly | null = null;
+  public get grabDraggedDelta(): DOMPointReadOnly | null {
+    return this._grabDraggedDelta;
+  }
 }

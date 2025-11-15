@@ -1,48 +1,67 @@
-import { RefObject, useEffect, useRef } from "react";
-import { getDefaultStore, useAtomValue } from "jotai";
-import { SelectionStore } from "../../state/selection-store/SelectionStore";
-import { Highlighter } from "./Highlighter";
-import { JotaiStore } from "../../state/JotaiStore";
-import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
-import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
-import { Zoomer } from "../Zoomer";
-import { Node } from "../../../../mung/Node";
-import { EditorStateStore } from "../../state/EditorStateStore";
+import { JSX, useEffect, useRef } from "react";
+import { atom, Atom } from "jotai";
+import { SelectionStore } from "../state/selection-store/SelectionStore";
+import { HighlightController } from "./HighlightController";
+import { JotaiStore } from "../state/JotaiStore";
+import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
+import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
+import { ZoomController } from "./ZoomController";
+import { Node } from "../../../mung/Node";
+import { EditorStateStore } from "../state/EditorStateStore";
+import { IController } from "./IController";
+import { ToolbeltController } from "../toolbelt/ToolbeltController";
+import { EditorTool } from "../toolbelt/EditorTool";
 
 /**
  * Contains logic for selecting and deselecting nodes.
  */
-export class Selector {
-  private jotaiStore: JotaiStore = getDefaultStore();
+export class SelectionController implements IController {
+  public readonly controllerName = "SelectionController";
+
+  private jotaiStore: JotaiStore;
 
   private readonly notationGraphStore: NotationGraphStore;
   private readonly classVisibilityStore: ClassVisibilityStore;
   private readonly selectionStore: SelectionStore;
   private readonly editorStateStore: EditorStateStore;
-  private readonly highlighter: Highlighter;
-  private readonly zoomer: Zoomer;
+  private readonly highlighter: HighlightController;
+  private readonly zoomController: ZoomController;
+  private readonly toolbeltController: ToolbeltController;
 
   constructor(
+    jotaiStore: JotaiStore,
     notationGraphStore: NotationGraphStore,
     classVisibilityStore: ClassVisibilityStore,
     selectionStore: SelectionStore,
     editorStateStore: EditorStateStore,
-    highlighter: Highlighter,
-    zoomer: Zoomer,
+    highlighter: HighlightController,
+    zoomController: ZoomController,
+    toolbeltController: ToolbeltController,
   ) {
+    this.jotaiStore = jotaiStore;
     this.notationGraphStore = notationGraphStore;
     this.classVisibilityStore = classVisibilityStore;
     this.selectionStore = selectionStore;
     this.editorStateStore = editorStateStore;
     this.highlighter = highlighter;
-    this.zoomer = zoomer;
+    this.zoomController = zoomController;
+    this.toolbeltController = toolbeltController;
+  }
+
+  public isEnabledAtom: Atom<boolean> = atom((get) => {
+    const currentTool = get(this.toolbeltController.currentToolAtom);
+    if (currentTool === EditorTool.Hand) return false;
+    if (currentTool === EditorTool.NodeEditing) return false;
+    return true;
+  });
+
+  public get isEnabled(): boolean {
+    return this.jotaiStore.get(this.isEnabledAtom);
   }
 
   ///////////
   // State //
   ///////////
-
-  public isEnabled: boolean = true;
 
   private sweepRectangle: SVGRectElement | null = null;
   private isSweeping: boolean = false;
@@ -55,40 +74,11 @@ export class Selector {
   // Mouse interaction //
   ///////////////////////
 
-  /**
-   * React hook that attaches the selector to an SVG element, so that it
-   * starts reacting to mouse events.
-   */
-  public useHighlighter(
-    svgRef: RefObject<SVGSVGElement | null>,
-    sweepRectangleRef: RefObject<SVGRectElement | null>,
-  ) {
-    useEffect(() => {
-      if (svgRef.current === null) return;
-      const svg = svgRef.current;
-      this.sweepRectangle = sweepRectangleRef.current;
-
-      const downListener = this.onMouseDown.bind(this);
-      const moveListener = this.onMouseMove.bind(this);
-      const upListener = this.onMouseUp.bind(this);
-
-      svg.addEventListener("mousedown", downListener);
-      svg.addEventListener("mousemove", moveListener);
-      svg.addEventListener("mouseup", upListener);
-      return () => {
-        svg.removeEventListener("mousedown", downListener);
-        svg.removeEventListener("mousemove", moveListener);
-        svg.removeEventListener("mouseup", upListener);
-      };
-    }, []);
-  }
-
-  private onMouseMove(e: MouseEvent) {
-    if (!this.isEnabled) return;
+  public onMouseMove(e: MouseEvent) {
     if (!this.isSweeping) return;
 
     // pointer position
-    const t = this.zoomer.currentTransform;
+    const t = this.zoomController.currentTransform;
     const x = t.invertX(e.offsetX);
     const y = t.invertY(e.offsetY);
 
@@ -99,8 +89,7 @@ export class Selector {
     this.updateSweepRectangle();
   }
 
-  private onMouseUp(e: MouseEvent) {
-    if (!this.isEnabled) return;
+  public onMouseUp(e: MouseEvent) {
     if (e.button !== 0) return; // LMB only
     if (!this.isSweeping) return;
 
@@ -118,18 +107,17 @@ export class Selector {
     this.updateSweepRectangle();
   }
 
-  private onMouseDown(e: MouseEvent) {
-    if (!this.isEnabled) return;
+  public onMouseDown(e: MouseEvent) {
     if (e.button !== 0) return; // LMB only
 
     const highlightedNode = this.highlighter.highlightedNode;
 
     // pointer position
-    const t = this.zoomer.currentTransform;
+    const t = this.zoomController.currentTransform;
     const x = t.invertX(e.offsetX);
     const y = t.invertY(e.offsetY);
 
-    // click on the backgorund de-selects
+    // click on the background de-selects
     // and initiates the sweep select
     if (highlightedNode === null) {
       // Do not deselect here. That happens on mouse up if there's nothing
@@ -180,7 +168,7 @@ export class Selector {
     const y = Math.min(this.sweepStartY, this.sweepEndY);
     const width = Math.abs(this.sweepStartX - this.sweepEndX);
     const height = Math.abs(this.sweepStartY - this.sweepEndY);
-    const dashed = !this.editorStateStore.isSelectionLazy;
+    const dashed = !this.editorStateStore.isSelectionLazy; // TODO: this state should be inside of this controller
 
     this.sweepRectangle.style.display = "block";
     this.sweepRectangle.setAttribute("x", String(x));
@@ -222,37 +210,34 @@ export class Selector {
 
     return nodes;
   }
-}
 
-/////////////////////
-// React component //
-/////////////////////
+  ///////////////
+  // Rendering //
+  ///////////////
 
-export interface SelectorComponentProps {
-  readonly svgRef: RefObject<SVGSVGElement | null>;
-  readonly selector: Selector;
-}
+  public renderSVG(): JSX.Element | null {
+    const sweepRectangleRef = useRef<SVGRectElement | null>(null);
 
-export function SelectorComponent(props: SelectorComponentProps) {
-  const sweepRectangleRef = useRef<SVGRectElement | null>(null);
+    useEffect(() => {
+      this.sweepRectangle = sweepRectangleRef.current;
+    }, []);
 
-  props.selector.useHighlighter(props.svgRef, sweepRectangleRef);
-
-  return (
-    <>
-      <rect
-        ref={sweepRectangleRef}
-        x={0}
-        y={0}
-        width={0}
-        height={0}
-        fill="color-mix(in srgb, var(--joy-palette-primary-400) 20%, transparent)"
-        stroke="var(--joy-palette-primary-400)"
-        strokeWidth="var(--scene-screen-pixel)"
-        style={{
-          display: "none",
-        }}
-      />
-    </>
-  );
+    return (
+      <>
+        <rect
+          ref={sweepRectangleRef}
+          x={0}
+          y={0}
+          width={0}
+          height={0}
+          fill="color-mix(in srgb, var(--joy-palette-primary-400) 20%, transparent)"
+          stroke="var(--joy-palette-primary-400)"
+          strokeWidth="var(--scene-screen-pixel)"
+          style={{
+            display: "none",
+          }}
+        />
+      </>
+    );
+  }
 }

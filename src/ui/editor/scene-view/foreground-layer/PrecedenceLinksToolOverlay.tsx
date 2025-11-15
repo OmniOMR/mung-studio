@@ -1,7 +1,7 @@
 import { RefObject, useEffect, useRef } from "react";
 import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
 import { LinkType } from "../../../../mung/LinkType";
-import { Zoomer } from "../Zoomer";
+import { ZoomController } from "../../controllers/ZoomController";
 import {
   SelectionNodeChangeMetadata,
   SelectionStore,
@@ -13,7 +13,7 @@ import { OverlayedLinks } from "./OverlayedLinks";
 
 export interface PrecedenceLinksToolOverlayProps {
   readonly svgRef: RefObject<SVGSVGElement | null>;
-  readonly zoomer: Zoomer;
+  readonly zoomController: ZoomController;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectionStore: SelectionStore;
 }
@@ -21,7 +21,7 @@ export interface PrecedenceLinksToolOverlayProps {
 export function PrecedenceLinksToolOverlay(
   props: PrecedenceLinksToolOverlayProps,
 ) {
-  const isCtrlPressedRef = useIsKeyPressedRef("Control");
+  const isCtrlPressedRef = useIsKeyPressedRef("MS::CtrlOrCmd");
 
   function onSelectionChange(e: SelectionNodeChangeMetadata) {
     if (!isCtrlPressedRef.current) return;
@@ -55,7 +55,7 @@ export function PrecedenceLinksToolOverlay(
   return (
     <OverlayedPrecedenceLinks
       svgRef={props.svgRef}
-      zoomer={props.zoomer}
+      zoomController={props.zoomController}
       selectionStore={props.selectionStore}
     />
   );
@@ -63,13 +63,13 @@ export function PrecedenceLinksToolOverlay(
 
 interface OverlayedPrecedenceLinksProps {
   readonly svgRef: React.RefObject<SVGElement | null>;
-  readonly zoomer: Zoomer;
+  readonly zoomController: ZoomController;
   readonly selectionStore: SelectionStore;
 }
 
 function OverlayedPrecedenceLinks(props: OverlayedPrecedenceLinksProps) {
   const selectedNodes = useAtomValue(props.selectionStore.selectedNodesAtom);
-  const isCtrlPressed = useIsKeyPressed("Control");
+  const isCtrlPressed = useIsKeyPressed("MS::CtrlOrCmd");
 
   return (
     <OverlayedLinks
@@ -77,7 +77,7 @@ function OverlayedPrecedenceLinks(props: OverlayedPrecedenceLinksProps) {
       sourceNodes={isCtrlPressed ? selectedNodes : []}
       svgRef={props.svgRef}
       selectionStore={props.selectionStore}
-      zoomer={props.zoomer}
+      zoomController={props.zoomController}
     />
   );
 }

@@ -1,13 +1,13 @@
 import { useEffect, useRef, useContext } from "react";
-import { Zoomer } from "../Zoomer";
 import * as d3 from "d3";
 import { EditorContext } from "../../EditorContext";
 import { GLRenderer } from "./WebGLDriver";
 import { LinkGeometryMasterDrawable, PrecedenceLinkGeometryDrawable, SyntaxLinkGeometryDrawable } from "./GLLinkRenderer";
 import { GlobalMaskTexture } from "./GLNodeMaskRenderer";
+import { ZoomController } from "../../controllers/ZoomController";
 
 export interface SceneLayerProps {
-  readonly zoomer: Zoomer;
+  readonly zoomer: ZoomController;
 }
 
 /**

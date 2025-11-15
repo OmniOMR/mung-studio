@@ -1,7 +1,7 @@
 import { useAtomValue } from "jotai";
-import { EditorTool } from "../state/EditorStateStore";
+import { EditorTool } from "./EditorTool";
 import { ToolbeltButton } from "./ToolbeltButton";
-import { useCallback, useContext, useEffect } from "react";
+import { useContext } from "react";
 import NearMeIcon from "@mui/icons-material/NearMe";
 import PanToolIcon from "@mui/icons-material/PanTool";
 import PolylineIcon from "@mui/icons-material/Polyline";
@@ -10,118 +10,50 @@ import PentagonIcon from "@mui/icons-material/Pentagon";
 import { EditorContext } from "../EditorContext";
 
 export function ToolsContent() {
-  const { editorStateStore, selectionStore } = useContext(EditorContext);
+  const { toolbeltController } = useContext(EditorContext);
 
-  const tool = useAtomValue(editorStateStore.currentToolAtom);
-  const selectedNodes = useAtomValue(selectionStore.selectedNodesAtom);
-
-  /////////////////////////
-  // Equipping functions //
-  /////////////////////////
-
-  function equipPointerTool() {
-    if (tool === EditorTool.Pointer) return;
-
-    editorStateStore.setCurrentTool(EditorTool.Pointer);
-  }
-
-  function equipHandTool() {
-    if (tool === EditorTool.Hand) return;
-
-    editorStateStore.setCurrentTool(EditorTool.Hand);
-  }
-
-  function equipNodeEditingTool() {
-    if (tool === EditorTool.NodeEditing) return;
-    if (selectedNodes.length > 1) return;
-
-    editorStateStore.setCurrentTool(EditorTool.NodeEditing);
-  }
-
-  function equipSyntaxLinksTool() {
-    if (tool === EditorTool.SyntaxLinks) return;
-
-    editorStateStore.setCurrentTool(EditorTool.SyntaxLinks);
-  }
-
-  function equipPrecedenceLinksTool() {
-    if (tool === EditorTool.PrecedenceLinks) return;
-
-    editorStateStore.setCurrentTool(EditorTool.PrecedenceLinks);
-  }
-
-  ////////////////////////
-  // Keyboard shortcuts //
-  ////////////////////////
-
-  const handleKeyDown = useCallback<(ev: KeyboardEvent) => any>(
-    (e) => {
-      if (e.key.toUpperCase() == "V") {
-        equipPointerTool();
-      }
-      if (e.key.toUpperCase() == "H") {
-        equipHandTool();
-      }
-      if (e.key.toUpperCase() == "N") {
-        equipNodeEditingTool();
-      }
-      if (e.key.toUpperCase() == "L") {
-        equipSyntaxLinksTool();
-      }
-      if (e.key.toUpperCase() == "P") {
-        equipPrecedenceLinksTool();
-      }
-    },
-    [tool],
-  );
-
-  // register the handler
-  useEffect(() => {
-    window.addEventListener("keydown", handleKeyDown);
-    return () => {
-      window.removeEventListener("keydown", handleKeyDown);
-    };
-  }, [handleKeyDown]);
-
-  //////////
-  // View //
-  //////////
+  const tool = useAtomValue(toolbeltController.currentToolAtom);
 
   return (
     <>
       <ToolbeltButton
         tooltip="Pointer [V]"
         isSelected={tool === EditorTool.Pointer}
-        onClick={equipPointerTool}
+        onClick={() => toolbeltController.setCurrentTool(EditorTool.Pointer)}
       >
         <NearMeIcon sx={{ transform: "scaleX(-1.0)" }} />
       </ToolbeltButton>
       <ToolbeltButton
         tooltip="Hand [H]"
         isSelected={tool === EditorTool.Hand}
-        onClick={equipHandTool}
+        onClick={() => toolbeltController.setCurrentTool(EditorTool.Hand)}
       >
         <PanToolIcon />
       </ToolbeltButton>
       <ToolbeltButton
         tooltip="Edit Nodes [N]"
         isSelected={false}
-        isDisabled={selectedNodes.length > 1}
-        onClick={equipNodeEditingTool}
+        onClick={() =>
+          toolbeltController.setCurrentTool(EditorTool.NodeEditing)
+        }
       >
         <PentagonIcon />
       </ToolbeltButton>
       <ToolbeltButton
         tooltip="Syntax Links [L]"
         isSelected={tool == EditorTool.SyntaxLinks}
-        onClick={equipSyntaxLinksTool}
+        onClick={() =>
+          toolbeltController.setCurrentTool(EditorTool.SyntaxLinks)
+        }
       >
         <PolylineIcon />
       </ToolbeltButton>
       <ToolbeltButton
         tooltip="Precedence Links [P]"
         isSelected={tool === EditorTool.PrecedenceLinks}
-        onClick={equipPrecedenceLinksTool}
+        onClick={() =>
+          toolbeltController.setCurrentTool(EditorTool.PrecedenceLinks)
+        }
       >
         <TimelineIcon />
       </ToolbeltButton>

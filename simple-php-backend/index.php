@@ -643,8 +643,18 @@ function action_upload_document_mung() {
         $document
     );
 
+    // read the uploaded file and verify its completeness
+    $uploadedMungXml = file_get_contents("php://input");
+    if (strlen($uploadedMungXml) != $_SERVER["CONTENT_LENGTH"]) {
+        http_response_code(400);
+        echo "Sent request body does not match the sent content length header.\n";
+        echo "Header: " . $_SERVER["HTTP_CONTENT_LENGTH"] . "\n";
+        echo "Body: " . strlen($uploadedMungXml) . "\n";
+        return;
+    }
+
     // store the uploaded file
-    file_put_contents($mungPath, file_get_contents("php://input"));
+    file_put_contents($mungPath, $uploadedMungXml);
     chmod($mungPath, 0666);
 
     // store the corresponding backup snapshot
@@ -655,7 +665,7 @@ function action_upload_document_mung() {
         // make sure it can be modified and deleted by non-www users
         chmod(dirname($backupPath), 0777);
     }
-    file_put_contents($backupPath, file_get_contents("php://input"));
+    file_put_contents($backupPath, $uploadedMungXml);
 
     // make sure it can be modified and deleted by non-www users
     chmod($backupPath, 0666);

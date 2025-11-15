@@ -7,7 +7,6 @@ import { GLBuffer, GLDrawable, GLRenderer } from "./WebGLDriver";
 import * as d3 from "d3";
 import RBush from 'rbush';
 import { NodeUpdateMetadata } from "../../state/notation-graph-store/NodeCollection";
-import { off } from "process";
 
 const SHADER_COMMON =
   `#version 300 es

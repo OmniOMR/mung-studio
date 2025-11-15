@@ -10,7 +10,7 @@ import { ISimpleEventHandler } from "strongly-typed-events";
 import { LinkInsertMetadata, LinkRemoveMetadata } from "../../state/notation-graph-store/NodeCollection";
 import { Link } from "../../../../mung/Link";
 import { LinkType } from "../../../../mung/LinkType";
-import { Zoomer } from "../Zoomer";
+import { ZoomController } from "../../controllers/ZoomController";
 import { ZoomTransform } from "d3";
 
 const SHADER_COMMON =
@@ -314,7 +314,7 @@ class LinkGeometryDrawable implements GLDrawable {
   private editorState: EditorStateStore;
   private selectionStore: SelectionStore;
   private classVisibilityStore: ClassVisibilityStore;
-  private zoomer: Zoomer;
+  private zoomer: ZoomController;
 
   private triangleBuffer = new GeometryBuffer({
     dataType: WebGL2RenderingContext.FLOAT,
@@ -340,7 +340,7 @@ class LinkGeometryDrawable implements GLDrawable {
 
   private scale: number = 1.0;
 
-  constructor(notationGraph: NotationGraphStore, editorStateStore: EditorStateStore, selectionStore: SelectionStore, classVisibilityStore: ClassVisibilityStore, zoomer: Zoomer) {
+  constructor(notationGraph: NotationGraphStore, editorStateStore: EditorStateStore, selectionStore: SelectionStore, classVisibilityStore: ClassVisibilityStore, zoomer: ZoomController) {
     this.notationGraph = notationGraph;
     this.editorState = editorStateStore;
     this.selectionStore = selectionStore;

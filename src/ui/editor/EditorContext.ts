@@ -7,6 +7,17 @@ import { ClassVisibilityStore } from "./state/ClassVisibilityStore";
 import { EditorStateStore } from "./state/EditorStateStore";
 import { AutosaveStore } from "./state/AutosaveStore";
 import { PythonRuntime } from "../../../pyodide/PythonRuntime";
+import { getDefaultStore } from "jotai";
+import { JotaiStore } from "./state/JotaiStore";
+import { ToolbeltController } from "./toolbelt/ToolbeltController";
+import { ZoomController } from "./controllers/ZoomController";
+import { HighlightController } from "./controllers/HighlightController";
+import { SelectionController } from "./controllers/SelectionController";
+import { RedrawTrigger } from "./controllers/RedrawTrigger";
+import { PolygonToolsController } from "./toolbelt/node-editing/PolygonToolsController";
+import { NodeEditingController } from "./toolbelt/node-editing/NodeEditingController";
+import { MainMenuController } from "./controllers/MainMenuController";
+import { MousePointerController } from "./controllers/MousePointerController";
 
 /**
  * All fields present in the editor component's global context
@@ -17,16 +28,29 @@ export interface EditorContextState {
   readonly classVisibilityStore: ClassVisibilityStore;
   readonly editorStateStore: EditorStateStore;
   readonly autosaveStore: AutosaveStore;
+
   readonly pythonRuntime: PythonRuntime;
+
+  readonly redrawTrigger: RedrawTrigger;
+  readonly toolbeltController: ToolbeltController;
+  readonly zoomController: ZoomController;
+  readonly mousePointerController: MousePointerController;
+  readonly highlightController: HighlightController;
+  readonly selectionController: SelectionController;
+  readonly nodeEditingController: NodeEditingController;
+  readonly polygonToolsController: PolygonToolsController;
+  readonly mainMenuController: MainMenuController;
 }
 
 /**
  * Creates all services and stores present in the editor context
  */
-export function useEditorContextState(
+export function useConstructContextServices(
   initialNodes: readonly Node[],
   initialMungFileMetadata: MungFileMetadata,
 ): EditorContextState {
+  const jotaiStore: JotaiStore = useMemo(() => getDefaultStore(), []);
+
   const notationGraphStore = useMemo(
     () => new NotationGraphStore(initialNodes, initialMungFileMetadata),
     [],
@@ -42,7 +66,7 @@ export function useEditorContextState(
     [],
   );
 
-  const editorStateStore = useMemo(() => new EditorStateStore(), []);
+  const editorStateStore = useMemo(() => new EditorStateStore(jotaiStore), []);
 
   // TODO: historyStore (for undo/redo)
 
@@ -53,13 +77,105 @@ export function useEditorContextState(
 
   const pythonRuntime = useMemo(() => PythonRuntime.resolveInstance(), []);
 
+  const redrawTrigger = useMemo(() => new RedrawTrigger(), []);
+
+  const toolbeltController = useMemo(
+    () => new ToolbeltController(jotaiStore),
+    [],
+  );
+
+  const zoomController = useMemo(
+    () => new ZoomController(jotaiStore, toolbeltController),
+    [],
+  );
+
+  const mousePointerController = useMemo(
+    () => new MousePointerController(zoomController),
+    [],
+  );
+
+  const highlightController = useMemo(
+    () =>
+      new HighlightController(
+        jotaiStore,
+        notationGraphStore,
+        classVisibilityStore,
+        zoomController,
+        toolbeltController,
+      ),
+    [],
+  );
+
+  const selectionController = useMemo(
+    () =>
+      new SelectionController(
+        jotaiStore,
+        notationGraphStore,
+        classVisibilityStore,
+        selectionStore,
+        editorStateStore,
+        highlightController,
+        zoomController,
+        toolbeltController,
+      ),
+    [],
+  );
+
+  const nodeEditingController = useMemo(
+    () =>
+      new NodeEditingController(
+        jotaiStore,
+        notationGraphStore,
+        classVisibilityStore,
+        selectionStore,
+        toolbeltController,
+        zoomController,
+        redrawTrigger,
+      ),
+    [],
+  );
+
+  const polygonToolsController = useMemo(
+    () =>
+      new PolygonToolsController(
+        jotaiStore,
+        zoomController,
+        mousePointerController,
+        redrawTrigger,
+        nodeEditingController,
+      ),
+    [],
+  );
+
+  const mainMenuController = useMemo(
+    () =>
+      new MainMenuController(
+        jotaiStore,
+        notationGraphStore,
+        selectionStore,
+        toolbeltController,
+      ),
+    [],
+  );
+
   return {
     notationGraphStore,
     selectionStore,
     classVisibilityStore,
     editorStateStore,
     autosaveStore,
+
     pythonRuntime,
+
+    redrawTrigger,
+    toolbeltController,
+    zoomController,
+    mousePointerController,
+    highlightController,
+    selectionController,
+    nodeEditingController,
+    polygonToolsController,
+    mainMenuController,
   };
 }
 

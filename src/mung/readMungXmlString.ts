@@ -1,4 +1,5 @@
 import { DataItems } from "./DataItems";
+import { MUNG_MAX_MASK_SIZE } from "./mungConstants";
 import { MungFile } from "./MungFile";
 import { Node } from "./Node";
 
@@ -34,8 +35,6 @@ export function readMungXmlString(xml: string): MungFile {
 }
 
 function readNodeFromXmlElement(element: Element): Node {
-  const dataItems = parseDataItems(element);
-
   const width = parseInt(element.querySelector("Width")?.innerHTML || "NaN");
   const height = parseInt(element.querySelector("Height")?.innerHTML || "NaN");
   const maskString = element.querySelector("Mask")?.textContent || null;
@@ -43,19 +42,32 @@ function readNodeFromXmlElement(element: Element): Node {
   const decodedMask =
     maskString !== null ? decodeRleMaskString(maskString, width, height) : null;
 
+  const dataItems = parseDataItems(element);
+  const precedenceOutlinks = parseIntList(
+    dataItems["precedence_outlinks"]?.value,
+  );
+  delete dataItems["precedence_outlinks"];
+  const precedenceInlinks = parseIntList(
+    dataItems["precedence_inlinks"]?.value,
+  );
+  delete dataItems["precedence_inlinks"];
+  const textTranscription = dataItems["text_transcription"]?.value || null;
+  delete dataItems["text_transcription"];
+
   return {
     id: parseInt(element.querySelector("Id")?.innerHTML || "NaN"),
     className: element.querySelector("ClassName")?.innerHTML || "unknown",
     top: parseInt(element.querySelector("Top")?.innerHTML || "NaN"),
     left: parseInt(element.querySelector("Left")?.innerHTML || "NaN"),
-    width: width,
-    height: height,
+    width,
+    height,
     syntaxOutlinks: parseIntList(element.querySelector("Outlinks")?.innerHTML),
     syntaxInlinks: parseIntList(element.querySelector("Inlinks")?.innerHTML),
-    precedenceOutlinks: parseIntList(dataItems["precedence_outlinks"]?.value),
-    precedenceInlinks: parseIntList(dataItems["precedence_inlinks"]?.value),
-    maskString: maskString,
-    decodedMask: decodedMask,
+    precedenceOutlinks,
+    precedenceInlinks,
+    decodedMask,
+    textTranscription,
+    data: dataItems,
     polygon: null,
   };
 }
@@ -91,7 +103,7 @@ function decodeRleMaskString(
   height: number,
 ): ImageData {
   // validate dimensions
-  if (width > 4096 || height > 4096) {
+  if (width > MUNG_MAX_MASK_SIZE || height > MUNG_MAX_MASK_SIZE) {
     throw new Error("Mask too large.");
   }
   width = Math.floor(width);

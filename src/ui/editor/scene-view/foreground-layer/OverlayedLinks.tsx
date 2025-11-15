@@ -2,7 +2,7 @@ import { useEffect, useState } from "react";
 import { SelectionStore } from "../../state/selection-store/SelectionStore";
 import { Node } from "../../../../mung/Node";
 import { LinkType } from "../../../../mung/LinkType";
-import { Zoomer } from "../Zoomer";
+import { ZoomController } from "../../controllers/ZoomController";
 import {
   LINK_STROKE_WIDTH,
   PRECEDENCE_LINK_COLOR,
@@ -14,7 +14,7 @@ export interface OverlayedLinksProps {
   readonly sourceNodes: readonly Node[];
   readonly svgRef: React.RefObject<SVGElement | null>;
   readonly selectionStore: SelectionStore;
-  readonly zoomer: Zoomer;
+  readonly zoomController: ZoomController;
 }
 
 /**
@@ -29,7 +29,7 @@ export function OverlayedLinks(props: OverlayedLinksProps) {
     if (props.sourceNodes.length === 0) return;
 
     const handleMouseMove = (e: MouseEvent) => {
-      const t = props.zoomer.currentTransform;
+      const t = props.zoomController.currentTransform;
       const x = t.invertX(e.offsetX);
       const y = t.invertY(e.offsetY);
       setMouseX(x);
@@ -40,7 +40,13 @@ export function OverlayedLinks(props: OverlayedLinksProps) {
     return () => {
       props.svgRef.current?.removeEventListener("mousemove", handleMouseMove);
     };
-  }, [props.svgRef, props.zoomer, props.sourceNodes, setMouseX, setMouseY]);
+  }, [
+    props.svgRef,
+    props.zoomController,
+    props.sourceNodes,
+    setMouseX,
+    setMouseY,
+  ]);
 
   // determine the link color
   let color =

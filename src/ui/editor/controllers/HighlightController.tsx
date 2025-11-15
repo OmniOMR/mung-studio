@@ -1,33 +1,53 @@
-import { RefObject, useEffect } from "react";
-import * as d3 from "d3";
-import { Node } from "../../../../mung/Node";
-import { Atom, atom, getDefaultStore, useAtomValue } from "jotai";
-import { ClassVisibilityStore } from "../../state/ClassVisibilityStore";
-import { NotationGraphStore } from "../../state/notation-graph-store/NotationGraphStore";
-import { Zoomer } from "../Zoomer";
-import { JotaiStore } from "../../state/JotaiStore";
-import { SignalAtomWrapper } from "../../state/SignalAtomWrapper";
+import { JSX } from "react";
+import { Node } from "../../../mung/Node";
+import { Atom, atom, useAtomValue } from "jotai";
+import { ClassVisibilityStore } from "../state/ClassVisibilityStore";
+import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
+import { ZoomController } from "./ZoomController";
+import { JotaiStore } from "../state/JotaiStore";
+import { SignalAtomWrapper } from "../state/SignalAtomWrapper";
+import { IController } from "./IController";
+import { EditorTool } from "../toolbelt/EditorTool";
+import { ToolbeltController } from "../toolbelt/ToolbeltController";
 
 /**
- * Contains logic and state related to node and link highlighting.
+ * Contains logic and state related to node highlighting.
  * Highlighted object is one that is being hovered over, and is to be selected
- * or and action is to be performed with it upon clicking.
+ * or an action is to be performed with it upon clicking.
  */
-export class Highlighter {
-  private jotaiStore: JotaiStore = getDefaultStore();
+export class HighlightController implements IController {
+  public readonly controllerName = "HighlightController";
+
+  private jotaiStore: JotaiStore;
 
   private readonly notationGraphStore: NotationGraphStore;
   private readonly classVisibilityStore: ClassVisibilityStore;
-  private readonly zoomer: Zoomer;
+  private readonly zoomController: ZoomController;
+  private readonly toolbeltController: ToolbeltController;
 
   constructor(
+    jotaiStore: JotaiStore,
     notationGraphStore: NotationGraphStore,
     classVisibilityStore: ClassVisibilityStore,
-    zoomer: Zoomer,
+    zoomController: ZoomController,
+    toolbeltController: ToolbeltController,
   ) {
+    this.jotaiStore = jotaiStore;
     this.notationGraphStore = notationGraphStore;
     this.classVisibilityStore = classVisibilityStore;
-    this.zoomer = zoomer;
+    this.zoomController = zoomController;
+    this.toolbeltController = toolbeltController;
+  }
+
+  public isEnabledAtom: Atom<boolean> = atom((get) => {
+    const currentTool = get(this.toolbeltController.currentToolAtom);
+    if (currentTool === EditorTool.Hand) return false;
+    if (currentTool === EditorTool.NodeEditing) return false;
+    return true;
+  });
+
+  public get isEnabled(): boolean {
+    return this.jotaiStore.get(this.isEnabledAtom);
   }
 
   ///////////
@@ -35,7 +55,6 @@ export class Highlighter {
   ///////////
 
   private signalAtom = new SignalAtomWrapper();
-  private _isNodeHighlightingEnabled = true;
   private _highlightedNode: Node | null = null;
 
   /**
@@ -43,17 +62,9 @@ export class Highlighter {
    * or highlighting is disabled
    */
   public get highlightedNode(): Node | null {
-    if (!this._isNodeHighlightingEnabled) return null;
+    if (!this.isEnabled) return null;
     return this._highlightedNode;
   }
-
-  /**
-   * Read-only atom that exposes whether the node highlighting is enabled
-   */
-  public readonly isNodeHighlightingEnabledAtom: Atom<boolean> = atom((get) => {
-    this.signalAtom.subscribe(get);
-    return this._isNodeHighlightingEnabled;
-  });
 
   /**
    * Read-only atom that exposes the highlighted node
@@ -75,44 +86,12 @@ export class Highlighter {
     this.signalAtom.signal(this.jotaiStore.set);
   }
 
-  /**
-   * Sets whether node highlighting is enabled
-   */
-  public setIsNodeHighlightingEnabled(isEnabled: boolean) {
-    // skip if no change
-    if (this._isNodeHighlightingEnabled === isEnabled) return;
-
-    // change the state
-    this._isNodeHighlightingEnabled = isEnabled;
-    this.signalAtom.signal(this.jotaiStore.set);
-  }
-
   ///////////////////////
   // Mouse interaction //
   ///////////////////////
 
-  /**
-   * React hook that attaches the highlighter to an SVG element, so that it
-   * starts reacting to mouse events.
-   */
-  public useHighlighter(svgRef: RefObject<SVGSVGElement | null>) {
-    useEffect(() => {
-      if (svgRef.current === null) return;
-      const svg = svgRef.current;
-
-      const listener = this.onMouseMove.bind(this);
-
-      svg.addEventListener("mousemove", listener);
-      return () => {
-        svg.removeEventListener("mousemove", listener);
-      };
-    }, []);
-  }
-
-  private onMouseMove(e: MouseEvent) {
-    if (!this._isNodeHighlightingEnabled) return;
-
-    const t = this.zoomer.currentTransform;
+  public onMouseMove(e: MouseEvent) {
+    const t = this.zoomController.currentTransform;
 
     const x = t.invertX(e.offsetX);
     const y = t.invertY(e.offsetY);
@@ -146,28 +125,37 @@ export class Highlighter {
 
     return highlightedNode;
   }
-}
 
-/////////////////////
-// React component //
-/////////////////////
+  ///////////////
+  // Rendering //
+  ///////////////
 
-export interface HighlighterComponentProps {
-  readonly svgRef: RefObject<SVGSVGElement | null>;
-  readonly highlighter: Highlighter;
-}
+  public renderSVG(): JSX.Element | null {
+    const highlightedNode = useAtomValue(this.highlightedNodeAtom);
 
-/**
- * Binds highlighter to the SVG foreground layer and renders the highlight rect
- */
-export function HighlighterComponent(props: HighlighterComponentProps) {
-  const highlightedNode = useAtomValue(props.highlighter.highlightedNodeAtom);
+    if (highlightedNode === null) {
+      return null;
+    }
 
-  props.highlighter.useHighlighter(props.svgRef);
-
-  return (
-    <>
-      {highlightedNode && (
+    // render the highlight rectangle
+    return (
+      <>
+        <text
+          x={highlightedNode.left + highlightedNode.width}
+          y={highlightedNode.top}
+          fill="white"
+          fontSize="calc(var(--scene-screen-pixel) * 16)"
+          fontFamily="monospace"
+          fontWeight="700"
+          style={{
+            transform:
+              "translateY(calc(var(--scene-screen-pixel) * 15px))" +
+              "translateX(calc(var(--scene-screen-pixel) * 10px))",
+            textShadow: "1px 1px 2px rgba(0, 0, 0, 0.4)",
+          }}
+        >
+          {highlightedNode.className}
+        </text>
         <rect
           x={highlightedNode.left}
           y={highlightedNode.top}
@@ -177,7 +165,7 @@ export function HighlighterComponent(props: HighlighterComponentProps) {
           stroke="white"
           strokeWidth="calc(var(--scene-screen-pixel) * 2)"
         />
-      )}
-    </>
-  );
+      </>
+    );
+  }
 }

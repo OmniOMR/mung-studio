@@ -1,34 +1,45 @@
-import { useEffect, useRef } from "react";
-import { Zoomer } from "./Zoomer";
+import { useCallback, useContext, useEffect, useRef } from "react";
 import { Node } from "../../../mung/Node";
 import { classNameToHue } from "../../../mung/classNameToHue";
-import { NotationGraphStore } from "../state/notation-graph-store/NotationGraphStore";
-
-export interface SceneLayerProps {
-  readonly zoomEventBus: Zoomer;
-  readonly notationGraphStore: NotationGraphStore;
-}
+import { EditorContext } from "../EditorContext";
+import { SelectionNodeChangeMetadata } from "../state/selection-store/SelectionStore";
 
 /**
  * Scene layer, rendered via canvas 2D
  */
-export function SceneLayer_Canvas2D(props: SceneLayerProps) {
+export function SceneLayer_Canvas2D() {
+  const { notationGraphStore, selectionStore, zoomController } =
+    useContext(EditorContext);
+
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const canvasContextRef = useRef<CanvasRenderingContext2D | null>(null);
+
+  const draw = useCallback(() => {
+    const ctx = canvasContextRef.current;
+    if (ctx === null) return;
+
+    const nodes = notationGraphStore.nodes;
+    renderToCanvas(nodes, ctx, zoomController.currentTransform);
+  }, []);
 
   useEffect(() => {
     if (canvasRef.current === null) return;
+    canvasContextRef.current = canvasRef.current.getContext("2d");
 
-    const ctx = canvasRef.current.getContext("2d");
-    if (!ctx) return;
+    const onZoom = (transform: d3.ZoomTransform) => draw();
+    const onSelectionChange = (meta: SelectionNodeChangeMetadata) => draw();
+    const onGraphChange = () => draw();
 
-    const onZoom = (transform: d3.ZoomTransform) => {
-      const nodes = props.notationGraphStore.nodes;
-      renderToCanvas(nodes, ctx, transform);
-    };
+    // also draw immediately when mounted
+    draw();
 
-    props.zoomEventBus.onTransformChange.subscribe(onZoom);
+    zoomController.onTransformChange.subscribe(onZoom);
+    selectionStore.onNodesChange.subscribe(onSelectionChange);
+    notationGraphStore.onChange.subscribe(onGraphChange);
     return () => {
-      props.zoomEventBus.onTransformChange.unsubscribe(onZoom);
+      zoomController.onTransformChange.unsubscribe(onZoom);
+      selectionStore.onNodesChange.unsubscribe(onSelectionChange);
+      notationGraphStore.onChange.unsubscribe(onGraphChange);
     };
   }, []);
 

@@ -55,10 +55,10 @@ export function DocumentEditorPage() {
     })();
   }, [connection.userToken]);
 
-  function onSave(mung: MungFile) {
+  async function onSave(mung: MungFile) {
     const mungXmlString = writeMungXmlString(mung);
     const api = new SimpleBackendApi(connection);
-    api.uploadDocumentMung(documentName, mungXmlString); // fire & forget
+    await api.uploadDocumentMung(documentName, mungXmlString);
   }
 
   function onClose() {

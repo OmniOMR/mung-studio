@@ -233,11 +233,65 @@ export class NotationGraphStore {
   }
 
   /**
+   * Returns a free ID for a node. Use this method to get a valid ID
+   * for a node that's about to be inserted.
+   */
+  public getFreeId(): number {
+    return this.nodeCollection.getFreeId();
+  }
+
+  /**
+   * Inserts a new node into the collection. Its ID must be free and it
+   * must have NO links.
+   */
+  public insertNode(node: Node) {
+    this.nodeCollection.insertNode(node);
+  }
+
+  /**
    * Updates the value of a node. It is looked up by the ID.
    * Links cannot be changed via this method, use the dedicated one instead.
    */
   public updateNode(newValue: Node) {
     this.nodeCollection.updateNode(newValue);
+  }
+
+  /**
+   * Removes a node from the graph.
+   * The node must already have NO links.
+   *
+   * @param nodeId ID of the node to remove.
+   */
+  public removeNode(nodeId: number) {
+    this.nodeCollection.removeNode(nodeId);
+  }
+
+  /**
+   * Removes a node from the graph together with its links.
+   *
+   * @param nodeId ID of the node to remove.
+   */
+  public removeNodeWithLinks(nodeId: number) {
+    const node = this.nodeCollection.getNode(nodeId);
+
+    // remove links going out from this node
+    for (let outlink of node.syntaxOutlinks) {
+      this.nodeCollection.removeLink(nodeId, outlink, LinkType.Syntax);
+    }
+    for (let outlink of node.precedenceOutlinks) {
+      this.nodeCollection.removeLink(nodeId, outlink, LinkType.Precedence);
+    }
+
+    // remove links going into this node
+    for (let inlink of node.syntaxInlinks) {
+      this.nodeCollection.removeLink(inlink, nodeId, LinkType.Syntax);
+    }
+    for (let inlink of node.precedenceInlinks) {
+      this.nodeCollection.removeLink(inlink, nodeId, LinkType.Precedence);
+    }
+
+    // now the node should have no links
+    this.nodeCollection.removeNode(nodeId);
   }
 
   /**
