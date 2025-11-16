@@ -14,7 +14,6 @@ export interface GLBuffer {
 }
 
 export class GLRenderer {
-  
   private gl: WebGL2RenderingContext;
   private drawables: GLDrawable[] = [];
   private transform: d3.ZoomTransform = d3.zoomIdentity;
@@ -76,7 +75,10 @@ export class GLRenderer {
     return this.createShader(this.gl.FRAGMENT_SHADER, source);
   }
 
-  public createProgram(vertexShader: WebGLShader, fragmentShader: WebGLShader): WebGLProgram {
+  public createProgram(
+    vertexShader: WebGLShader,
+    fragmentShader: WebGLShader,
+  ): WebGLProgram {
     const program = this.gl.createProgram();
     if (program === null) {
       throw new Error("Failed to create program");
@@ -95,7 +97,10 @@ export class GLRenderer {
     return program;
   }
 
-  public createProgramFromSource(vertexSource: string, fragmentSource: string): WebGLProgram {
+  public createProgramFromSource(
+    vertexSource: string,
+    fragmentSource: string,
+  ): WebGLProgram {
     const vertexShader = this.createVertexShader(vertexSource);
     const fragmentShader = this.createFragmentShader(fragmentSource);
     const program = this.createProgram(vertexShader, fragmentShader);
@@ -120,7 +125,7 @@ export class GLRenderer {
     texture: WebGLTexture,
     width: number,
     height: number,
-    format: GLenum = this.gl.RGBA
+    format: GLenum = this.gl.RGBA,
   ): void {
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     this.gl.texStorage2D(this.gl.TEXTURE_2D, 1, format, width, height);
@@ -132,13 +137,26 @@ export class GLRenderer {
     height: number,
     internalFormat: GLenum = this.gl.RGBA,
     format: GLenum = this.gl.RGBA,
-    dataType: GLenum = this.gl.UNSIGNED_BYTE
+    dataType: GLenum = this.gl.UNSIGNED_BYTE,
   ): void {
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
-    this.gl.texImage2D(this.gl.TEXTURE_2D, 0, internalFormat, width, height, 0, format, dataType, null);
+    this.gl.texImage2D(
+      this.gl.TEXTURE_2D,
+      0,
+      internalFormat,
+      width,
+      height,
+      0,
+      format,
+      dataType,
+      null,
+    );
   }
 
-  public updateTexture(texture: WebGLTexture, func: (WebGL2RenderingContext) => void): void {
+  public updateTexture(
+    texture: WebGLTexture,
+    func: (WebGL2RenderingContext) => void,
+  ): void {
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     func(this.gl);
   }
@@ -153,8 +171,16 @@ export class GLRenderer {
     this.gl.activeTexture(this.gl.TEXTURE0 + unit);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_S, wrap);
     this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_WRAP_T, wrap);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MIN_FILTER, filter);
-    this.gl.texParameteri(this.gl.TEXTURE_2D, this.gl.TEXTURE_MAG_FILTER, filter);
+    this.gl.texParameteri(
+      this.gl.TEXTURE_2D,
+      this.gl.TEXTURE_MIN_FILTER,
+      filter,
+    );
+    this.gl.texParameteri(
+      this.gl.TEXTURE_2D,
+      this.gl.TEXTURE_MAG_FILTER,
+      filter,
+    );
   }
 
   public deleteTexture(texture: WebGLTexture) {
@@ -189,13 +215,22 @@ export class GLRenderer {
       return;
     }
 
-    const mvpMatrixLocation = this.gl.getUniformLocation(this.currentProgram, "u_mvp_matrix");
+    const mvpMatrixLocation = this.gl.getUniformLocation(
+      this.currentProgram,
+      "u_mvp_matrix",
+    );
     if (mvpMatrixLocation !== null) {
       this.gl.uniformMatrix4fv(mvpMatrixLocation, false, this.currentMatrix);
     }
   }
 
-  public setUniformColor(name: string, r: number, g: number, b: number, a: number) {
+  public setUniformColor(
+    name: string,
+    r: number,
+    g: number,
+    b: number,
+    a: number,
+  ) {
     if (this.currentProgram === null) {
       return;
     }
@@ -206,10 +241,10 @@ export class GLRenderer {
   }
 
   public setUniformColorInt(name: string, color: number) {
-    const r = ((color >> 16) & 0xFF) / 255;
-    const g = ((color >> 8) & 0xFF) / 255;
-    const b = (color & 0xFF) / 255;
-    const a = ((color >> 24) & 0xFF) / 255;
+    const r = ((color >> 16) & 0xff) / 255;
+    const g = ((color >> 8) & 0xff) / 255;
+    const b = (color & 0xff) / 255;
+    const a = ((color >> 24) & 0xff) / 255;
     this.setUniformColor(name, r, g, b, a);
   }
 
@@ -268,7 +303,7 @@ export class GLRenderer {
       transform.invertY(canvas.clientHeight),
       transform.invertY(0),
       -1,
-      1
+      1,
     );
 
     for (const drawable of this.drawables) {
@@ -294,7 +329,6 @@ export class GLRenderer {
 }
 
 export class GLDrawableComposite implements GLDrawable {
-
   protected drawables: GLDrawable[] = [];
 
   constructor(drawables: GLDrawable[] = []) {

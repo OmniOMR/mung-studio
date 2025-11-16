@@ -2,7 +2,11 @@ import { useEffect, useRef, useContext } from "react";
 import * as d3 from "d3";
 import { EditorContext } from "../../EditorContext";
 import { GLRenderer } from "./WebGLDriver";
-import { LinkGeometryMasterDrawable, PrecedenceLinkGeometryDrawable, SyntaxLinkGeometryDrawable } from "./GLLinkRenderer";
+import {
+  LinkGeometryMasterDrawable,
+  PrecedenceLinkGeometryDrawable,
+  SyntaxLinkGeometryDrawable,
+} from "./GLLinkRenderer";
 import { GlobalMaskTexture } from "./GLNodeMaskRenderer";
 import { ZoomController } from "../../controllers/ZoomController";
 
@@ -14,7 +18,12 @@ export interface SceneLayerProps {
  * Scene layer, rendered via WebGL
  */
 export function SceneLayer_WebGL(props: SceneLayerProps) {
-  const { notationGraphStore, selectionStore, classVisibilityStore, editorStateStore } = useContext(EditorContext);
+  const {
+    notationGraphStore,
+    selectionStore,
+    classVisibilityStore,
+    editorStateStore,
+  } = useContext(EditorContext);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const glRef = useRef<GLRenderer | null>(null);
@@ -33,12 +42,30 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       glRef.current = new GLRenderer(gl);
     }
 
-    const maskDrawable = GlobalMaskTexture.withAutoSize(notationGraphStore, { paddingMultiplier: 1.5, paddingExtraPixels: 256 });
+    const maskDrawable = GlobalMaskTexture.withAutoSize(notationGraphStore, {
+      paddingMultiplier: 1.5,
+      paddingExtraPixels: 256,
+    });
     glRef.current.addDrawable(maskDrawable);
 
-    const syntaxLinks = new SyntaxLinkGeometryDrawable(notationGraphStore, editorStateStore, selectionStore, classVisibilityStore, props.zoomer);
-    const precedenceLinks = new PrecedenceLinkGeometryDrawable(notationGraphStore, editorStateStore, selectionStore, classVisibilityStore, props.zoomer);
-    const masterDrawable = new LinkGeometryMasterDrawable([syntaxLinks, precedenceLinks]);
+    const syntaxLinks = new SyntaxLinkGeometryDrawable(
+      notationGraphStore,
+      editorStateStore,
+      selectionStore,
+      classVisibilityStore,
+      props.zoomer,
+    );
+    const precedenceLinks = new PrecedenceLinkGeometryDrawable(
+      notationGraphStore,
+      editorStateStore,
+      selectionStore,
+      classVisibilityStore,
+      props.zoomer,
+    );
+    const masterDrawable = new LinkGeometryMasterDrawable([
+      syntaxLinks,
+      precedenceLinks,
+    ]);
     glRef.current.addDrawable(masterDrawable);
 
     let noMoreUpdates = false;
@@ -64,7 +91,7 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
 
     //https://wikis.khronos.org/webgl/HandlingHighDPI
 
-    const resizeObserver = new ResizeObserver(resizeTheCanvasToDisplaySize)
+    const resizeObserver = new ResizeObserver(resizeTheCanvasToDisplaySize);
     resizeObserver.observe(canvasRef.current);
 
     function resizeTheCanvasToDisplaySize(entries) {
@@ -78,8 +105,12 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
         height = entry.devicePixelContentBoxSize[0].blockSize;
       } else if (entry.contentBoxSize) {
         // fallback for Safari that will not always be correct
-        width = Math.round(entry.contentBoxSize[0].inlineSize * devicePixelRatio);
-        height = Math.round(entry.contentBoxSize[0].blockSize * devicePixelRatio);
+        width = Math.round(
+          entry.contentBoxSize[0].inlineSize * devicePixelRatio,
+        );
+        height = Math.round(
+          entry.contentBoxSize[0].blockSize * devicePixelRatio,
+        );
       }
       canvas.width = width;
       canvas.height = height;
@@ -105,7 +136,9 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       notationGraphStore.onNodeRemoved.unsubscribe(onGraphUpdate);
       selectionStore.onLinksChange.unsubscribe(onGraphUpdate);
       classVisibilityStore.onChange.unsubscribe(onGraphUpdate);
-      editorStateStore.displayPrecedenceLinksChangeEvent.unsubscribe(onGraphUpdate);
+      editorStateStore.displayPrecedenceLinksChangeEvent.unsubscribe(
+        onGraphUpdate,
+      );
       editorStateStore.displaySyntaxLinksChangeEvent.unsubscribe(onGraphUpdate);
       syntaxLinks.unsubscribeEvents();
       precedenceLinks.unsubscribeEvents();

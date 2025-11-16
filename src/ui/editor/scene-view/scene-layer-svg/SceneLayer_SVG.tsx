@@ -117,11 +117,13 @@ export function SceneLayer_SVG() {
         )}
 
         {/* Links - currently commented out, rendered with WebGL */}
-        {<g>
-          {links.map((link) => (
-            <SvgLink key={getLinkId(link)} link={link} />
-          ))}
-        </g>}
+        {
+          <g>
+            {links.map((link) => (
+              <SvgLink key={getLinkId(link)} link={link} />
+            ))}
+          </g>
+        }
       </g>
     </svg>
   );

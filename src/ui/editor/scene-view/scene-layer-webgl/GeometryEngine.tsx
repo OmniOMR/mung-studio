@@ -85,11 +85,17 @@ export class GeometryBuffer implements GLBuffer {
   constructor(config: GeometryBufferConfig) {
     this.config = config;
     this.dirtyState = new BufferDirtyStateKeeper(() => this.geometries.length);
-    this.buffer = GeometryBuffer.newBufferStorage(config.dataType, GeometryBuffer.INITIAL_BUFFER_SIZE);
+    this.buffer = GeometryBuffer.newBufferStorage(
+      config.dataType,
+      GeometryBuffer.INITIAL_BUFFER_SIZE,
+    );
     this.geometries = [];
   }
 
-  private static newBufferStorage(dataType: GLenum, size: number): BufferDataType {
+  private static newBufferStorage(
+    dataType: GLenum,
+    size: number,
+  ): BufferDataType {
     switch (dataType) {
       case WebGL2RenderingContext.FLOAT:
         return new Float32Array(size);
@@ -109,7 +115,10 @@ export class GeometryBuffer implements GLBuffer {
         sizeInFloats,
         Math.trunc(this.buffer.length * GeometryBuffer.BUFFER_GROWTH_FACTOR),
       );
-      const newBuffer = GeometryBuffer.newBufferStorage(this.config.dataType, newSize);
+      const newBuffer = GeometryBuffer.newBufferStorage(
+        this.config.dataType,
+        newSize,
+      );
       newBuffer.set(this.buffer);
       this.buffer = newBuffer;
     }
@@ -117,7 +126,11 @@ export class GeometryBuffer implements GLBuffer {
 
   public addGeometry(geometry: GeometrySource): number {
     const index = this.geometries.length;
-    this.geometries.push({ source: geometry, vertexOffset: this.vertexTopIndex, vertexCount: geometry.VERTEX_COUNT });
+    this.geometries.push({
+      source: geometry,
+      vertexOffset: this.vertexTopIndex,
+      vertexCount: geometry.VERTEX_COUNT,
+    });
     this.vertexTopIndex += geometry.VERTEX_COUNT;
     this.dirtyState.markDirty(index);
     this.ensureBufferVertexCount(this.vertexTopIndex);
@@ -131,7 +144,9 @@ export class GeometryBuffer implements GLBuffer {
 
     this.geometries[index].source.generateVertices((...coords: number[]) => {
       if (coords.length !== this.config.elementCount) {
-        throw new Error(`Invalid vertex data length: expected ${this.config.elementCount}, got ${coords.length}`);
+        throw new Error(
+          `Invalid vertex data length: expected ${this.config.elementCount}, got ${coords.length}`,
+        );
       }
       const base = (start + subIndex) * this.config.elementCount;
       for (let i = 0; i < coords.length; i++) {
@@ -154,10 +169,10 @@ export class GeometryBuffer implements GLBuffer {
     if (wasLast) {
       //do not shift any data - just reduce the top index
       this.vertexTopIndex -= geometry.vertexCount;
-    }
-    else {
+    } else {
       //move data to the left
-      const start = this.getGeomVertexStart(index) * GeometryBuffer.VERTEX_STRIDE; //start of the NEXT geometry (after splice)
+      const start =
+        this.getGeomVertexStart(index) * GeometryBuffer.VERTEX_STRIDE; //start of the NEXT geometry (after splice)
       const target = geometry.vertexOffset * GeometryBuffer.VERTEX_STRIDE; //start of the geometry that was removed
       this.buffer.copyWithin(target, start);
 
@@ -195,8 +210,7 @@ export class GeometryBuffer implements GLBuffer {
     if (this.glBufferSize !== this.buffer.length) {
       gl.bufferData(gl.ARRAY_BUFFER, this.buffer, gl.STATIC_DRAW);
       this.glBufferSize = this.buffer.length;
-    }
-    else {
+    } else {
       const [startGeom, endGeom] = this.dirtyState.getDirtyRange();
 
       const startVertex = this.getGeomVertexStart(startGeom);
@@ -207,30 +221,49 @@ export class GeometryBuffer implements GLBuffer {
       gl.bufferSubData(
         gl.ARRAY_BUFFER,
         startVertex * vs * this.config.elementSizeof,
-        this.buffer.subarray(startVertex * vs, endVertex * vs)
+        this.buffer.subarray(startVertex * vs, endVertex * vs),
       );
     }
     this.dirtyState.clearDirty();
   }
 
-  public bind(gl: WebGL2RenderingContext, program: WebGLProgram, location: string) {
+  public bind(
+    gl: WebGL2RenderingContext,
+    program: WebGLProgram,
+    location: string,
+  ) {
     this.flush(gl);
 
     gl.bindBuffer(gl.ARRAY_BUFFER, this.glBuffer);
     const shaderLocation = gl.getAttribLocation(program, location);
     gl.enableVertexAttribArray(shaderLocation);
     if (!this.isDataTypeInt()) {
-      gl.vertexAttribPointer(shaderLocation, this.config.elementCount, this.config.dataType, false, 0, 0);
-    }
-    else {
+      gl.vertexAttribPointer(
+        shaderLocation,
+        this.config.elementCount,
+        this.config.dataType,
+        false,
+        0,
+        0,
+      );
+    } else {
       // For integer types, we need to use vertexAttribIPointer
-      gl.vertexAttribIPointer(shaderLocation, this.config.elementCount, this.config.dataType, 0, 0);
+      gl.vertexAttribIPointer(
+        shaderLocation,
+        this.config.elementCount,
+        this.config.dataType,
+        0,
+        0,
+      );
     }
   }
 
   private isDataTypeInt(): boolean {
     const dt = this.config.dataType;
-    return dt === WebGL2RenderingContext.INT || dt === WebGL2RenderingContext.UNSIGNED_INT;
+    return (
+      dt === WebGL2RenderingContext.INT ||
+      dt === WebGL2RenderingContext.UNSIGNED_INT
+    );
   }
 
   public numVertices(): number {

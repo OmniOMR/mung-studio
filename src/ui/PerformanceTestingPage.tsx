@@ -164,8 +164,16 @@ function generateTestNodes(): Node[] {
   }
 
   // generate links
-  generateLinks(1000, (node) => node.syntaxOutlinks, (node) => node.syntaxInlinks);
-  generateLinks(1000, (node) => node.precedenceOutlinks, (node) => node.precedenceInlinks);
+  generateLinks(
+    1000,
+    (node) => node.syntaxOutlinks,
+    (node) => node.syntaxInlinks,
+  );
+  generateLinks(
+    1000,
+    (node) => node.precedenceOutlinks,
+    (node) => node.precedenceInlinks,
+  );
 
   return nodes;
 }
