@@ -39,6 +39,7 @@ export function PerformanceTestingPage() {
         initialNodes={nodes}
         backgroundImageUrl={imageUrl}
         onClose={onClose}
+        fileName="Performance-Testing"
       />
     </Box>
   );
@@ -138,6 +139,9 @@ function generateTestNodes(): Node[] {
       syntaxInlinks: [],
       precedenceOutlinks: [],
       precedenceInlinks: [],
+      decodedMask: null,
+      textTranscription: null,
+      data: {},
       polygon: generatePolygon(top, left, width, height),
     };
     nodes.push(node);

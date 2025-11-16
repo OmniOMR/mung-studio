@@ -339,7 +339,7 @@ class LinkGeometryDrawable implements GLDrawable {
   private editorState: EditorStateStore;
   private selectionStore: SelectionStore;
   private classVisibilityStore: ClassVisibilityStore;
-  private zoomer: ZoomController;
+  private zoomController: ZoomController;
 
   private triangleBuffer = new GeometryBuffer({
     dataType: WebGL2RenderingContext.FLOAT,
@@ -370,13 +370,13 @@ class LinkGeometryDrawable implements GLDrawable {
     editorStateStore: EditorStateStore,
     selectionStore: SelectionStore,
     classVisibilityStore: ClassVisibilityStore,
-    zoomer: ZoomController,
+    zoomController: ZoomController,
   ) {
     this.notationGraph = notationGraph;
     this.editorState = editorStateStore;
     this.selectionStore = selectionStore;
     this.classVisibilityStore = classVisibilityStore;
-    this.zoomer = zoomer;
+    this.zoomController = zoomController;
 
     this.linkInsertSubscription = (meta) => {
       this.onLinkInserted(meta);
@@ -421,8 +421,8 @@ class LinkGeometryDrawable implements GLDrawable {
 
     classVisibilityStore.onChange.subscribe(this.classVisibilitySubscription);
 
-    zoomer.onTransformChange.subscribe(this.zoomSubscription);
-    this.onZoom(zoomer.currentTransform);
+    zoomController.onTransformChange.subscribe(this.zoomSubscription);
+    this.onZoom(zoomController.currentTransform);
   }
 
   public setScale(scale: number): void {
@@ -615,7 +615,7 @@ class LinkGeometryDrawable implements GLDrawable {
     this.classVisibilityStore.onChange.unsubscribe(
       this.classVisibilitySubscription,
     );
-    this.zoomer.onTransformChange.unsubscribe(this.zoomSubscription);
+    this.zoomController.onTransformChange.unsubscribe(this.zoomSubscription);
   }
 }
 

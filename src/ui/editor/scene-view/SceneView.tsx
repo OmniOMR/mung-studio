@@ -43,7 +43,7 @@ export function SceneView(props: SceneViewProps) {
 
       {/* Objects that are not being edited, but there is many of them,
       so tricks have to be made to render them fast */}
-      <SceneLayer_WebGL zoomer={zoomController} />
+      <SceneLayer_WebGL />
       {/* <SceneLayer_Canvas2D /> */}
 
       {/* The editing overlay for the current object, consumes pointer events

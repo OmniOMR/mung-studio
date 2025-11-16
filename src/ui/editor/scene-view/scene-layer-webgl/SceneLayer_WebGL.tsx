@@ -8,21 +8,17 @@ import {
   SyntaxLinkGeometryDrawable,
 } from "./GLLinkRenderer";
 import { GlobalMaskTexture } from "./GLNodeMaskRenderer";
-import { ZoomController } from "../../controllers/ZoomController";
-
-export interface SceneLayerProps {
-  readonly zoomer: ZoomController;
-}
 
 /**
  * Scene layer, rendered via WebGL
  */
-export function SceneLayer_WebGL(props: SceneLayerProps) {
+export function SceneLayer_WebGL() {
   const {
     notationGraphStore,
     selectionStore,
     classVisibilityStore,
     editorStateStore,
+    zoomController,
   } = useContext(EditorContext);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -53,14 +49,14 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       editorStateStore,
       selectionStore,
       classVisibilityStore,
-      props.zoomer,
+      zoomController,
     );
     const precedenceLinks = new PrecedenceLinkGeometryDrawable(
       notationGraphStore,
       editorStateStore,
       selectionStore,
       classVisibilityStore,
-      props.zoomer,
+      zoomController,
     );
     const masterDrawable = new LinkGeometryMasterDrawable([
       syntaxLinks,
@@ -77,7 +73,7 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       glRef.current?.draw();
     };
 
-    glRef.current!.updateTransform(props.zoomer.currentTransform);
+    glRef.current!.updateTransform(zoomController.currentTransform);
     render();
 
     const onZoom = (transform: d3.ZoomTransform) => {
@@ -118,7 +114,7 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
       render();
     }
 
-    props.zoomer.onTransformChange.subscribe(onZoom);
+    zoomController.onTransformChange.subscribe(onZoom);
     notationGraphStore.onNodeUpdatedOrLinked.subscribe(onGraphUpdate);
     notationGraphStore.onNodeInserted.subscribe(onGraphUpdate);
     notationGraphStore.onNodeRemoved.subscribe(onGraphUpdate);
@@ -130,7 +126,7 @@ export function SceneLayer_WebGL(props: SceneLayerProps) {
     // Cleanup
     return () => {
       noMoreUpdates = true;
-      props.zoomer.onTransformChange.unsubscribe(onZoom);
+      zoomController.onTransformChange.unsubscribe(onZoom);
       notationGraphStore.onNodeUpdatedOrLinked.unsubscribe(onGraphUpdate);
       notationGraphStore.onNodeInserted.unsubscribe(onGraphUpdate);
       notationGraphStore.onNodeRemoved.unsubscribe(onGraphUpdate);
