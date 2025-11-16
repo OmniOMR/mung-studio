@@ -9,6 +9,7 @@ import { MungFileMetadata } from "../../mung/MungFileMetadata";
 import { MungFile } from "../../mung/MungFile";
 import { Toolbelt } from "./toolbelt/Toolbelt";
 import { EditorContext, useConstructContextServices } from "./EditorContext";
+import { SettingsWindow } from "./settings-window/SettingsWindow";
 
 export interface EditorProps {
   /**
@@ -164,6 +165,7 @@ export function Editor(props: EditorProps) {
           Keyboard shortcuts / python terminal / whatever
         </Box> */}
       </Box>
+      <SettingsWindow />
     </EditorContext.Provider>
   );
 }

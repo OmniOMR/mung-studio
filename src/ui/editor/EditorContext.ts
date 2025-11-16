@@ -18,6 +18,7 @@ import { PolygonToolsController } from "./toolbelt/node-editing/PolygonToolsCont
 import { NodeEditingController } from "./toolbelt/node-editing/NodeEditingController";
 import { MainMenuController } from "./controllers/MainMenuController";
 import { MousePointerController } from "./controllers/MousePointerController";
+import { SettingsStore } from "./state/SettingsStore";
 
 /**
  * All fields present in the editor component's global context
@@ -28,6 +29,7 @@ export interface EditorContextState {
   readonly classVisibilityStore: ClassVisibilityStore;
   readonly editorStateStore: EditorStateStore;
   readonly autosaveStore: AutosaveStore;
+  readonly settingsStore: SettingsStore;
 
   readonly pythonRuntime: PythonRuntime;
 
@@ -74,6 +76,8 @@ export function useConstructContextServices(
     () => new AutosaveStore(notationGraphStore),
     [],
   );
+
+  const settingsStore = useMemo(() => new SettingsStore(jotaiStore), []);
 
   const pythonRuntime = useMemo(() => PythonRuntime.resolveInstance(), []);
 
@@ -164,6 +168,7 @@ export function useConstructContextServices(
     classVisibilityStore,
     editorStateStore,
     autosaveStore,
+    settingsStore,
 
     pythonRuntime,
 

@@ -5,6 +5,8 @@ import { SceneLayer_SVG } from "./scene-layer-svg/SceneLayer_SVG";
 import { SceneLayer_WebGL } from "./scene-layer-webgl/SceneLayer_WebGL";
 import { BackgroundLayer } from "./BackgroundLayer";
 import { EditorContext } from "../EditorContext";
+import { useAtomValue } from "jotai";
+import { SceneRenderingEngine } from "../state/SettingsStore";
 
 export interface SceneViewProps {
   readonly backgroundImageUrl: string | null;
@@ -16,7 +18,11 @@ export interface SceneViewProps {
  * with the scene to the user.
  */
 export function SceneView(props: SceneViewProps) {
-  const { zoomController } = useContext(EditorContext);
+  const { zoomController, settingsStore } = useContext(EditorContext);
+
+  const sceneRenderingEngine = useAtomValue(
+    settingsStore.sceneRenderingEngineAtom,
+  );
 
   const containerRef = useRef<HTMLDivElement | null>(null);
 
@@ -43,8 +49,13 @@ export function SceneView(props: SceneViewProps) {
 
       {/* Objects that are not being edited, but there is many of them,
       so tricks have to be made to render them fast */}
-      <SceneLayer_WebGL />
-      {/* <SceneLayer_Canvas2D /> */}
+      {sceneRenderingEngine === SceneRenderingEngine.SVG && <SceneLayer_SVG />}
+      {sceneRenderingEngine === SceneRenderingEngine.WebGL && (
+        <SceneLayer_WebGL />
+      )}
+      {sceneRenderingEngine === SceneRenderingEngine.Canvas2D && (
+        <SceneLayer_Canvas2D />
+      )}
 
       {/* The editing overlay for the current object, consumes pointer events
       and contains the zoom controlling code */}

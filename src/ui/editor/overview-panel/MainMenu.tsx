@@ -72,8 +72,10 @@ export interface MainMenuProps {
 }
 
 export function MainMenu(props: MainMenuProps) {
-  const { mainMenuController } = useContext(EditorContext);
+  const { mainMenuController, settingsStore } = useContext(EditorContext);
   const controller = mainMenuController;
+
+  const [_, setSettingsOpen] = useAtom(settingsStore.isSettingsWindowOpenAtom);
 
   //////////////////////////
   // Action preconditions //
@@ -92,6 +94,10 @@ export function MainMenu(props: MainMenuProps) {
     props.onClose();
   }
 
+  function openSettings() {
+    setSettingsOpen(true);
+  }
+
   ///////////////
   // Rendering //
   ///////////////
@@ -108,6 +114,8 @@ export function MainMenu(props: MainMenuProps) {
         // open={true}
       >
         <MyMenuItem onClick={backToFiles}>Back to files</MyMenuItem>
+
+        <MyMenuItem onClick={openSettings}>Settings</MyMenuItem>
 
         <MyListDivider />
         <MyCategoryTitle>Nodes</MyCategoryTitle>

@@ -1,4 +1,10 @@
-import { ButtonGroup, IconButton, ToggleButtonGroup, Tooltip } from "@mui/joy";
+import {
+  ButtonGroup,
+  Chip,
+  IconButton,
+  ToggleButtonGroup,
+  Tooltip,
+} from "@mui/joy";
 import PolylineIcon from "@mui/icons-material/Polyline";
 import TimelineIcon from "@mui/icons-material/Timeline";
 import RectangleIcon from "@mui/icons-material/Rectangle";
@@ -8,9 +14,10 @@ import { useAtom } from "jotai";
 import { NodeDisplayMode } from "../state/EditorStateStore";
 import { useContext } from "react";
 import { EditorContext } from "../EditorContext";
+import { SceneRenderingEngine } from "../state/SettingsStore";
 
 export function DisplayModeButtons() {
-  const { editorStateStore } = useContext(EditorContext);
+  const { editorStateStore, settingsStore } = useContext(EditorContext);
 
   const [nodeDisplayMode, setNodeDisplayMode] = useAtom(
     editorStateStore.nodeDisplayModeAtom,
@@ -20,6 +27,9 @@ export function DisplayModeButtons() {
   );
   const [displayPrecedenceLinks, setDisplayPrecedenceLinks] = useAtom(
     editorStateStore.displayPrecedenceLinksAtom,
+  );
+  const [sceneRenderingEngine, setSceneRenderingEngine] = useAtom(
+    settingsStore.sceneRenderingEngineAtom,
   );
 
   return (
@@ -84,6 +94,24 @@ export function DisplayModeButtons() {
           </IconButton>
         </Tooltip>
       </ToggleButtonGroup>
+
+      <Tooltip arrow title="Scene rendering engine">
+        <Chip
+          variant="outlined"
+          size="sm"
+          onClick={() => {
+            setSceneRenderingEngine(
+              sceneRenderingEngine === SceneRenderingEngine.SVG
+                ? SceneRenderingEngine.WebGL
+                : SceneRenderingEngine.SVG,
+            );
+          }}
+        >
+          {sceneRenderingEngine === SceneRenderingEngine.SVG ? "SVG" : ""}
+          {sceneRenderingEngine === SceneRenderingEngine.WebGL ? "GL" : ""}
+          {sceneRenderingEngine === SceneRenderingEngine.Canvas2D ? "2D" : ""}
+        </Chip>
+      </Tooltip>
     </>
   );
 }
