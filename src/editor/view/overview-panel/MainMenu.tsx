@@ -115,7 +115,7 @@ export function MainMenu(props: MainMenuProps) {
 
         <MyMenuItem
           disabled={!canRemoveNodes}
-          onClick={controller.removeSelectedNodes}
+          onClick={() => controller.removeSelectedNodes()}
         >
           Remove selected nodes {renderShortcut("Del")}
         </MyMenuItem>
@@ -125,19 +125,19 @@ export function MainMenu(props: MainMenuProps) {
 
         <MyMenuItem
           disabled={!canToggleLink}
-          onClick={controller.toggleSyntaxLink}
+          onClick={() => controller.toggleSyntaxLink()}
         >
           Toggle syntax link {renderShortcut("E")}
         </MyMenuItem>
         <MyMenuItem
           disabled={!canToggleLink}
-          onClick={controller.togglePrecedenceLink}
+          onClick={() => controller.togglePrecedenceLink()}
         >
           Toggle precedence link {renderShortcut("Q")}
         </MyMenuItem>
         <MyMenuItem
           disabled={!canRemoveLinks}
-          onClick={controller.removePartiallySelectedLinks}
+          onClick={() => controller.removePartiallySelectedLinks()}
         >
           Remove partially selected links {renderShortcut("Shift + Del")}
         </MyMenuItem>
@@ -147,7 +147,7 @@ export function MainMenu(props: MainMenuProps) {
 
         <MyMenuItem
           disabled={!canClearSelection}
-          onClick={controller.clearSelection}
+          onClick={() => controller.clearSelection()}
         >
           Clear selection {renderShortcut("Esc")}
         </MyMenuItem>
