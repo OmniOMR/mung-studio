@@ -1,9 +1,9 @@
 import { createHashRouter } from "react-router-dom";
-import { HomePage } from "./ui/HomePage";
-import { InMemoryPage } from "./ui/InMemoryPage";
-import { PerformanceTestingPage } from "./ui/PerformanceTestingPage";
-import { DocumentsPage as SimpleBackendDocumentsPage } from "./ui/simple-backend/DocumentsPage";
-import { DocumentEditorPage } from "./ui/simple-backend/DocumentEditorPage";
+import { HomePage } from "./pages/HomePage";
+import { InMemoryPage } from "./pages/InMemoryPage";
+import { PerformanceTestingPage } from "./pages/PerformanceTestingPage";
+import { DocumentsPage as SimpleBackendDocumentsPage } from "./pages/simple-backend/DocumentsPage";
+import { DocumentEditorPage } from "./pages/simple-backend/DocumentEditorPage";
 
 export const router = createHashRouter([
   {

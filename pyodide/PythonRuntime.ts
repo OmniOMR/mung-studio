@@ -1,5 +1,5 @@
 import { atom, getDefaultStore } from "jotai";
-import { JotaiStore } from "../src/ui/editor/state/JotaiStore";
+import { JotaiStore } from "../src/editor/model/JotaiStore";
 import { PyodideWorkerConnection } from "./PyodideWorkerConnection";
 import { MaskManipulationApi } from "./MaskManipulationApi";
 
