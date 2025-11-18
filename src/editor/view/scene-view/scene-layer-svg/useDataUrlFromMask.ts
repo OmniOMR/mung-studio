@@ -2,12 +2,14 @@ import { useEffect } from "react";
 import { Node } from "../../../../mung/Node";
 import { SignalAtomCollection } from "../../../model/SignalAtomCollection";
 import { getDefaultStore, useAtomValue } from "jotai";
+import { classNameToHue } from "../../../../mung/classNameToHue";
 
 /**
  * Web worker that converts masks to data URLs in the background
  */
 const maskConvertingWorker = new Worker(
   new URL("./mask-converting-worker.ts", import.meta.url),
+  { type: "module" },
 );
 
 // used by the worker to signal back to React to redraw
@@ -37,16 +39,18 @@ export function useDataUrlFromMask(node: Node): string | undefined {
   // re-render the component that uses this hook when this signal atom fires
   useAtomValue(workerSignals.get(node.id).getSignalAtom());
 
-  // send the new mask to the worker to be decoded whenever the mask changes
+  // send the new mask to the worker to be decoded whenever the mask changes,
+  // or the node class changes
   useEffect(() => {
-    if (node.decodedMask !== undefined) {
-      // only if there is a mask
-      maskConvertingWorker.postMessage([node.id, node.decodedMask]);
+    // only if there is a mask
+    if (node.decodedMask) {
+      const hue = classNameToHue(node.className);
+      maskConvertingWorker.postMessage([node.id, hue, node.decodedMask]);
     }
-  }, [node.decodedMask]);
+  }, [node.decodedMask, node.className]);
 
   // return undefined if no mask is set
-  if (node.decodedMask === null) return undefined;
+  if (!node.decodedMask) return undefined;
 
   // return the decoded mask, which may be undefined if not yet decoded
   return maskDataUrls.get(node.id);

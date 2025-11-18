@@ -24,12 +24,8 @@ export function SvgNode(props: SvgNodeProps) {
     useAtomValue(classVisibilityStore.getIsClassVisibleAtom(node.className)) ||
     isSelected; // must be visible if is selected
 
-  // NOTE: used to a state here, but now highlights are rendered in overlay only
-  const highlighted = false;
-
   // decide on how to display
   const hue = classNameToHue(node.className);
-  const lightness = highlighted ? 90 : 50;
 
   // data URL that displays the mask
   const maskDataUrl = useDataUrlFromMask(node);
@@ -53,10 +49,8 @@ export function SvgNode(props: SvgNodeProps) {
       {displayPolygon && (
         <path
           d={svgPathFromMungPolygon(node)}
-          fill={`hsla(${hue}, 100%, ${lightness}%, 0.2)`}
-          stroke={
-            isSelected ? "white" : `hsla(${hue}, 100%, ${lightness}%, 1.0)`
-          }
+          fill={`hsla(${hue}, 100%, 50%, 0.2)`}
+          stroke={isSelected ? "white" : `hsla(${hue}, 100%, 50%, 1.0)`}
           strokeWidth={isSelected ? "var(--scene-screen-pixel)" : "0"}
         />
       )}
@@ -71,7 +65,7 @@ export function SvgNode(props: SvgNodeProps) {
             height={node.height}
             href={maskDataUrl}
             style={{
-              filter: `hue-rotate(${hue}deg) brightness(150%) opacity(0.2)`,
+              filter: `opacity(0.2)`,
               imageRendering: "pixelated",
             }}
           />
@@ -81,9 +75,7 @@ export function SvgNode(props: SvgNodeProps) {
             width={node.width}
             height={node.height}
             fill="none"
-            stroke={
-              isSelected ? "white" : `hsla(${hue}, 100%, ${lightness}%, 1.0)`
-            }
+            stroke={isSelected ? "white" : `hsla(${hue}, 100%, 50%, 1.0)`}
             strokeWidth={isSelected ? "var(--scene-screen-pixel)" : "0"}
           />
         </>
@@ -96,10 +88,8 @@ export function SvgNode(props: SvgNodeProps) {
           y={node.top}
           width={node.width}
           height={node.height}
-          fill={`hsla(${hue}, 100%, ${lightness}%, 0.2)`}
-          stroke={
-            isSelected ? "white" : `hsla(${hue}, 100%, ${lightness}%, 1.0)`
-          }
+          fill={`hsla(${hue}, 100%, 50%, 0.2)`}
+          stroke={isSelected ? "white" : `hsla(${hue}, 100%, 50%, 1.0)`}
           strokeWidth={isSelected ? "var(--scene-screen-pixel)" : "0"}
         />
       )}
