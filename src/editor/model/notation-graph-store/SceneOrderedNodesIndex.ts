@@ -91,6 +91,16 @@ export class SceneOrderedNodesIndex {
   }
 
   private onNodeUpdatedOrLinked(e: NodeUpdateMetadata) {
+    // ignore changes that did not affect the class name, width, nor height
+    // (which is what we sort by in the nodeComparator)
+    if (
+      e.newValue.className === e.oldValue.className &&
+      e.newValue.width === e.oldValue.width &&
+      e.newValue.height === e.oldValue.height
+    ) {
+      return;
+    }
+
     for (let i = 0; i < this._orderedMutableNodes.length; i++) {
       if (this._orderedMutableNodes[i].id !== e.nodeId) continue;
 

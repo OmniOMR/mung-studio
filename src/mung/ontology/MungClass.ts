@@ -32,12 +32,12 @@ export interface MungClass {
   readonly isMuscimaPP20: boolean;
 
   /**
-   * Composite node is a mung node that does not have visual appearance
+   * Container node is a mung node that does not have visual appearance
    * on the page. Its primary function is to provide higher-level node in
    * the semantic notation graph. Examples: "measureSeparator", "keySignature".
-   * Being a composite node is a justified reason to not be a SMuFL class.
+   * Being a container node is a justified reason to not be a SMuFL class.
    */
-  readonly isComposite: boolean;
+  readonly isContainer: boolean;
 
   /**
    * If there is some other valid reason for the class to not be SMuFL aligned,
@@ -50,4 +50,9 @@ export interface MungClass {
    * or should an alternative class name be used?
    */
   readonly justifiedSmuflDivergence?: boolean;
+
+  /**
+   * Does it make sense for the class to have a text transcription?
+   */
+  readonly isTranscribable: boolean;
 }

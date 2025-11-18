@@ -14,6 +14,7 @@ import { PrecedenceLinksToolPanel } from "./PrecedenceLinksToolPanel";
 import { useContext } from "react";
 import { EditorContext } from "../../EditorContext";
 import { NodeEditingToolPanel } from "./NodeEditingToolPanel";
+import { TextTranscriptionPanel } from "./TextTranscriptionPanel";
 
 /**
  * The right-side panel, showing details about selected nodes.
@@ -53,6 +54,8 @@ export function InspectorPanel() {
           <SyntaxLinksToolPanel />
 
           <PrecedenceLinksToolPanel />
+
+          <TextTranscriptionPanel />
 
           <Accordion defaultExpanded={true}>
             <AccordionSummary>

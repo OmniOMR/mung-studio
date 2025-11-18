@@ -165,6 +165,22 @@ export class HighlightController implements IController {
           stroke="white"
           strokeWidth="calc(var(--scene-screen-pixel) * 2)"
         />
+        {highlightedNode.textTranscription && (
+          <text
+            x={highlightedNode.left}
+            y={highlightedNode.top + highlightedNode.height}
+            fill="white"
+            fontSize="calc(var(--scene-screen-pixel) * 12)"
+            fontFamily="monospace"
+            fontWeight="400"
+            style={{
+              transform: "translateY(calc(var(--scene-screen-pixel) * 15px))",
+              textShadow: "1px 1px 2px rgba(0, 0, 0, 0.4)",
+            }}
+          >
+            {highlightedNode.textTranscription}
+          </text>
+        )}
       </>
     );
   }

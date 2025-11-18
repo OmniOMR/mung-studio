@@ -29,19 +29,24 @@ interface MungClassDefinition {
   readonly smuflEquivalents?: string[];
 
   /**
-   * Composite node is a mung node that does not have visual appearance
+   * Container node is a mung node that does not have visual appearance
    * on the page. Its primary function is to provide higher-level node in
    * the semantic notation graph. Examples: "measureSeparator", "keySignature".
-   * Being a composite node is a justified reason to not be a SMuFL class.
+   * Being a container node is a justified reason to not be a SMuFL class.
    * (missing value means false)
    */
-  readonly composite?: boolean;
+  readonly container?: boolean;
 
   /**
    * If there is some other valid reason for the class to not be SMuFL aligned,
    * this field should contain that explanation.
    */
   readonly otherSmuflDivergenceJustification?: string;
+
+  /**
+   * Does it make sense for the class to have a text transcription?
+   */
+  readonly transcribable?: boolean;
 }
 
 ///////////////////////
@@ -106,7 +111,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     uc: "\u{E030}",
     mpp: true,
     notSmufl: true,
-    composite: true,
+    container: true,
   },
   barline: {
     uc: "\u{E030}",
@@ -132,7 +137,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     mpp: true,
     smuflEquivalents: ["repeatLeft", "repeatRight"],
   },
-  volta: { uc: "1.", mpp: true, composite: true },
+  volta: { uc: "1.", mpp: true, container: true },
   repeatLeft: { uc: "\u{E040}" },
   repeatRight: { uc: "\u{E041}" },
   repeatRightLeft: { uc: "\u{E042}" },
@@ -166,7 +171,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
 
   // 4.6. Time signatures
   // https://w3c.github.io/smufl/latest/tables/time-signatures.html
-  timeSignature: { uc: "\u{F5FC}", mpp: true, notSmufl: true, composite: true },
+  timeSignature: { uc: "\u{F5FC}", mpp: true, notSmufl: true, container: true },
   timeSig0: { uc: "\u{E080}" },
   timeSig1: { uc: "\u{E081}" },
   timeSig2: { uc: "\u{E082}" },
@@ -276,7 +281,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
 
   // 4.18. Standard accidentals
   // https://w3c.github.io/smufl/latest/tables/standard-accidentals-12-edo.html
-  keySignature: { uc: "\u{E269}", mpp: true, notSmufl: true, composite: true },
+  keySignature: { uc: "\u{E269}", mpp: true, notSmufl: true, container: true },
   accidentalFlat: { uc: "\u{E260}", mpp: true },
   accidentalNatural: { uc: "\u{E261}", mpp: true },
   accidentalSharp: { uc: "\u{E262}", mpp: true },
@@ -441,6 +446,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     mpp: true,
     notSmufl: true,
     smuflEquivalents: ["ottava"],
+    transcribable: true,
   },
   ottava: { uc: "\u{E510}" },
   ottavaAlta: { uc: "\u{E511}" },
@@ -449,7 +455,13 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
 
   // 4.44. Dynamics
   // https://w3c.github.io/smufl/latest/tables/dynamics.html
-  dynamicsText: { uc: "\u{E52D}", mpp: true, notSmufl: true, composite: true },
+  dynamicsText: {
+    uc: "\u{E52D}",
+    mpp: true,
+    notSmufl: true,
+    container: true,
+    transcribable: true,
+  },
   dynamicLetterF: {
     uc: "\u{E522}",
     mpp: true,
@@ -510,6 +522,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     mpp: true,
     notSmufl: true,
     otherSmuflDivergenceJustification: "Possibly a composite object",
+    transcribable: true,
   },
   lyricsElision: { uc: "\u{E551}" },
   lyricsHyphenBaseline: { uc: "\u{E553}" },
@@ -563,7 +576,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     uc: "\u{E1F0}\u{E201}\u{E1F0}\u{E202}\u{E1F0}\u{E203}",
     mpp: true,
     notSmufl: true,
-    composite: true,
+    container: true,
   },
   tupletBracket: {
     // "tupleBracket" is deprecated
@@ -612,6 +625,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     mpp: true,
     notSmufl: true,
     otherSmuflDivergenceJustification: "Possibly a composite object",
+    transcribable: true,
   },
 
   // 4.95. Multi-segment lines
@@ -628,12 +642,14 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     mpp: true,
     notSmufl: true,
     otherSmuflDivergenceJustification: "Possibly a composite object",
+    transcribable: true,
   },
   tempoText: {
     uc: "t",
     mpp: true,
     notSmufl: true,
     otherSmuflDivergenceJustification: "Possibly a composite object",
+    transcribable: true,
   },
 
   characterCapitalA: { uc: "A", mpp: true, notSmufl: true },
@@ -714,19 +730,20 @@ function parseMungClassDefinition(
   def: MungClassDefinition,
 ): MungClass {
   const isSmufl = !def.notSmufl;
-  const isComposite = !!def.composite;
+  const isContainer = !!def.container;
   const justifiedSmuflDivergence = isSmufl
     ? undefined
-    : isComposite || def.otherSmuflDivergenceJustification !== undefined;
+    : isContainer || def.otherSmuflDivergenceJustification !== undefined;
   return {
     className,
     unicode: def.uc,
     isSmufl,
     smuflEquivalents: def.smuflEquivalents,
     isMuscimaPP20: !!def.mpp,
-    isComposite,
+    isContainer: isContainer,
     otherSmuflDivergenceJustification: def.otherSmuflDivergenceJustification,
     justifiedSmuflDivergence,
+    isTranscribable: !!def.transcribable,
   };
 }
 
