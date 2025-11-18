@@ -31,7 +31,8 @@ export class SceneOrderedNodesIndex {
   private jotaiStore: JotaiStore;
   private nodeCollection: NodeCollection;
 
-  private signalAtom = new SignalAtomWrapper();
+  private idsSignalAtom = new SignalAtomWrapper();
+  private nodesSignalAtom = new SignalAtomWrapper();
 
   // the primary datastructure behind the index,
   // mutable and never exposed. Insert-sort into this structure.
@@ -58,7 +59,7 @@ export class SceneOrderedNodesIndex {
    * Read-only atom that exposes nodes sorted in the scene order
    */
   public readonly nodesInSceneOrderAtom = atom<readonly Node[]>((get) => {
-    this.signalAtom.subscribe(get);
+    this.nodesSignalAtom.subscribe(get);
     return this.nodesInSceneOrder;
   });
 
@@ -66,7 +67,7 @@ export class SceneOrderedNodesIndex {
    * Read-only atom that exposes node IDs sorted in the scene order
    */
   public readonly nodeIdsInSceneOrderAtom = atom<readonly number[]>((get) => {
-    this.signalAtom.subscribe(get);
+    this.idsSignalAtom.subscribe(get);
     return this.nodeIdsInSceneOrder;
   });
 
@@ -87,28 +88,31 @@ export class SceneOrderedNodesIndex {
   private onNodeInserted(node: Node) {
     this._orderedMutableNodes.push(node);
     this._orderedMutableNodes.sort(nodeComparator);
-    this.rebuildSecondaryStructures();
+    this.rebuildSecondaryStructures(true);
   }
 
   private onNodeUpdatedOrLinked(e: NodeUpdateMetadata) {
-    // ignore changes that did not affect the class name, width, nor height
-    // (which is what we sort by in the nodeComparator)
-    if (
-      e.newValue.className === e.oldValue.className &&
-      e.newValue.width === e.oldValue.width &&
-      e.newValue.height === e.oldValue.height
-    ) {
-      return;
-    }
+    // determine whether the update causes a re-ordering or not
+    // (if the properties by which we sort have been changed)
+    let mayAffectOrdering = (
+      e.newValue.className !== e.oldValue.className ||
+      e.newValue.width !== e.oldValue.width ||
+      e.newValue.height !== e.oldValue.height
+    );
 
+    // find the node that was updated
     for (let i = 0; i < this._orderedMutableNodes.length; i++) {
       if (this._orderedMutableNodes[i].id !== e.nodeId) continue;
 
+      // update the node in the ordered index
       this._orderedMutableNodes[i] = e.newValue;
-      if (!e.isLinkUpdate) {
+
+      // sort nodes
+      if (mayAffectOrdering) {
         this._orderedMutableNodes.sort(nodeComparator);
       }
-      this.rebuildSecondaryStructures();
+
+      this.rebuildSecondaryStructures(mayAffectOrdering);
       return;
     }
     throw new Error("Node was updated that is not present in the index.");
@@ -128,15 +132,20 @@ export class SceneOrderedNodesIndex {
 
     this._orderedMutableNodes.splice(index, 1);
     // (no need to sort)
-    this.rebuildSecondaryStructures();
+    this.rebuildSecondaryStructures(true);
   }
 
-  private rebuildSecondaryStructures() {
+  private rebuildSecondaryStructures(orderHasChanged: boolean) {
     // update structures
     this._nodes = [...this._orderedMutableNodes];
-    this._nodeIds = this._orderedMutableNodes.map((node) => node.id);
+    if (orderHasChanged) {
+      this._nodeIds = this._orderedMutableNodes.map((node) => node.id);
+    }
 
     // notify react stuff
-    this.signalAtom.signal(this.jotaiStore.set);
+    this.nodesSignalAtom.signal(this.jotaiStore.set);
+    if (orderHasChanged) {
+      this.idsSignalAtom.signal(this.jotaiStore.set);
+    }
   }
 }
