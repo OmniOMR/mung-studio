@@ -19,6 +19,9 @@ import { NodeEditingController } from "./controller/tools/NodeEditingController"
 import { MainMenuController } from "./controller/MainMenuController";
 import { MousePointerController } from "./controller/MousePointerController";
 import { SettingsStore } from "./model/SettingsStore";
+import { ValidationStore } from "./model/ValidationStore";
+import { ValidationController } from "./controller/ValidationController";
+import { DeltaInterpreter } from "./model/DeltaInterpreter";
 
 /**
  * All fields present in the editor component's global context
@@ -30,9 +33,12 @@ export interface EditorContextState {
   readonly editorStateStore: EditorStateStore;
   readonly autosaveStore: AutosaveStore;
   readonly settingsStore: SettingsStore;
+  readonly validationStore: ValidationStore;
+  readonly deltaInterpreter: DeltaInterpreter;
 
   readonly pythonRuntime: PythonRuntime;
 
+  readonly validationController: ValidationController;
   readonly redrawTrigger: RedrawTrigger;
   readonly toolbeltController: ToolbeltController;
   readonly zoomController: ZoomController;
@@ -79,7 +85,29 @@ export function useConstructContextServices(
 
   const settingsStore = useMemo(() => new SettingsStore(jotaiStore), []);
 
+  const validationStore = useMemo(
+    () => new ValidationStore(jotaiStore, notationGraphStore),
+    [],
+  );
+
+  const deltaInterpreter = useMemo(
+    () => new DeltaInterpreter(notationGraphStore),
+    [],
+  );
+
   const pythonRuntime = useMemo(() => PythonRuntime.resolveInstance(), []);
+
+  const validationController = useMemo(
+    () =>
+      new ValidationController(
+        jotaiStore,
+        validationStore,
+        notationGraphStore,
+        pythonRuntime,
+        deltaInterpreter,
+      ),
+    [],
+  );
 
   const redrawTrigger = useMemo(() => new RedrawTrigger(), []);
 
@@ -169,9 +197,12 @@ export function useConstructContextServices(
     editorStateStore,
     autosaveStore,
     settingsStore,
+    validationStore,
+    deltaInterpreter,
 
     pythonRuntime,
 
+    validationController,
     redrawTrigger,
     toolbeltController,
     zoomController,

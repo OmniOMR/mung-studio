@@ -94,11 +94,10 @@ export class SceneOrderedNodesIndex {
   private onNodeUpdatedOrLinked(e: NodeUpdateMetadata) {
     // determine whether the update causes a re-ordering or not
     // (if the properties by which we sort have been changed)
-    let mayAffectOrdering = (
+    let mayAffectOrdering =
       e.newValue.className !== e.oldValue.className ||
       e.newValue.width !== e.oldValue.width ||
-      e.newValue.height !== e.oldValue.height
-    );
+      e.newValue.height !== e.oldValue.height;
 
     // find the node that was updated
     for (let i = 0; i < this._orderedMutableNodes.length; i++) {

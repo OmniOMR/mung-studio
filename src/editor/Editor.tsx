@@ -10,6 +10,7 @@ import { MungFile } from "../mung/MungFile";
 import { Toolbelt } from "./view/toolbelt/Toolbelt";
 import { EditorContext, useConstructContextServices } from "./EditorContext";
 import { SettingsWindow } from "./view/settings-window/SettingsWindow";
+import { ValidationPanel } from "./view/validation-panel/ValidationPanel";
 
 export interface EditorProps {
   /**
@@ -70,16 +71,6 @@ export function Editor(props: EditorProps) {
       autosaveStore.onAutosave.unsubscribe(_handler);
     };
   }, [notationGraphStore, autosaveStore, props.onSave]);
-
-  /**
-   * Must be called before the editor is left by the user.
-   * Handles file saving.
-   */
-  const beforeLeavingEditor = useCallback(() => {
-    setTimeout(() => {
-      console.log("Im living 500ms later!");
-    }, 500);
-  }, [notationGraphStore, autosaveStore]);
 
   /**
    * The user wants to leave the editor by clicking the exit button
@@ -143,12 +134,19 @@ export function Editor(props: EditorProps) {
           />
           <Box
             sx={{
-              position: "relative",
-              flexGrow: 1,
+              display: "flex",
+              flexDirection: "column",
+              justifyItems: "stretch",
+              overflow: "hidden",
+              flexGrow: 1, // grows to take up remaining horizontal space
+              width: "50px", // prevents content from stretching it too much
             }}
           >
-            <SceneView backgroundImageUrl={props.backgroundImageUrl} />
-            <Toolbelt />
+            <Box sx={{ position: "relative", flexGrow: 1 }}>
+              <SceneView backgroundImageUrl={props.backgroundImageUrl} />
+              <Toolbelt />
+            </Box>
+            <ValidationPanel />
           </Box>
           <InspectorPanel />
         </Box>

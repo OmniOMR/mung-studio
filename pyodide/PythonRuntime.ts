@@ -2,6 +2,7 @@ import { atom, getDefaultStore } from "jotai";
 import { JotaiStore } from "../src/editor/model/JotaiStore";
 import { PyodideWorkerConnection } from "./PyodideWorkerConnection";
 import { MaskManipulationApi } from "./MaskManipulationApi";
+import { MungValidationApi } from "./MungValidationApi";
 
 /**
  * Provides user-level APIs for functionality that runs in the python
@@ -28,6 +29,7 @@ export class PythonRuntime {
 
     // create APIs
     this.maskManipulation = new MaskManipulationApi(this.connection);
+    this.mungValidation = new MungValidationApi(this.connection);
   }
 
   //////////
@@ -39,9 +41,10 @@ export class PythonRuntime {
    */
   public readonly maskManipulation: MaskManipulationApi;
 
-  // TODO: notation graph validation API
-
-  // ...
+  /**
+   * Validates a MuNG document and produces list of issues
+   */
+  public readonly mungValidation: MungValidationApi;
 
   /////////////////////////////////
   // Worker initialization state //
