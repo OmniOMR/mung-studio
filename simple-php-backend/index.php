@@ -175,7 +175,7 @@ class Document {
      * (this makes sure the name does not contain relative fs paths etc.)
      */
     public static function is_name_valid(string $name): bool {
-        $pattern = "/[a-zA-Z0-9_-]+/";
+        $pattern = "/^[a-zA-Z0-9\\s_-]+$/";
         $ret = preg_match($pattern, $name);
         return $ret === 1;
     }
