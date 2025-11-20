@@ -16,6 +16,7 @@ This document teaches you how to use the MuNG Studio annotation tool.
     - [Modifying existing node mask](#modifying-existing-node-mask)
     - [Changing existing node class](#changing-existing-node-class)
     - [Deleting a node](#changing-existing-node-class)
+- [Transcribing text](#transcribing-text)
 - [Annotating links](#annotating-links)
     - [Toggling individual links](#toggling-individual-links)
     - [Removing all links from selection](#removing-all-links-from-selection)
@@ -241,6 +242,21 @@ You can also exit the *Node Editing* tool by pressing <kbd>Esc</kbd>.
 ### Deleting a node
 
 Select a node and then press the <kbd>Del</kbd> key.
+
+
+## Transcribing text
+
+Some nodes represent textual content. Instead of annotating individual characters, text can be represented by one node, coupled with a text transcription of its content.
+
+1. Select or create a new node.
+2. Enter the *Node Editing Tool* (<kbd>N</kbd> key).
+3. In the *Inspector Panel* (right, up) there is a section titled *Text Transcription*. In that section there's a text field where you can enter or modify a node's text transcription.
+
+<blockquote><img src="img/text-transcription-ui.png" width="620"/></blockquote>
+
+When doing review of an annotated document, when hovering over a node, its text transcription is displayed below the element:
+
+<blockquote><img src="img/text-transcription-highlight.png" width="620"/></blockquote>
 
 
 ## Annotating links
