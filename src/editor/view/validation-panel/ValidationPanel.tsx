@@ -57,7 +57,7 @@ export function ValidationPanel() {
           <Tooltip
             arrow
             title={
-              "Valiation Issues" + (isValidationRunning ? " (scanning...)" : "")
+              "Validation Issues" + (isValidationRunning ? " (scanning...)" : "")
             }
           >
             <IconButton
