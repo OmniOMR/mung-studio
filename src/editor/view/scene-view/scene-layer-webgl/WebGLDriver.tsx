@@ -201,10 +201,10 @@ export class GLRenderer {
     return false;
   }
 
-  public setAlphaBlend(enable: boolean) {
+  public setAlphaBlend(enable: boolean, premultiplied: boolean = false) {
     if (enable) {
       this.gl.enable(this.gl.BLEND);
-      this.gl.blendFunc(this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+      this.gl.blendFunc(premultiplied ? this.gl.ONE : this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
     } else {
       this.gl.disable(this.gl.BLEND);
     }
@@ -280,6 +280,10 @@ export class GLRenderer {
 
   public setUniformBool(name: string, value: boolean) {
     this.setUniformInt(name, value ? 1 : 0);
+  }
+
+  public use(func: (gl: WebGL2RenderingContext) => void) {
+    func(this.gl);
   }
 
   public draw() {

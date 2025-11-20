@@ -28,7 +28,10 @@ export function SceneLayer_WebGL() {
     if (!canvasRef.current) return;
 
     // Get WebGL context
-    const gl = canvasRef.current.getContext("webgl2");
+    const gl = canvasRef.current.getContext("webgl2", {
+      premultipliedAlpha: true
+    });
+    
     if (!gl) return;
     if (glRef.current !== null && glRef.current.isCurrent(gl)) {
       glRef.current.release();

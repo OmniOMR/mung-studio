@@ -41,7 +41,8 @@ const RECT_FRAGMENT_SHADER_SOURCE =
   out vec4 fragColor;
 
   void main() {
-    fragColor = texture(u_texture, uv);
+    vec4 color = texture(u_texture, uv);
+    fragColor = vec4(color.rgb * color.a, color.a); // premultiplied alpha
   }
 `;
 
@@ -608,7 +609,7 @@ export class GlobalMaskTexture implements GLDrawable {
 
   public draw(gl: GLRenderer): void {
     this.flush(gl);
-    gl.setAlphaBlend(true);
+    gl.setAlphaBlend(true, true);
     gl.useProgram(this.program!);
     gl.bindBuffer(this.rectangle, "a_position");
 
@@ -671,6 +672,10 @@ export class GlobalMaskTexture implements GLDrawable {
       this.forceFullUpload = true;
     }
 
+    gl.use((wgl: WebGL2RenderingContext) => {
+      wgl.pixelStorei(WebGL2RenderingContext.UNPACK_ROW_LENGTH, this.bgImageWidth);
+    });
+
     for (const update of this.queuedUpdates) {
       this.processUpdateRequest(update);
 
@@ -689,11 +694,6 @@ export class GlobalMaskTexture implements GLDrawable {
                 Math.min(update.y + update.height, tex.startY + tex.height) -
                 srcY;
 
-              wgl.pixelStorei(
-                WebGL2RenderingContext.UNPACK_ROW_LENGTH,
-                this.bgImageWidth,
-              );
-
               wgl.texSubImage2D(
                 WebGL2RenderingContext.TEXTURE_2D,
                 0,
@@ -705,8 +705,6 @@ export class GlobalMaskTexture implements GLDrawable {
                 WebGL2RenderingContext.UNSIGNED_BYTE,
                 this.getClientBufPointer(srcX, srcY),
               );
-
-              wgl.pixelStorei(WebGL2RenderingContext.UNPACK_ROW_LENGTH, 0);
             });
           }
         });
@@ -716,11 +714,6 @@ export class GlobalMaskTexture implements GLDrawable {
     if (this.forceFullUpload || this.requestTextureResize) {
       this.forEachTextureSegment((tex) => {
         gl.updateTexture(tex.texture!, (wgl: WebGL2RenderingContext) => {
-          wgl.pixelStorei(
-            WebGL2RenderingContext.UNPACK_ROW_LENGTH,
-            this.bgImageWidth,
-          );
-
           if (this.requestTextureResize && tex.needsResize) {
             //force full reallocation and reupload
             wgl.texImage2D(
@@ -751,11 +744,13 @@ export class GlobalMaskTexture implements GLDrawable {
               this.getClientBufPointer(tex.startX, tex.startY),
             );
           }
-
-          wgl.pixelStorei(WebGL2RenderingContext.UNPACK_ROW_LENGTH, 0);
         });
       });
     }
+
+    gl.use((wgl: WebGL2RenderingContext) => {
+      wgl.pixelStorei(WebGL2RenderingContext.UNPACK_ROW_LENGTH, 0);
+    });
 
     this.forceFullUpload = false;
     this.requestTextureResize = false;

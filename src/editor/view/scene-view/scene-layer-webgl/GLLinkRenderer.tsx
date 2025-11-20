@@ -100,7 +100,7 @@ const LINE_FRAGMENT_SHADER_SOURCE =
       color.a = 0.15;
     }
 
-    fragColor = color;
+    fragColor = vec4(color.rgb * color.a, color.a); //premultiply alpha
   }
 `;
 
@@ -313,7 +313,7 @@ export class LinkGeometryMasterDrawable extends GLDrawableComposite {
 
   public draw(gl: GLRenderer): void {
     gl.useProgram(this.program);
-    gl.setAlphaBlend(true);
+    gl.setAlphaBlend(true, true);
 
     let selecting = false;
     this.linkDrawables.forEach((drawable) => {
