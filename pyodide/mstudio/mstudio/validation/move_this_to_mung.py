@@ -113,8 +113,64 @@ def build_default_validation_engine():
     """Constructs a validation engine for the current MuNG format
     with all the available validation rules included."""
     return ValidationEngine([
-        R1001_FullNoteheadsAreDeprecated(),
+        
+        # 1xxx codes are class name deprecations
+        DeprecatedClassNameRule(1001, "noteheadFull", "noteheadBlack"),
+        DeprecatedClassNameRule(1002, "noteheadFullSmall", "noteheadBlackSmall"),
+        DeprecatedClassNameRule(1003, "restBreve", "restDoubleWhole"),
+        DeprecatedClassNameRule(1003, "restSemibreve", "restWhole"),
+        DeprecatedClassNameRule(1003, "restMinim", "restHalf"),
+        DeprecatedClassNameRule(1003, "restCrotchet", "restQuarter"),
+        DeprecatedClassNameRule(1003, "restQuaver", "rest8th"),
+        DeprecatedClassNameRule(1003, "restSemiquaver", "rest16th"),
+        DeprecatedClassNameRule(1003, "restDemisemiquaver", "rest32nd"),
+        DeprecatedClassNameRule(1004, "multiMeasureRest", "restHBar"),
+        DeprecatedClassNameRule(1005, "dynamicLetterF", "dynamicForte"),
+        DeprecatedClassNameRule(1005, "dynamicLetterM", "dynamicMezzo"),
+        DeprecatedClassNameRule(1005, "dynamicLetterN", "dynamicNiente"),
+        DeprecatedClassNameRule(1005, "dynamicLetterP", "dynamicPiano"),
+        DeprecatedClassNameRule(1005, "dynamicLetterR", "dynamicRinforzando"),
+        DeprecatedClassNameRule(1005, "dynamicLetterS", "dynamicSforzando"),
+        DeprecatedClassNameRule(1005, "dynamicLetterZ", "dynamicZ"),
+        DeprecatedClassNameRule(1006, "tuple", "tuplet"),
+        DeprecatedClassNameRule(1006, "tupleBracket", "tupletBracket"),
+        DeprecatedClassNameRule(1007, "singleNoteTremolo"),
+        DeprecatedClassNameRule(1007, "tremoloMark"),
+        DeprecatedClassNameRule(1008, "flag"),
+        DeprecatedClassNameRule(1009, "fermata"),
+        DeprecatedClassNameRule(1010, "arpegio", "arpeggiato"),
+        DeprecatedClassNameRule(1011, "ledgerLine", "legerLine"),
+        DeprecatedClassNameRule(1012, "sharp", "accidentalSharp"),
+        DeprecatedClassNameRule(1012, "flat", "accidentalFlat"),
+        DeprecatedClassNameRule(1012, "natural", "accidentalNatural"),
+        DeprecatedClassNameRule(1012, "double_sharp", "accidentalDoubleSharp"),
+        DeprecatedClassNameRule(1012, "double_flat", "accidentalDoubleFlat"),
+        DeprecatedClassNameRule(1013, "numeral0"),
+        DeprecatedClassNameRule(1013, "numeral1"),
+        DeprecatedClassNameRule(1013, "numeral2"),
+        DeprecatedClassNameRule(1013, "numeral3"),
+        DeprecatedClassNameRule(1013, "numeral4"),
+        DeprecatedClassNameRule(1013, "numeral5"),
+        DeprecatedClassNameRule(1013, "numeral6"),
+        DeprecatedClassNameRule(1013, "numeral7"),
+        DeprecatedClassNameRule(1013, "numeral8"),
+        DeprecatedClassNameRule(1013, "numeral9"),
+        DeprecatedClassNameRule(1014, "timeSigDivider", "timeSigSlash"),
+        DeprecatedClassNameRule(1015, "barline", "barlineSingle"),
+        DeprecatedClassNameRule(1016, "articulationAccent"),
+        DeprecatedClassNameRule(1016, "articulationMarcatoAbove", "articMarcatoAbove"),
+        DeprecatedClassNameRule(1016, "articulationMarcatoBelow", "articMarcatoBelow"),
+        DeprecatedClassNameRule(1016, "articulationStaccato"),
+        DeprecatedClassNameRule(1016, "articulationTenuto"),
+        DeprecatedClassNameRule(1017, "repeatOneBar", "repeat1Bar"),
+        DeprecatedClassNameRule(1018, "graceNoteAcciaccatura"),
+
+        # 2xxx codes are manual class+graph interactions
         R2001_FlagsAreOrientedProperly(),
+
+        # 3xxx codes are grammar validation issues
+
+        # 4xxx codes are musicxml conversion issues
     ])
 
 
@@ -123,21 +179,41 @@ def build_default_validation_engine():
 ##################
 
 
-class R1001_FullNoteheadsAreDeprecated(ValidationRule):
+class DeprecatedClassNameRule(ValidationRule):
+    def __init__(
+            self,
+            code: int,
+            old_class: str,
+            new_class: str | None = None,
+            message: str | None = None
+    ):
+        self.code = code
+        self.old_class = old_class
+        self.new_class = new_class
+        self.message = (
+            message if message is not None else
+            f"Class '{old_class}' is deprecated. " +
+            (
+                f"Use '{new_class}' instead."
+                if new_class is not None else
+                "See the annotation instructions for more info."
+            )
+        )
+
     def scan_graph(self, graph: NotationGraph) -> Iterator[ValidationIssue]:
         for node in graph.vertices:
-            if node.class_name == "noteheadFull":
+            if node.class_name == self.old_class:
                 yield self.build_issue(node)
     
     def build_issue(self, node: Node) -> ValidationIssue:
         return ValidationIssue(
-            code=1001,
-            message="Class 'noteheadFull' is deprecated. Use 'noteheadBlack' instead.",
+            code=self.code,
+            message=self.message,
             node_id=node.id,
-            resolution=Delta([
+            resolution=None if self.new_class is None else Delta([
                 DeltaUpdateNodeClass(
                     update_node_id=node.id,
-                    new_class_name="noteheadBlack",
+                    new_class_name=self.new_class,
                 )
             ]),
             fingerprint=None,
