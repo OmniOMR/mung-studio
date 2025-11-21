@@ -184,6 +184,8 @@ def build_default_validation_engine():
         SinglePixelLineRule(3003, "stem", 1),
 
         # 4xxx codes are text-nodes related issues
+        MandatoryTextTranscriptionRule(4001, "dynamicsText"),
+        MandatoryTextTranscriptionRule(4001, "restText"),
         
         # 5xxx codes are grammar validation issues
 
@@ -323,6 +325,35 @@ class SinglePixelLineRule(ValidationRule):
         return ValidationIssue(
             code=self.code,
             message=f"Node '{node.class_name}' is likely a single-pixel line, instead of a proper mask.",
+            node_id=node.id,
+            resolution=None,
+            fingerprint=None,
+        )
+
+
+class MandatoryTextTranscriptionRule(ValidationRule):
+    def __init__(
+            self,
+            code: int,
+            class_name: str,
+    ):
+        self.code = code
+        self.class_name = class_name
+
+    def scan_graph(self, graph: NotationGraph) -> Iterator[ValidationIssue]:
+        for node in graph.vertices:
+            if node.class_name == self.class_name:
+                yield from self.inspect_node(node)
+    
+    def inspect_node(self, node: Node) -> Iterator[ValidationIssue]:
+        text = node.data.get("text_transcription", None)
+        if text is None:
+            yield self.build_issue(node)
+    
+    def build_issue(self, node: Node) -> ValidationIssue:
+        return ValidationIssue(
+            code=self.code,
+            message=f"Node '{node.class_name}' is missing mandatory text transcription.",
             node_id=node.id,
             resolution=None,
             fingerprint=None,
