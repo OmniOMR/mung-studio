@@ -157,16 +157,25 @@ def build_default_validation_engine():
         DeprecatedClassNameRule(1013, "numeral9"),
         DeprecatedClassNameRule(1014, "timeSigDivider", "timeSigSlash"),
         DeprecatedClassNameRule(1015, "barline", "barlineSingle"),
-        DeprecatedClassNameRule(1016, "articulationAccent"),
+        DeprecatedClassNameRule(1016, "articulationAccent", "articAccentAbove"),
         DeprecatedClassNameRule(1016, "articulationMarcatoAbove", "articMarcatoAbove"),
         DeprecatedClassNameRule(1016, "articulationMarcatoBelow", "articMarcatoBelow"),
-        DeprecatedClassNameRule(1016, "articulationStaccato"),
-        DeprecatedClassNameRule(1016, "articulationTenuto"),
+        DeprecatedClassNameRule(1016, "articulationStaccato", "articStaccatoBelow"),
+        DeprecatedClassNameRule(1016, "articulationTenuto", "articTenutoBelow"),
         DeprecatedClassNameRule(1017, "repeatOneBar", "repeat1Bar"),
-        DeprecatedClassNameRule(1018, "graceNoteAcciaccatura"),
+        DeprecatedClassNameRule(1018, "graceNoteAcciaccatura", "graceNoteSlashStemUp"),
 
         # 2xxx codes are manual class+graph interactions
-        R2001_FlagsAreOrientedProperly(),
+        NoteheadChildOrientationRule(2001, "Up", "Down", [
+            "flag8th", "flag16th", "flag32nd", "flag64th",
+            "flag128th", "flag256th", "flag512th", "flag1024th",
+        ]),
+        NoteheadChildOrientationRule(2002, "Above", "Below", [
+            "articAccent", "articMarcato", "articStaccato",
+            "articTenuto", "articStaccatissimo",
+        ]),
+        NoteheadChildOrientationRule(2003, "Above", "Below", ["fermata"]),
+        NoteheadChildOrientationRule(2004, "Up", "Down", ["graceNoteSlashStem"]),
 
         # 3xxx codes are grammar validation issues
 
@@ -220,52 +229,59 @@ class DeprecatedClassNameRule(ValidationRule):
         )
 
 
-class R2001_FlagsAreOrientedProperly(ValidationRule):
-    """
-    Checks that if a flag is above the notehead, it has the "Up" class
-    and if below, it has the "Down" class.
-    """
+class NoteheadChildOrientationRule(ValidationRule):
+    def __init__(
+            self,
+            code: int,
+            above_suffix: str,
+            below_suffix: str,
+            class_roots: list[str]
+    ):
+        self.code = code
+        self.above_suffix = above_suffix
+        self.below_suffix = below_suffix
+        self.class_roots = class_roots
+
+        self.NOTEHEADS = set([
+            "noteheadBlack", "noteheadHalf", "noteheadWhole",
+            "noteheadBlackSmall", "noteheadHalfSmall", "noteheadWholeSmall",
+        ])
+
+        self.CHILD_CLASSES = set(
+            [r + above_suffix for r in class_roots] +
+            [r + below_suffix for r in class_roots]
+        )
+    
     def scan_graph(self, graph: NotationGraph) -> Iterator[ValidationIssue]:
         for node in graph.vertices:
-            if node.class_name in ["noteheadBlack", "noteheadBlackSmall"]:
+            if node.class_name in self.NOTEHEADS:
                 yield from self.inspect_notehead(graph, node)
     
     def inspect_notehead(self, graph: NotationGraph, notehead: Node) -> Iterator[ValidationIssue]:
-        flags = [
-            n for n in graph.children(notehead) if self.is_flag(n.class_name)
-        ]
-        for flag in flags:
-            if self.is_flag_up(flag.class_name):
-                if notehead.middle[1] < flag.middle[1]:
-                    yield self.build_issue(notehead, flag, "Up", "Down")
-            else:
-                if notehead.middle[1] > flag.middle[1]:
-                    yield self.build_issue(notehead, flag, "Down", "Up")
+        for child in graph.children(notehead, self.CHILD_CLASSES):
+            if str(child.class_name).endswith(self.above_suffix):
+                if notehead.middle[0] < child.middle[0]:
+                    yield self.build_issue(notehead, child, False)
+            elif str(child.class_name).endswith(self.below_suffix):
+                if notehead.middle[0] > child.middle[0]:
+                    yield self.build_issue(notehead, child, True)
     
-    def build_issue(self, notehead: Node, flag: Node, dir_from: str, dir_to: str) -> ValidationIssue:
+    def build_issue(self, notehead: Node, child: Node, is_actually_above: bool) -> ValidationIssue:
+        suffix_from = self.below_suffix if is_actually_above else self.above_suffix
+        suffix_to = self.above_suffix if is_actually_above else self.below_suffix
+        new_class = str(child.class_name).replace(suffix_from, suffix_to)
         return ValidationIssue(
             code=2001,
-            message=f"Flag seems to be '{dir_to}' from its position but is annotated as '{dir_from}'.",
-            node_id=flag.id,
+            message=f"Node '{child.class_name}' should be '{new_class}' since it " + \
+                f"is acutally {"above" if is_actually_above else "below"} the notehead.",
+            node_id=child.id,
             resolution=Delta([
                 DeltaUpdateNodeClass(
-                    update_node_id=flag.id,
-                    new_class_name=flag.class_name.replace(dir_from, dir_to),
+                    update_node_id=child.id,
+                    new_class_name=new_class,
                 )
             ]),
+            # the child may belong to multiple noteheads (e.g. a flag),
+            # so we fingerprint by the notehead ID to disambiguate issues
             fingerprint=str(notehead.id),
         )
-
-    def is_flag(self, class_name: str) -> bool:
-        return class_name in [
-            "flag8thUp", "flag8thDown", "flag16thUp", "flag16thDown",
-            "flag32ndUp", "flag32ndDown", "flag64thUp", "flag64thDown",
-            "flag128thUp", "flag128thDown", "flag256thUp", "flag256thDown",
-            "flag512thUp", "flag512thDown", "flag1024thUp", "flag1024thDown",
-        ]
-    
-    def is_flag_up(self, class_name: str) -> bool:
-        return class_name in [
-            "flag8thUp", "flag16thUp", "flag32ndUp", "flag64thUp",
-            "flag128thUp", "flag256thUp", "flag512thUp", "flag1024thUp",
-        ]
