@@ -673,7 +673,10 @@ export class GlobalMaskTexture implements GLDrawable {
     }
 
     gl.use((wgl: WebGL2RenderingContext) => {
-      wgl.pixelStorei(WebGL2RenderingContext.UNPACK_ROW_LENGTH, this.bgImageWidth);
+      wgl.pixelStorei(
+        WebGL2RenderingContext.UNPACK_ROW_LENGTH,
+        this.bgImageWidth,
+      );
     });
 
     for (const update of this.queuedUpdates) {

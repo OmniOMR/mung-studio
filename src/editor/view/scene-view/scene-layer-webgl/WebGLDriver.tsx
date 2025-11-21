@@ -204,7 +204,10 @@ export class GLRenderer {
   public setAlphaBlend(enable: boolean, premultiplied: boolean = false) {
     if (enable) {
       this.gl.enable(this.gl.BLEND);
-      this.gl.blendFunc(premultiplied ? this.gl.ONE : this.gl.SRC_ALPHA, this.gl.ONE_MINUS_SRC_ALPHA);
+      this.gl.blendFunc(
+        premultiplied ? this.gl.ONE : this.gl.SRC_ALPHA,
+        this.gl.ONE_MINUS_SRC_ALPHA,
+      );
     } else {
       this.gl.disable(this.gl.BLEND);
     }
