@@ -177,9 +177,17 @@ def build_default_validation_engine():
         NoteheadChildOrientationRule(2003, "Above", "Below", ["fermata"]),
         NoteheadChildOrientationRule(2004, "Up", "Down", ["graceNoteSlashStem"]),
 
-        # 3xxx codes are grammar validation issues
+        # 3xxx codes are mask pixel-shape validation issues
+        SinglePixelLineRule(3001, "barlineSingle", 1),
+        SinglePixelLineRule(3001, "barlineHeavy", 1),
+        SinglePixelLineRule(3002, "staffLine", 0),
+        SinglePixelLineRule(3003, "stem", 1),
 
-        # 4xxx codes are musicxml conversion issues
+        # 4xxx codes are text-nodes related issues
+        
+        # 5xxx codes are grammar validation issues
+
+        # 6xxx codes are musicxml conversion issues
     ])
 
 
@@ -271,7 +279,7 @@ class NoteheadChildOrientationRule(ValidationRule):
         suffix_to = self.above_suffix if is_actually_above else self.below_suffix
         new_class = str(child.class_name).replace(suffix_from, suffix_to)
         return ValidationIssue(
-            code=2001,
+            code=self.code,
             message=f"Node '{child.class_name}' should be '{new_class}' since it " + \
                 f"is acutally {"above" if is_actually_above else "below"} the notehead.",
             node_id=child.id,
@@ -284,4 +292,38 @@ class NoteheadChildOrientationRule(ValidationRule):
             # the child may belong to multiple noteheads (e.g. a flag),
             # so we fingerprint by the notehead ID to disambiguate issues
             fingerprint=str(notehead.id),
+        )
+
+
+class SinglePixelLineRule(ValidationRule):
+    def __init__(
+            self,
+            code: int,
+            class_name: str,
+            sum_axis: int,
+            detection_threshold: float = 0.8,
+    ):
+        self.code = code
+        self.class_name = class_name
+        self.sum_axis = sum_axis
+        self.detection_threshold = detection_threshold
+
+    def scan_graph(self, graph: NotationGraph) -> Iterator[ValidationIssue]:
+        for node in graph.vertices:
+            if node.class_name == self.class_name:
+                yield from self.inspect_node(node)
+    
+    def inspect_node(self, node: Node) -> Iterator[ValidationIssue]:
+        bool_list = (node.mask.sum(axis=self.sum_axis).flatten() == 1)
+        single_pixel_ratio = bool_list.sum() / len(bool_list)
+        if single_pixel_ratio >= self.detection_threshold:
+            yield self.build_issue(node)
+    
+    def build_issue(self, node: Node) -> ValidationIssue:
+        return ValidationIssue(
+            code=self.code,
+            message=f"Node '{node.class_name}' is likely a single-pixel line, instead of a proper mask.",
+            node_id=node.id,
+            resolution=None,
+            fingerprint=None,
         )
