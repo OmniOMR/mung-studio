@@ -8,16 +8,12 @@ import { EditorContext } from "../../EditorContext";
 import { useAtomValue } from "jotai";
 import { SceneRenderingEngine } from "../../model/SettingsStore";
 
-export interface SceneViewProps {
-  readonly backgroundImageUrl: string | null;
-}
-
 /**
  * The central surface of the editor. Displays the scene and its
  * contents visually. It provides visual navigation and interaction
  * with the scene to the user.
  */
-export function SceneView(props: SceneViewProps) {
+export function SceneView() {
   const { zoomController, settingsStore } = useContext(EditorContext);
 
   const sceneRenderingEngine = useAtomValue(
@@ -45,7 +41,7 @@ export function SceneView(props: SceneViewProps) {
       }}
     >
       {/* The gray background and the scanned document image */}
-      <BackgroundLayer backgroundImageUrl={props.backgroundImageUrl} />
+      <BackgroundLayer />
 
       {/* Objects that are not being edited, but there is many of them,
       so tricks have to be made to render them fast */}

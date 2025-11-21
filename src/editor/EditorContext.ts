@@ -22,11 +22,13 @@ import { SettingsStore } from "./model/SettingsStore";
 import { ValidationStore } from "./model/ValidationStore";
 import { ValidationController } from "./controller/ValidationController";
 import { DeltaInterpreter } from "./model/DeltaInterpreter";
+import { BackgroundImageStore } from "./model/BackgroundImageStore";
 
 /**
  * All fields present in the editor component's global context
  */
 export interface EditorContextState {
+  readonly backgroundImageStore: BackgroundImageStore;
   readonly notationGraphStore: NotationGraphStore;
   readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
@@ -56,8 +58,14 @@ export interface EditorContextState {
 export function useConstructContextServices(
   initialNodes: readonly Node[],
   initialMungFileMetadata: MungFileMetadata,
+  backgroundImageUrl: string | null,
 ): EditorContextState {
   const jotaiStore: JotaiStore = useMemo(() => getDefaultStore(), []);
+
+  const backgroundImageStore = useMemo(
+    () => new BackgroundImageStore(backgroundImageUrl, jotaiStore),
+    [],
+  );
 
   const notationGraphStore = useMemo(
     () => new NotationGraphStore(initialNodes, initialMungFileMetadata),
@@ -191,6 +199,7 @@ export function useConstructContextServices(
   );
 
   return {
+    backgroundImageStore,
     notationGraphStore,
     selectionStore,
     classVisibilityStore,

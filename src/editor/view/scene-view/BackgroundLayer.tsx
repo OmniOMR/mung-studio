@@ -2,12 +2,8 @@ import { useContext, useRef } from "react";
 import * as d3 from "d3";
 import { EditorContext } from "../../EditorContext";
 
-export interface BackgroundLayerProps {
-  readonly backgroundImageUrl: string | null;
-}
-
-export function BackgroundLayer(props: BackgroundLayerProps) {
-  const { zoomController } = useContext(EditorContext);
+export function BackgroundLayer() {
+  const { zoomController, backgroundImageStore } = useContext(EditorContext);
 
   const gRef = useRef<SVGGElement | null>(null);
 
@@ -32,7 +28,7 @@ export function BackgroundLayer(props: BackgroundLayerProps) {
         <image
           x="0"
           y="0"
-          href={props.backgroundImageUrl ?? undefined}
+          href={backgroundImageStore.imageUrl ?? undefined}
           style={{
             imageRendering: "pixelated",
           }}

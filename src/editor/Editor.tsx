@@ -1,5 +1,5 @@
 import { Node } from "../mung/Node";
-import { useCallback, useEffect } from "react";
+import { useEffect } from "react";
 import { SceneView } from "./view/scene-view/SceneView";
 import { OverviewPanel } from "./view/overview-panel/OverviewPanel";
 import { InspectorPanel } from "./view/inspector-panel/InspectorPanel";
@@ -60,6 +60,7 @@ export function Editor(props: EditorProps) {
   const editorContext = useConstructContextServices(
     props.initialNodes,
     props.initialMungFileMetadata,
+    props.backgroundImageUrl,
   );
   const { notationGraphStore, autosaveStore } = editorContext;
 
@@ -143,7 +144,7 @@ export function Editor(props: EditorProps) {
             }}
           >
             <Box sx={{ position: "relative", flexGrow: 1 }}>
-              <SceneView backgroundImageUrl={props.backgroundImageUrl} />
+              <SceneView />
               <Toolbelt />
             </Box>
             <ValidationPanel />
