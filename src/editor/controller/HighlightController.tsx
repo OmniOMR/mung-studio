@@ -174,11 +174,14 @@ export class HighlightController implements IController {
             fontFamily="monospace"
             fontWeight="400"
             style={{
-              transform: "translateY(calc(var(--scene-screen-pixel) * 15px))",
               textShadow: "1px 1px 2px rgba(0, 0, 0, 0.4)",
             }}
           >
-            {highlightedNode.textTranscription}
+            {highlightedNode.textTranscription.split("\n").map((line, i) => (
+              <tspan key={i} x={highlightedNode.left} dy="1.3em">
+                {line}
+              </tspan>
+            ))}
           </text>
         )}
       </>
