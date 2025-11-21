@@ -269,8 +269,6 @@ const lookupTable = {
   tupletColon: 7_502,
 
   // rests
-  multiMeasureRest: 8_000,
-  restMaxima: 8_000,
   restLonga: 8_000,
   restDoubleWhole: 8_000,
   restBreve: 8_000,
@@ -292,9 +290,8 @@ const lookupTable = {
   rest512th: 8_000,
   rest1024th: 8_000,
   restHBar: 8_000,
-  restDoubleWholeLegerLine: 8_000,
-  restWholeLegerLine: 8_000,
-  restHalfLegerLine: 8_000,
+  restText: 8_000,
+  multiMeasureRest: 8_000,
 
   // stems
   stem: 9_000,

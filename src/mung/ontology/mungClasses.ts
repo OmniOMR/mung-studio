@@ -369,13 +369,6 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
 
   // 4.41. Rests
   // https://w3c.github.io/smufl/latest/tables/rests.html
-  multiMeasureRest: {
-    uc: "\u{E4EE}",
-    mpp: true,
-    notSmufl: true,
-    smuflEquivalents: ["restHBar"],
-  },
-  restMaxima: { uc: "\u{E01A}\u{00A0}\u{00A0}\u{E4E0}" },
   restLonga: { uc: "\u{E01A}\u{00A0}\u{00A0}\u{E4E1}" },
   restDoubleWhole: { uc: "\u{E01A}\u{00A0}\u{00A0}\u{E4E2}" },
   restBreve: {
@@ -421,9 +414,13 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   rest512th: { uc: "\u{E4EC}" },
   rest1024th: { uc: "\u{E4ED}" },
   restHBar: { uc: "\u{E4EE}" },
-  restDoubleWholeLegerLine: { uc: "\u{E4F3}" },
-  restWholeLegerLine: { uc: "\u{E4F4}" },
-  restHalfLegerLine: { uc: "\u{E4F5}" },
+  restText: { uc: "14", transcribable: true },
+  multiMeasureRest: {
+    uc: "\u{E4EE}",
+    mpp: true,
+    notSmufl: true,
+    smuflEquivalents: ["restHBar"],
+  },
 
   // 4.42. Bar repeats
   // https://w3c.github.io/smufl/latest/tables/bar-repeats.html
