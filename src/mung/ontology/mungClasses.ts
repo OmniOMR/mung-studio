@@ -462,6 +462,27 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     container: true,
     transcribable: true,
   },
+  dynamicPiano: { uc: "\u{E520}" },
+  dynamicMezzo: { uc: "\u{E521}" },
+  dynamicForte: { uc: "\u{E522}" },
+  dynamicRinforzando: { uc: "\u{E523}" },
+  dynamicSforzando: { uc: "\u{E524}" },
+  dynamicZ: { uc: "\u{E525}" },
+  dynamicNiente: { uc: "\u{E526}" },
+  dynamicCrescendo: { uc: "cres.", transcribable: true },
+  dynamicCrescendoSpanner: {
+    uc: "_\u{00A0}_",
+    otherSmuflDivergenceJustification: "Cannot be rendered using a font",
+  },
+  dynamicDiminuendo: { uc: "dim.", transcribable: true },
+  dynamicDiminuendoSpanner: {
+    uc: "_\u{00A0}_",
+    otherSmuflDivergenceJustification: "Cannot be rendered using a font",
+  },
+  dynamicCrescendoHairpin: { uc: "\u{E53E}", mpp: true },
+  dynamicDiminuendoHairpin: { uc: "\u{E53F}", mpp: true },
+  dynamicNienteForHairpin: { uc: "\u{E541}" },
+  // these are legacy MUSCIMA++ classes:
   dynamicLetterF: {
     uc: "\u{E522}",
     mpp: true,
@@ -504,16 +525,6 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     notSmufl: true,
     smuflEquivalents: ["dynamicZ"],
   },
-  dynamicPiano: { uc: "\u{E520}" },
-  dynamicMezzo: { uc: "\u{E521}" },
-  dynamicForte: { uc: "\u{E522}" },
-  dynamicRinforzando: { uc: "\u{E523}" },
-  dynamicSforzando: { uc: "\u{E524}" },
-  dynamicZ: { uc: "\u{E525}" },
-  dynamicNiente: { uc: "\u{E526}" },
-  dynamicCrescendoHairpin: { uc: "\u{E53E}", mpp: true },
-  dynamicDiminuendoHairpin: { uc: "\u{E53F}", mpp: true },
-  dynamicNienteForHairpin: { uc: "\u{E541}" },
 
   // 4.45. Lyrics
   // https://w3c.github.io/smufl/latest/tables/lyrics.html
@@ -631,8 +642,8 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   // 4.95. Multi-segment lines
   // https://w3c.github.io/smufl/latest/tables/multi-segment-lines.html
   wiggleTrill: { uc: "\u{EAA4}\u{EAA4}\u{EAA4}", mpp: true },
-  dottedHorizontalSpanner: { uc: "--", mpp: true },
-  horizontalSpanner: { uc: "-", mpp: true },
+  dottedHorizontalSpanner: { uc: "_\u{00A0}_", mpp: true },
+  horizontalSpanner: { uc: "_", mpp: true },
   glissando: { uc: "/", mpp: true },
 
   // MUSCIMA++ Text glyphs
@@ -733,7 +744,9 @@ function parseMungClassDefinition(
   const isContainer = !!def.container;
   const justifiedSmuflDivergence = isSmufl
     ? undefined
-    : isContainer || def.otherSmuflDivergenceJustification !== undefined;
+    : isContainer ||
+      def.transcribable === true ||
+      def.otherSmuflDivergenceJustification !== undefined;
   return {
     className,
     unicode: def.uc,
