@@ -10,6 +10,7 @@ import { useContext } from "react";
 import { EditorContext } from "../../EditorContext";
 import { NodeTool } from "../../model/NodeTool";
 import { useAtomValue } from "jotai";
+import ReorderIcon from "@mui/icons-material/Reorder";
 
 export function NodeEditingContent() {
   const { nodeEditingController } = useContext(EditorContext);
@@ -72,6 +73,15 @@ export function NodeEditingContent() {
         }
       >
         <BookmarkRemoveIcon />
+      </ToolbeltButton>
+      <ToolbeltButton
+        tooltip="Stafflines tool [S]"
+        isSelected={nodeTool === NodeTool.StafflinesTool}
+        onClick={() =>
+          nodeEditingController.setCurrentNodeTool(NodeTool.StafflinesTool)
+        }
+      >
+        <ReorderIcon />
       </ToolbeltButton>
     </>
   );

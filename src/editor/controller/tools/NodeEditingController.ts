@@ -155,6 +155,13 @@ export class NodeEditingController implements IController {
         this.setCurrentNodeTool(NodeTool.PolygonFill);
       }
     },
+    S: () => {
+      if (this.currentNodeTool !== NodeTool.StafflinesTool) {
+        this.setCurrentNodeTool(NodeTool.StafflinesTool);
+      } else {
+        this.setCurrentNodeTool(NodeTool.PolygonFill);
+      }
+    },
     // Note: "Escape" is handled by sub-tools
   };
 

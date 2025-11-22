@@ -40,4 +40,34 @@ export class BackgroundImageToolsApi {
 
     return outRegion;
   }
+
+  /**
+   * Runs staffline binarization on a region from the background image
+   */
+  public async detectStafflines(region: ImageData): Promise<ImageData> {
+    const result = await this.connection.executePython(
+      `
+        import numpy as np
+        from mstudio.background_image_tools.detect_stafflines \\
+          import detect_stafflines
+
+        region = np.asarray(data.to_py(), dtype=np.uint8) \\
+          .reshape((height, width, 4))
+        
+        out_region = detect_stafflines(region)
+
+        out_region.flatten() # return as one big array
+      `,
+      {
+        width: region.width,
+        height: region.height,
+        data: region.data,
+      },
+    );
+
+    const data = new Uint8ClampedArray((result as Uint8Array).buffer);
+    const outRegion = new ImageData(data, region.width, region.height);
+
+    return outRegion;
+  }
 }

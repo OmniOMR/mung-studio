@@ -31,4 +31,9 @@ export enum NodeTool {
    * Tool that draws a polygon, that once submitted is subtracted from the mask
    */
   PolygonErase = "PolygonErase",
+
+  /**
+   * Tool that binarizes stafflines
+   */
+  StafflinesTool = "StafflinesTool",
 }

@@ -61,6 +61,7 @@ export class PolygonToolsController implements IController {
     if (currentNodeTool === NodeTool.PolygonFill) return true;
     if (currentNodeTool === NodeTool.PolygonErase) return true;
     if (currentNodeTool === NodeTool.PolygonBinarize) return true;
+    if (currentNodeTool === NodeTool.StafflinesTool) return true;
     return false;
   });
 
@@ -190,6 +191,22 @@ export class PolygonToolsController implements IController {
       });
     }
 
+    // detect stafflines
+    if (nodeTool === NodeTool.StafflinesTool) {
+      const binarizedRegion =
+        await this.pythonRuntime.backgroundImageToolsApi.detectStafflines(
+          this.backgroundImageStore.getImageData(bbox),
+        );
+      const bitmap = await createImageBitmap(binarizedRegion);
+      this.nodeEditingController.paintOverTheMask(bbox, (ctx) => {
+        ctx.save();
+        ctx.clip(path, "nonzero");
+        ctx.globalCompositeOperation = "copy";
+        ctx.drawImage(bitmap, bbox.x, bbox.y);
+        ctx.restore();
+      });
+    }
+
     // reset the polygon state
     this.polygonVertices = [];
 
@@ -213,8 +230,7 @@ export class PolygonToolsController implements IController {
   ///////////////
 
   private svgPathElement: SVGPathElement | null = null;
-  private svgCrosshatchPatternElement: SVGPatternElement | null = null;
-  private svgDotsPatternElement: SVGPatternElement | null = null;
+  private svgPatterElements: SVGPatternElement[] = [];
 
   private buildPolygonPathData(includePointer: boolean): string {
     let d = "";
@@ -244,41 +260,49 @@ export class PolygonToolsController implements IController {
     this.svgPathElement?.setAttribute("d", this.buildPolygonPathData(true));
 
     // update crosshatch patern scaling
-    this.svgCrosshatchPatternElement?.setAttribute(
-      "patternTransform",
-      `scale(${1 / this.zoomController.currentTransform.k})`,
-    );
-    this.svgDotsPatternElement?.setAttribute(
-      "patternTransform",
-      `scale(${1 / this.zoomController.currentTransform.k})`,
-    );
+    for (const pattern of this.svgPatterElements) {
+      pattern.setAttribute(
+        "patternTransform",
+        `scale(${1 / this.zoomController.currentTransform.k})`,
+      );
+    }
   }
 
   public renderSVG(): JSX.Element | null {
     const svgPathRef = useRef<SVGPathElement | null>(null);
     const svgCrosshatchPatternRef = useRef<SVGPatternElement | null>(null);
     const svgDotsPatternRef = useRef<SVGPatternElement | null>(null);
+    const svgLinesPatternRef = useRef<SVGPatternElement | null>(null);
 
     useEffect(() => {
       this.svgPathElement = svgPathRef.current;
-      this.svgCrosshatchPatternElement = svgCrosshatchPatternRef.current;
-      this.svgDotsPatternElement = svgDotsPatternRef.current;
+      this.svgPatterElements = [
+        svgCrosshatchPatternRef.current!,
+        svgDotsPatternRef.current!,
+        svgLinesPatternRef.current!,
+      ];
 
       // run the update method when the react re-renders the element
       this.notify();
 
       return () => {
         this.svgPathElement = null;
-        this.svgCrosshatchPatternElement = null;
-        this.svgDotsPatternElement = null;
+        this.svgPatterElements = [];
       };
     }, []);
 
     const nodeTool = useAtomValue(
       this.nodeEditingController.currentNodeToolAtom,
     );
-    const isErasing = nodeTool === NodeTool.PolygonErase;
-    const isBinarizing = nodeTool === NodeTool.PolygonBinarize;
+
+    let fill = "rgba(255, 255, 255, 0.5)";
+    if (nodeTool === NodeTool.PolygonErase) {
+      fill = "url(#pattern-crosshatch)";
+    } else if (nodeTool === NodeTool.PolygonBinarize) {
+      fill = "url(#pattern-dots)";
+    } else if (nodeTool === NodeTool.StafflinesTool) {
+      fill = "url(#pattern-lines)";
+    }
 
     return (
       <>
@@ -319,15 +343,27 @@ export class PolygonToolsController implements IController {
         >
           <circle cx="5" cy="5" r="2" fill="rgba(255, 255, 255, 0.5)" />
         </pattern>
+        <pattern
+          ref={svgLinesPatternRef}
+          id="pattern-lines"
+          x="0"
+          y="0"
+          width="10"
+          height="10"
+          patternUnits="userSpaceOnUse"
+        >
+          <line
+            x1="0"
+            y1="5"
+            x2="10"
+            y2="5"
+            strokeWidth="2"
+            stroke="rgba(255, 255, 255, 0.5)"
+          />
+        </pattern>
         <path
           ref={svgPathRef}
-          fill={
-            isBinarizing
-              ? "url(#pattern-dots)"
-              : isErasing
-                ? "url(#pattern-crosshatch)"
-                : "rgba(255, 255, 255, 0.5)"
-          }
+          fill={fill}
           stroke="rgba(0, 0, 0, 0.5)"
           style={{ strokeWidth: "calc(var(--scene-screen-pixel) * 2)" }}
         />

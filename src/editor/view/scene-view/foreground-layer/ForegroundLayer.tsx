@@ -133,7 +133,8 @@ export function ForegroundLayer() {
   if (
     nodeTool === NodeTool.PolygonErase ||
     nodeTool == NodeTool.PolygonFill ||
-    nodeTool == NodeTool.PolygonBinarize
+    nodeTool == NodeTool.PolygonBinarize ||
+    nodeTool == NodeTool.StafflinesTool
   ) {
     cursor = "crosshair";
   }
