@@ -7,6 +7,9 @@ import { NodeTool } from "../../model/NodeTool";
 import { JotaiStore } from "../../model/JotaiStore";
 import { JSX, useEffect, useRef } from "react";
 import { MousePointerController } from "../MousePointerController";
+import { BackgroundImageStore } from "../../model/BackgroundImageStore";
+import { PythonRuntime } from "../../../../pyodide/PythonRuntime";
+import { snapGrowRectangle } from "../../../utils/snapGrowRectangle";
 
 /**
  * Controls both the PolygonFill and PolygonErase tools
@@ -20,6 +23,8 @@ export class PolygonToolsController implements IController {
   private readonly mousePointerController: MousePointerController;
   private readonly redrawTrigger: RedrawTrigger;
   private readonly nodeEditingController: NodeEditingController;
+  private readonly backgroundImageStore: BackgroundImageStore;
+  private readonly pythonRuntime: PythonRuntime;
 
   constructor(
     jotaiStore: JotaiStore,
@@ -27,12 +32,16 @@ export class PolygonToolsController implements IController {
     mousePointerController: MousePointerController,
     redrawTrigger: RedrawTrigger,
     nodeEditingController: NodeEditingController,
+    backgroundImageStore: BackgroundImageStore,
+    pythonRuntime: PythonRuntime,
   ) {
     this.jotaiStore = jotaiStore;
     this.zoomController = zoomController;
     this.mousePointerController = mousePointerController;
     this.redrawTrigger = redrawTrigger;
     this.nodeEditingController = nodeEditingController;
+    this.backgroundImageStore = backgroundImageStore;
+    this.pythonRuntime = pythonRuntime;
 
     // redraw when source data changes
     this.zoomController.onTransformChange.subscribe(this.notify.bind(this));
@@ -51,6 +60,7 @@ export class PolygonToolsController implements IController {
     const currentNodeTool = get(this.nodeEditingController.currentNodeToolAtom);
     if (currentNodeTool === NodeTool.PolygonFill) return true;
     if (currentNodeTool === NodeTool.PolygonErase) return true;
+    if (currentNodeTool === NodeTool.PolygonBinarize) return true;
     return false;
   });
 
@@ -86,7 +96,7 @@ export class PolygonToolsController implements IController {
     },
     N: () => {
       if (this.polygonVertices.length > 0) {
-        this.rasterizePolygon();
+        this.commitPolygon();
       } else {
         this.nodeEditingController.exitNodeEditingTool();
       }
@@ -138,25 +148,47 @@ export class PolygonToolsController implements IController {
     this.redrawTrigger.requestRedrawNextFrame();
   }
 
-  public rasterizePolygon() {
+  public async commitPolygon() {
     // if not even a triangle, do nothing
     if (this.polygonVertices.length < 3) return;
 
     const nodeTool = this.nodeEditingController.currentNodeTool;
-    const bbox = this.calculatePolygonBbox();
+    const bbox = snapGrowRectangle(this.calculatePolygonBbox());
+    const path = new Path2D(this.buildPolygonPathData(false));
 
-    // draw over the mask
-    this.nodeEditingController.paintOverTheMask(bbox, (ctx) => {
-      if (nodeTool === NodeTool.PolygonFill) {
+    // draw polygon
+    if (nodeTool === NodeTool.PolygonFill) {
+      this.nodeEditingController.paintOverTheMask(bbox, (ctx) => {
         ctx.globalCompositeOperation = "source-over";
         ctx.fillStyle = "rgba(255, 0, 0, 1.0)";
-      }
-      if (nodeTool === NodeTool.PolygonErase) {
+        ctx.fill(path, "nonzero");
+      });
+    }
+
+    // erase polygon
+    if (nodeTool === NodeTool.PolygonErase) {
+      this.nodeEditingController.paintOverTheMask(bbox, (ctx) => {
         ctx.globalCompositeOperation = "destination-out";
         ctx.fillStyle = "rgba(0, 0, 0, 1.0)";
-      }
-      ctx.fill(new Path2D(this.buildPolygonPathData(false)), "nonzero");
-    });
+        ctx.fill(path, "nonzero");
+      });
+    }
+
+    // binarize polygon
+    if (nodeTool === NodeTool.PolygonBinarize) {
+      const binarizedRegion =
+        await this.pythonRuntime.backgroundImageToolsApi.otsuBinarizeRegion(
+          this.backgroundImageStore.getImageData(bbox),
+        );
+      const bitmap = await createImageBitmap(binarizedRegion);
+      this.nodeEditingController.paintOverTheMask(bbox, (ctx) => {
+        ctx.save();
+        ctx.clip(path, "nonzero");
+        ctx.globalCompositeOperation = "copy";
+        ctx.drawImage(bitmap, bbox.x, bbox.y);
+        ctx.restore();
+      });
+    }
 
     // reset the polygon state
     this.polygonVertices = [];
@@ -181,7 +213,8 @@ export class PolygonToolsController implements IController {
   ///////////////
 
   private svgPathElement: SVGPathElement | null = null;
-  private svgPatternElement: SVGPatternElement | null = null;
+  private svgCrosshatchPatternElement: SVGPatternElement | null = null;
+  private svgDotsPatternElement: SVGPatternElement | null = null;
 
   private buildPolygonPathData(includePointer: boolean): string {
     let d = "";
@@ -211,7 +244,11 @@ export class PolygonToolsController implements IController {
     this.svgPathElement?.setAttribute("d", this.buildPolygonPathData(true));
 
     // update crosshatch patern scaling
-    this.svgPatternElement?.setAttribute(
+    this.svgCrosshatchPatternElement?.setAttribute(
+      "patternTransform",
+      `scale(${1 / this.zoomController.currentTransform.k})`,
+    );
+    this.svgDotsPatternElement?.setAttribute(
       "patternTransform",
       `scale(${1 / this.zoomController.currentTransform.k})`,
     );
@@ -219,18 +256,21 @@ export class PolygonToolsController implements IController {
 
   public renderSVG(): JSX.Element | null {
     const svgPathRef = useRef<SVGPathElement | null>(null);
-    const svgPatternRef = useRef<SVGPatternElement | null>(null);
+    const svgCrosshatchPatternRef = useRef<SVGPatternElement | null>(null);
+    const svgDotsPatternRef = useRef<SVGPatternElement | null>(null);
 
     useEffect(() => {
       this.svgPathElement = svgPathRef.current;
-      this.svgPatternElement = svgPatternRef.current;
+      this.svgCrosshatchPatternElement = svgCrosshatchPatternRef.current;
+      this.svgDotsPatternElement = svgDotsPatternRef.current;
 
       // run the update method when the react re-renders the element
       this.notify();
 
       return () => {
         this.svgPathElement = null;
-        this.svgPatternElement = null;
+        this.svgCrosshatchPatternElement = null;
+        this.svgDotsPatternElement = null;
       };
     }, []);
 
@@ -238,11 +278,12 @@ export class PolygonToolsController implements IController {
       this.nodeEditingController.currentNodeToolAtom,
     );
     const isErasing = nodeTool === NodeTool.PolygonErase;
+    const isBinarizing = nodeTool === NodeTool.PolygonBinarize;
 
     return (
       <>
         <pattern
-          ref={svgPatternRef}
+          ref={svgCrosshatchPatternRef}
           id="pattern-crosshatch"
           x="0"
           y="0"
@@ -267,10 +308,25 @@ export class PolygonToolsController implements IController {
             stroke="rgba(255, 255, 255, 0.5)"
           />
         </pattern>
+        <pattern
+          ref={svgDotsPatternRef}
+          id="pattern-dots"
+          x="0"
+          y="0"
+          width="10"
+          height="10"
+          patternUnits="userSpaceOnUse"
+        >
+          <circle cx="5" cy="5" r="2" fill="rgba(255, 255, 255, 0.5)" />
+        </pattern>
         <path
           ref={svgPathRef}
           fill={
-            isErasing ? "url(#pattern-crosshatch)" : "rgba(255, 255, 255, 0.5)"
+            isBinarizing
+              ? "url(#pattern-dots)"
+              : isErasing
+                ? "url(#pattern-crosshatch)"
+                : "rgba(255, 255, 255, 0.5)"
           }
           stroke="rgba(0, 0, 0, 0.5)"
           style={{ strokeWidth: "calc(var(--scene-screen-pixel) * 2)" }}

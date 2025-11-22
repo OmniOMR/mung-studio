@@ -3,6 +3,7 @@ import { JotaiStore } from "../src/editor/model/JotaiStore";
 import { PyodideWorkerConnection } from "./PyodideWorkerConnection";
 import { MaskManipulationApi } from "./MaskManipulationApi";
 import { MungValidationApi } from "./MungValidationApi";
+import { BackgroundImageToolsApi } from "./BackgroundImageToolsApi";
 
 /**
  * Provides user-level APIs for functionality that runs in the python
@@ -30,6 +31,7 @@ export class PythonRuntime {
     // create APIs
     this.maskManipulation = new MaskManipulationApi(this.connection);
     this.mungValidation = new MungValidationApi(this.connection);
+    this.backgroundImageToolsApi = new BackgroundImageToolsApi(this.connection);
   }
 
   //////////
@@ -45,6 +47,11 @@ export class PythonRuntime {
    * Validates a MuNG document and produces list of issues
    */
   public readonly mungValidation: MungValidationApi;
+
+  /**
+   * Runs binarization filters on the background image
+   */
+  public readonly backgroundImageToolsApi: BackgroundImageToolsApi;
 
   /////////////////////////////////
   // Worker initialization state //

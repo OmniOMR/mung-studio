@@ -183,6 +183,8 @@ export function useConstructContextServices(
         mousePointerController,
         redrawTrigger,
         nodeEditingController,
+        backgroundImageStore,
+        pythonRuntime,
       ),
     [],
   );

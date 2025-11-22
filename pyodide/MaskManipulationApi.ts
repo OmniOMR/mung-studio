@@ -35,8 +35,8 @@ export class MaskManipulationApi {
     );
 
     const data = new Uint8ClampedArray((result as Uint8Array).buffer);
-    const out_mask = new ImageData(data, mask.width, mask.height);
+    const outMask = new ImageData(data, mask.width, mask.height);
 
-    return out_mask;
+    return outMask;
   }
 }

@@ -18,6 +18,11 @@ export enum NodeTool {
   Eraser = "Eraser",
 
   /**
+   * Tools that binarizes the background image
+   */
+  PolygonBinarize = "PolygonBinarize",
+
+  /**
    * Tool that draws a polygon, that once submitted is added to the mask
    */
   PolygonFill = "PolygonFill",

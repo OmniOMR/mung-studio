@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import { JotaiStore } from "./JotaiStore";
+import { snapGrowRectangle } from "../../utils/snapGrowRectangle";
 
 /**
  * Holds the page scan pixel data as well as image metadata.
@@ -27,7 +28,8 @@ export class BackgroundImageStore {
 
   public readonly heightAtom = atom<number>(0);
 
-  public imageData: ImageData | null = null;
+  private canvas: OffscreenCanvas | null = null;
+  private ctx: OffscreenCanvasRenderingContext2D | null = null;
 
   constructor(imageUrl: string | null, jotaiStore: JotaiStore) {
     this.imageUrl = imageUrl;
@@ -43,24 +45,28 @@ export class BackgroundImageStore {
     let imgElement = new Image();
     imgElement.src = this.imageUrl;
     imgElement.onload = () => {
-      const canvas = new OffscreenCanvas(imgElement.width, imgElement.height);
-      const ctx = canvas.getContext("2d");
-      if (ctx === null) {
+      this.canvas = new OffscreenCanvas(imgElement.width, imgElement.height);
+      this.ctx = this.canvas.getContext("2d", { willReadFrequently: true });
+      if (this.ctx === null) {
         console.error("Failed to get canvas context in BackgroundImageStore");
         return;
       }
+      this.ctx.drawImage(imgElement, 0, 0);
 
-      ctx.drawImage(imgElement, 0, 0);
-      this.imageData = ctx.getImageData(
-        0,
-        0,
-        imgElement.width,
-        imgElement.height,
-      );
-
-      this.jotaiStore.set(this.widthAtom, this.imageData.width);
-      this.jotaiStore.set(this.heightAtom, this.imageData.height);
+      this.jotaiStore.set(this.widthAtom, imgElement.width);
+      this.jotaiStore.set(this.heightAtom, imgElement.height);
       this.jotaiStore.set(this.isReadyAtom, true);
     };
+  }
+
+  public getImageData(rect: DOMRect): ImageData {
+    if (this.ctx === null) {
+      throw new Error("Cannot get image data, canvas context not ready yet.");
+    }
+
+    // "ceil" the rectangle coordinates
+    rect = snapGrowRectangle(rect);
+
+    return this.ctx.getImageData(rect.x, rect.y, rect.width, rect.height);
   }
 }

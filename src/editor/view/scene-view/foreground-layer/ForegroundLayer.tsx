@@ -130,7 +130,11 @@ export function ForegroundLayer() {
   let cursor = "default";
   if (editorTool === EditorTool.Hand) cursor = "grab";
   if (isGrabbing) cursor = "grabbing";
-  if (nodeTool === NodeTool.PolygonErase || nodeTool == NodeTool.PolygonFill) {
+  if (
+    nodeTool === NodeTool.PolygonErase ||
+    nodeTool == NodeTool.PolygonFill ||
+    nodeTool == NodeTool.PolygonBinarize
+  ) {
     cursor = "crosshair";
   }
 

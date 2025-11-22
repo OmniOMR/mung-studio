@@ -142,10 +142,17 @@ export class NodeEditingController implements IController {
   public readonly keyBindings = {
     T: () => {
       // (T)oggles between polygon fill and erase
-      if (this.currentNodeTool !== NodeTool.PolygonFill) {
-        this.setCurrentNodeTool(NodeTool.PolygonFill);
-      } else {
+      if (this.currentNodeTool !== NodeTool.PolygonErase) {
         this.setCurrentNodeTool(NodeTool.PolygonErase);
+      } else {
+        this.setCurrentNodeTool(NodeTool.PolygonFill);
+      }
+    },
+    B: () => {
+      if (this.currentNodeTool !== NodeTool.PolygonBinarize) {
+        this.setCurrentNodeTool(NodeTool.PolygonBinarize);
+      } else {
+        this.setCurrentNodeTool(NodeTool.PolygonFill);
       }
     },
     // Note: "Escape" is handled by sub-tools

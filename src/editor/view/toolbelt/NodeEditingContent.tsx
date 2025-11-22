@@ -47,10 +47,11 @@ export function NodeEditingContent() {
         <EditIcon sx={{ transform: "rotate(180deg)" }} />
       </ToolbeltButton>
       <ToolbeltButton
-        tooltip="Binarize region"
-        isSelected={false}
-        isDisabled={true}
-        // onClick={equipPointerTool}
+        tooltip="Binarize region [B]"
+        isSelected={nodeTool === NodeTool.PolygonBinarize}
+        onClick={() =>
+          nodeEditingController.setCurrentNodeTool(NodeTool.PolygonBinarize)
+        }
       >
         <FilterCenterFocusIcon />
       </ToolbeltButton>
