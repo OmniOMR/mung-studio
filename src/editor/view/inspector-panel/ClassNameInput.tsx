@@ -39,6 +39,7 @@ export function ClassNameInput(props: ClassNameInputProps) {
       autoComplete
       selectOnFocus
       clearOnBlur
+      blurOnSelect
       handleHomeEndKeys
       freeSolo
       placeholder="Choose node class"
