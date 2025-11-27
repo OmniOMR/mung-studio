@@ -85,6 +85,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   },
   systemDivider: { uc: "\u{E007}" },
   splitBarDivider: { uc: "\u{E00A}" },
+  custos: { uc: "\u{E56C}" },
 
   // 4.2. Staves
   // https://w3c.github.io/smufl/latest/tables/staves.html
@@ -414,7 +415,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   rest512th: { uc: "\u{E4EC}" },
   rest1024th: { uc: "\u{E4ED}" },
   restHBar: { uc: "\u{E4EE}" },
-  restText: { uc: "14", transcribable: true },
+  restText: { uc: "R", notSmufl: true, transcribable: true },
   multiMeasureRest: {
     uc: "\u{E4EE}",
     mpp: true,
@@ -466,14 +467,16 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   dynamicSforzando: { uc: "\u{E524}" },
   dynamicZ: { uc: "\u{E525}" },
   dynamicNiente: { uc: "\u{E526}" },
-  dynamicCrescendo: { uc: "cres.", transcribable: true },
+  dynamicCrescendo: { uc: "cres.", notSmufl: true, transcribable: true },
   dynamicCrescendoSpanner: {
     uc: "_\u{00A0}_",
+    notSmufl: true,
     otherSmuflDivergenceJustification: "Cannot be rendered using a font",
   },
-  dynamicDiminuendo: { uc: "dim.", transcribable: true },
+  dynamicDiminuendo: { uc: "dim.", notSmufl: true, transcribable: true },
   dynamicDiminuendoSpanner: {
     uc: "_\u{00A0}_",
+    notSmufl: true,
     otherSmuflDivergenceJustification: "Cannot be rendered using a font",
   },
   dynamicCrescendoHairpin: { uc: "\u{E53E}", mpp: true },
@@ -529,12 +532,81 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     uc: "ly",
     mpp: true,
     notSmufl: true,
+    transcribable: true,
+  },
+  verseNumber: {
+    uc: "1.",
+    notSmufl: true,
+    transcribable: true,
+  },
+  // lyricsElision: { uc: "\u{E551}" },
+  // lyricsHyphenBaseline: { uc: "\u{E553}" },
+  // lyricsTextRepeat: { uc: "\u{E555}" },
+
+  // X.XX. Tempo
+  tempoText: {
+    uc: "te",
+    mpp: true,
+    notSmufl: true,
     otherSmuflDivergenceJustification: "Possibly a composite object",
     transcribable: true,
   },
-  lyricsElision: { uc: "\u{E551}" },
-  lyricsHyphenBaseline: { uc: "\u{E553}" },
-  lyricsTextRepeat: { uc: "\u{E555}" },
+  tempoRitardando: {
+    uc: "rit.",
+    mpp: false,
+    notSmufl: true,
+    transcribable: true,
+  },
+  tempoRitardandoSpanner: {
+    uc: "_\u{00A0}_",
+    notSmufl: true,
+    otherSmuflDivergenceJustification: "Cannot be rendered using a font",
+  },
+  tempoAccelerando: {
+    uc: "acc.",
+    mpp: false,
+    notSmufl: true,
+    transcribable: true,
+  },
+  tempoAccelerandoSpanner: {
+    uc: "_\u{00A0}_",
+    notSmufl: true,
+    otherSmuflDivergenceJustification: "Cannot be rendered using a font",
+  },
+  tempoATempo: {
+    uc: "a tempo",
+    mpp: false,
+    notSmufl: true,
+    transcribable: true,
+  },
+
+  // X.XX. Text
+  interpretationText: {
+    uc: "in",
+    notSmufl: true,
+    transcribable: true,
+  },
+  metadataText: {
+    uc: "M",
+    notSmufl: true,
+    transcribable: true,
+  },
+  measureNumber: {
+    uc: "mn",
+    notSmufl: true,
+    transcribable: true,
+  },
+  pageNumber: {
+    uc: "pn",
+    notSmufl: true,
+    transcribable: true,
+  },
+  otherText: {
+    uc: "T",
+    mpp: true,
+    notSmufl: true,
+    transcribable: true,
+  },
 
   // 4.46. Common ornaments
   // https://w3c.github.io/smufl/latest/tables/common-ornaments.html
@@ -548,12 +620,8 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     uc: "\u{E560}",
     mpp: true,
     notSmufl: true,
-    smuflEquivalents: ["graceNoteAcciaccaturaStemUp"],
+    smuflEquivalents: ["graceNoteSlashStemUp", "graceNoteSlashStemDown"],
   },
-  graceNoteAcciaccaturaStemUp: { uc: "\u{E560}" },
-  graceNoteAcciaccaturaStemDown: { uc: "\u{E561}" },
-  graceNoteAppoggiaturaStemUp: { uc: "\u{E562}" },
-  graceNoteAppoggiaturaStemDown: { uc: "\u{E563}" },
   graceNoteSlashStemUp: { uc: "\u{E564}" },
   graceNoteSlashStemDown: { uc: "\u{E565}" },
   ornamentTrill: { uc: "\u{E566}", mpp: true },
@@ -645,21 +713,6 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
 
   // MUSCIMA++ Text glyphs
   // -----------------------------------
-  otherText: {
-    uc: "T",
-    mpp: true,
-    notSmufl: true,
-    otherSmuflDivergenceJustification: "Possibly a composite object",
-    transcribable: true,
-  },
-  tempoText: {
-    uc: "t",
-    mpp: true,
-    notSmufl: true,
-    otherSmuflDivergenceJustification: "Possibly a composite object",
-    transcribable: true,
-  },
-
   characterCapitalA: { uc: "A", mpp: true, notSmufl: true },
   characterCapitalB: { uc: "B", mpp: true, notSmufl: true },
   characterCapitalC: { uc: "C", mpp: true, notSmufl: true },

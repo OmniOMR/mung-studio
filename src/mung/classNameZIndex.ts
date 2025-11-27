@@ -16,11 +16,6 @@ const lookupTable = {
   // other objects
   unclassified: 1_000,
   ossia: 1_001,
-  otherNumericSign: 1_002,
-  rehearsalMark: 1_003,
-  instrumentName: 1_004,
-  instrumentSpecific: 1_005,
-  systemSeparator: 1_006,
 
   // music layout
   staff: 2_000,
@@ -31,6 +26,9 @@ const lookupTable = {
   staffGrouping: 2_003,
   brace: 2_004,
   bracket: 2_005,
+  systemSeparator: 2_006,
+  systemDivider: 2_006,
+  splitBarDivider: 2_007,
 
   // barlines & repeats
   measureSeparator: 4_000,
@@ -115,8 +113,23 @@ const lookupTable = {
   figuredBassText: 6_600,
 
   // text & dynamics & markings
-  otherText: 6_500,
   tempoText: 6_500,
+  tempoRitardando: 6_500,
+  tempoRitardandoSpanner: 6_500,
+  tempoAccelerando: 6_500,
+  tempoAccelerandoSpanner: 6_500,
+  tempoATempo: 6_500,
+
+  interpretationText: 6_500,
+  metadataText: 6_500,
+  measureNumber: 6_500,
+  pageNumber: 6_500,
+  otherText: 6_500,
+
+  otherNumericSign: 6_540,
+  rehearsalMark: 6_540,
+  instrumentName: 6_540,
+  instrumentSpecific: 6_540,
 
   characterCapitalA: 6_550,
   characterCapitalB: 6_550,
@@ -224,9 +237,10 @@ const lookupTable = {
   dynamicLetterZ: 6_801,
 
   lyricsText: 6_900,
-  lyricsElision: 6_900,
-  lyricsHyphenBaseline: 6_900,
-  lyricsTextRepeat: 6_900,
+  verseNumber: 6_900,
+  // lyricsElision: 6_900,
+  // lyricsHyphenBaseline: 6_900,
+  // lyricsTextRepeat: 6_900,
 
   // beams & flags
   beam: 7_000,
@@ -314,10 +328,6 @@ const lookupTable = {
 
   ornament: 10_100,
   graceNoteAcciaccatura: 10_100,
-  graceNoteAcciaccaturaStemUp: 10_100,
-  graceNoteAcciaccaturaStemDown: 10_100,
-  graceNoteAppoggiaturaStemUp: 10_100,
-  graceNoteAppoggiaturaStemDown: 10_100,
   graceNoteSlashStemUp: 10_100,
   graceNoteSlashStemDown: 10_100,
   ornamentTrill: 10_100,
@@ -387,4 +397,5 @@ const lookupTable = {
   noteheadSlashHorizontalEnds: 11_000,
   noteheadSlashWhiteWhole: 11_000,
   noteheadSlashWhiteHalf: 11_000,
+  custos: 11_000,
 };
