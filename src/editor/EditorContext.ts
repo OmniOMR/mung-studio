@@ -23,6 +23,7 @@ import { ValidationStore } from "./model/ValidationStore";
 import { ValidationController } from "./controller/ValidationController";
 import { DeltaInterpreter } from "./model/DeltaInterpreter";
 import { BackgroundImageStore } from "./model/BackgroundImageStore";
+import { StafflinesToolController } from "./controller/tools/StafflinesToolController";
 
 /**
  * All fields present in the editor component's global context
@@ -49,6 +50,7 @@ export interface EditorContextState {
   readonly selectionController: SelectionController;
   readonly nodeEditingController: NodeEditingController;
   readonly polygonToolsController: PolygonToolsController;
+  readonly stafflinesToolController: StafflinesToolController;
   readonly mainMenuController: MainMenuController;
 }
 
@@ -189,6 +191,19 @@ export function useConstructContextServices(
     [],
   );
 
+  const stafflinesToolController = useMemo(
+    () =>
+      new StafflinesToolController(
+        jotaiStore,
+        nodeEditingController,
+        pythonRuntime,
+        notationGraphStore,
+        selectionStore,
+        toolbeltController,
+      ),
+    [],
+  );
+
   const mainMenuController = useMemo(
     () =>
       new MainMenuController(
@@ -222,6 +237,7 @@ export function useConstructContextServices(
     selectionController,
     nodeEditingController,
     polygonToolsController,
+    stafflinesToolController,
     mainMenuController,
   };
 }

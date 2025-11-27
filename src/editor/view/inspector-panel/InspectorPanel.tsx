@@ -15,6 +15,7 @@ import { useContext } from "react";
 import { EditorContext } from "../../EditorContext";
 import { NodeEditingToolPanel } from "./NodeEditingToolPanel";
 import { TextTranscriptionPanel } from "./TextTranscriptionPanel";
+import { StafflinesToolPanel } from "./StafflinesToolPanel";
 
 /**
  * The right-side panel, showing details about selected nodes.
@@ -49,6 +50,8 @@ export function InspectorPanel() {
         }}
       >
         <AccordionGroup>
+          <StafflinesToolPanel />
+
           <NodeEditingToolPanel />
 
           <SyntaxLinksToolPanel />

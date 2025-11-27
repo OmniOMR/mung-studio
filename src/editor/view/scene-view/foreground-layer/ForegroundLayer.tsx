@@ -21,6 +21,7 @@ export function ForegroundLayer() {
     selectionController,
     redrawTrigger,
     polygonToolsController,
+    stafflinesToolController,
     mainMenuController,
   } = useContext(EditorContext);
 
@@ -36,6 +37,7 @@ export function ForegroundLayer() {
     toolbeltController,
     nodeEditingController,
     polygonToolsController,
+    stafflinesToolController,
     mainMenuController,
   ];
 
