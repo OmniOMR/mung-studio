@@ -253,6 +253,12 @@ function useBindControllerEvents(
           }
         }
 
+        // for mouse events, prevent default to stop the user from
+        // accidentally selecting text in the SVG and similar issues
+        if (e.type.startsWith("mouse")) {
+          e.preventDefault();
+        }
+
         // invoke if hook exists
         controllerEventHook?.(e);
       };
