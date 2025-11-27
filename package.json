@@ -1,6 +1,6 @@
 {
     "name": "@mung-studio/mung-studio",
-    "version": "1.2.0-dev",
+    "version": "1.2.0",
     "private": true,
     "source": [
         "src/index.html"
