@@ -34,10 +34,12 @@ export function NodeEditingToolPanel() {
       </AccordionSummary>
       <AccordionDetails>
         {(nodeTool === NodeTool.PolygonFill ||
-          nodeTool === NodeTool.PolygonErase) && (
+          nodeTool === NodeTool.PolygonErase ||
+          nodeTool === NodeTool.PolygonBinarize ||
+          nodeTool === NodeTool.StafflinesTool) && (
           <Alert color="primary">
             Start by clicking into the scene which starts drawing the polygon.
-            Once done, press Enter/Return to rasterize the polygon.
+            Once done, press Enter/Return or N to commit the polygon.
           </Alert>
         )}
         <ClassNameInput

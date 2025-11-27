@@ -140,8 +140,12 @@ export class NodeEditingController implements IController {
   //////////////////
 
   public readonly keyBindings = {
+    F: () => {
+      if (this.currentNodeTool !== NodeTool.PolygonFill) {
+        this.setCurrentNodeTool(NodeTool.PolygonFill);
+      }
+    },
     T: () => {
-      // (T)oggles between polygon fill and erase
       if (this.currentNodeTool !== NodeTool.PolygonErase) {
         this.setCurrentNodeTool(NodeTool.PolygonErase);
       } else {

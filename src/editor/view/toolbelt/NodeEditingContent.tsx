@@ -57,7 +57,7 @@ export function NodeEditingContent() {
         <FilterCenterFocusIcon />
       </ToolbeltButton>
       <ToolbeltButton
-        tooltip="Fill polygon [T]"
+        tooltip="Fill polygon [F]"
         isSelected={nodeTool === NodeTool.PolygonFill}
         onClick={() =>
           nodeEditingController.setCurrentNodeTool(NodeTool.PolygonFill)
