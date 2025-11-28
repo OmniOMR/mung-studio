@@ -1,4 +1,10 @@
-import { marshalMaskRgb } from "./marshalling";
+import { Node } from "../src/mung/Node";
+import {
+  marshalMungNodes,
+  marshalMaskRgb,
+  unmarshalMungNode,
+  unmarshalMungNodes,
+} from "./marshalling";
 import { PyodideWorkerConnection } from "./PyodideWorkerConnection";
 
 /**
@@ -89,5 +95,53 @@ export class MaskManipulationApi {
       h,
       new ImageData(new Uint8ClampedArray(data.buffer), w, h),
     ]);
+  }
+
+  /**
+   * Generates a staff node from 5 staffline nodes
+   */
+  public async generateStaffFromStafflines(
+    stafflines: readonly Node[],
+  ): Promise<Node> {
+    const result = await this.connection.executePython(
+      `
+        from mstudio.marshalling import marshal_mung_node, unmarshal_mung_nodes
+        from mstudio.mask_manipulation.generate_staff_from_stafflines \\
+          import generate_staff_from_stafflines
+
+        stafflines = unmarshal_mung_nodes(marshalled_stafflines)
+        staff_node = generate_staff_from_stafflines(stafflines)
+
+        marshal_mung_node(staff_node)  # return statement
+      `,
+      {
+        marshalled_stafflines: marshalMungNodes(stafflines),
+      },
+    );
+    return unmarshalMungNode(result);
+  }
+
+  /**
+   * Generates staffspaces from 5 staffline nodes
+   */
+  public async generateStaffspacesFromStafflines(
+    stafflines: readonly Node[],
+  ): Promise<Node[]> {
+    const result = await this.connection.executePython(
+      `
+        from mstudio.marshalling import marshal_mung_nodes, unmarshal_mung_nodes
+        from mstudio.mask_manipulation.generate_staffspaces_from_stafflines \\
+          import generate_staffspaces_from_stafflines
+
+        stafflines = unmarshal_mung_nodes(marshalled_stafflines)
+        staffspaces = generate_staffspaces_from_stafflines(stafflines)
+
+        marshal_mung_nodes(staffspaces)  # return statement
+      `,
+      {
+        marshalled_stafflines: marshalMungNodes(stafflines),
+      },
+    );
+    return unmarshalMungNodes(result);
   }
 }

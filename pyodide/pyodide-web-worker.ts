@@ -117,7 +117,7 @@ async function onExecutePython(
     // convert proxy objects, they cannot be sent outside the web worker
     if (typeof result === "object") {
       const proxy = result as _PyProxy;
-      result = proxy.toJs(); // convert
+      result = proxy.toJs({ dict_converter: Object.fromEntries }); // convert
       proxy.destroy(); // release
     }
 

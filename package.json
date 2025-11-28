@@ -20,7 +20,7 @@
     "pyodide": {
         "mung-path": "pyodide/mung",
         "mung-url": "git@github.com:OmniOMR/mung.git",
-        "mung-commit": "2a1c587"
+        "mung-commit": "efa65da"
     },
     "devDependencies": {
         "@babel/core": "^7.23.3",

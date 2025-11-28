@@ -78,6 +78,9 @@ export function MainMenu(props: MainMenuProps) {
   const canRemoveLinks = useAtomValue(controller.canRemoveLinksAtom);
   const canToggleLink = useAtomValue(controller.canToggleLinkAtom);
   const canClearSelection = useAtomValue(controller.canClearSelectionAtom);
+  const canGenerateGraphFromStafflines = useAtomValue(
+    controller.canGenerateGraphFromStafflinesAtom,
+  );
 
   ////////////////////////////
   // Action implementations //
@@ -140,6 +143,16 @@ export function MainMenu(props: MainMenuProps) {
           onClick={() => controller.removePartiallySelectedLinks()}
         >
           Remove partially selected links {renderShortcut("Shift + Del")}
+        </MyMenuItem>
+
+        <MyListDivider />
+        <MyCategoryTitle>Staves</MyCategoryTitle>
+
+        <MyMenuItem
+          disabled={!canGenerateGraphFromStafflines}
+          onClick={() => controller.generateGraphFromStafflines()}
+        >
+          Generate graph from stafflines {renderShortcut("Shift + S")}
         </MyMenuItem>
 
         <MyListDivider />

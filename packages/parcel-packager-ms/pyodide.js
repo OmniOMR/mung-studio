@@ -13,10 +13,18 @@ module.exports.default = new Packager({
 
     // --- PACKAGES BEGIN ---
 
-    // include the mung python package
+    // include the mung python package(s)
     archive.directory(
       path.join(options.projectRoot, "pyodide/mung/mung/"),
       "mung"
+    );
+    archive.directory(
+      path.join(options.projectRoot, "pyodide/mung/mung2midi/"),
+      "mung2midi"
+    );
+    archive.directory(
+      path.join(options.projectRoot, "pyodide/mung/mung2musicxml/"),
+      "mung2musicxml"
     );
 
     // include the mstudio python package
