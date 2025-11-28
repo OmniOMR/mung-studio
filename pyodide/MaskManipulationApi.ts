@@ -122,24 +122,22 @@ export class MaskManipulationApi {
   }
 
   /**
-   * Generates staffspaces from 5 staffline nodes
+   * Generates staffspaces from 5 staffline nodes and the staff node
    */
-  public async generateStaffspacesFromStafflines(
-    stafflines: readonly Node[],
-  ): Promise<Node[]> {
+  public async generateStaffspaces(nodes: readonly Node[]): Promise<Node[]> {
     const result = await this.connection.executePython(
       `
         from mstudio.marshalling import marshal_mung_nodes, unmarshal_mung_nodes
-        from mstudio.mask_manipulation.generate_staffspaces_from_stafflines \\
-          import generate_staffspaces_from_stafflines
+        from mstudio.mask_manipulation.generate_staffspaces \\
+          import generate_staffspaces
 
-        stafflines = unmarshal_mung_nodes(marshalled_stafflines)
-        staffspaces = generate_staffspaces_from_stafflines(stafflines)
+        nodes = unmarshal_mung_nodes(marshalled_nodes)
+        staffspaces = generate_staffspaces(nodes)
 
         marshal_mung_nodes(staffspaces)  # return statement
       `,
       {
-        marshalled_stafflines: marshalMungNodes(stafflines),
+        marshalled_nodes: marshalMungNodes(nodes),
       },
     );
     return unmarshalMungNodes(result);

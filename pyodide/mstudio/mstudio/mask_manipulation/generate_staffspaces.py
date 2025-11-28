@@ -4,8 +4,8 @@ from mung.graph import NotationGraph
 from mung.node import Node
 
 
-def generate_staffspaces_from_stafflines(stafflines: list[Node]) -> list[Node]:
-    graph = NotationGraph(stafflines)
+def generate_staffspaces(nodes: list[Node]) -> list[Node]:
+    graph = NotationGraph(nodes)
 
     new_graph = StaffspaceGenerator.run(graph)
 

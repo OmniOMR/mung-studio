@@ -178,8 +178,11 @@ export class MainMenuController implements IController {
 
     // create the staffspace objects and link them from the staff
     console.log("Generating staff spaces...");
-    const proposedStaffspaces =
-      await api.generateStaffspacesFromStafflines(stafflines);
+    const proposedStaffspaces = await api.generateStaffspaces(
+      [...stafflines.map((s) => s.id), staff.id].map((id) =>
+        this.notationGraphStore.getNode(id),
+      ),
+    );
     for (const proposedStaffspace of proposedStaffspaces) {
       const staffSpace: Node = {
         id: this.notationGraphStore.getFreeId(),
