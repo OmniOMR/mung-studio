@@ -1,5 +1,4 @@
 import { RefObject, useCallback, useContext, useEffect, useRef } from "react";
-import { NodeEditorOverlay } from "./NodeEditorOverlay";
 import { PrecedenceLinksToolOverlay } from "./PrecedenceLinksToolOverlay";
 import { EditorTool } from "../../../model/EditorTool";
 import { useAtomValue } from "jotai";
@@ -181,8 +180,7 @@ export function ForegroundLayer() {
               );
             })}
 
-          {/* {currentTool === EditorTool.NodeEditing && <NodeEditorOverlay />} */}
-
+          {/* TODO: this should be moved into a controller */}
           {editorTool === EditorTool.SyntaxLinks && (
             <SyntaxLinksToolOverlay
               svgRef={svgRef}
@@ -192,6 +190,7 @@ export function ForegroundLayer() {
             />
           )}
 
+          {/* TODO: this should be moved into a controller */}
           {editorTool === EditorTool.PrecedenceLinks && (
             <PrecedenceLinksToolOverlay
               svgRef={svgRef}

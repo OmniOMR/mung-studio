@@ -42,14 +42,15 @@ const MUNG_COMMIT_HASH = packageJson["pyodide"]["mung-commit"];
 console.log("Checking pyodide mung package...");
 
 if (fs.existsSync(MUNG_PATH)) {
-  console.log("Mung package already exists.");
-} else {
-  console.log("Cloning the mung repository...")
-  execSync(`git clone ${MUNG_REPO_URL} ${MUNG_PATH}`);
-
-  console.log(`Checking out to the commit ${MUNG_COMMIT_HASH}...`);
-  execSync(`git -C ${MUNG_PATH} -c "advice.detachedHead=false" checkout ${MUNG_COMMIT_HASH}`);
+  console.log("Mung package already exists. Removing for re-cloning...");
+  fs.rmSync(MUNG_PATH, { recursive: true });
 }
+
+console.log("Cloning the mung repository...")
+execSync(`git clone ${MUNG_REPO_URL} ${MUNG_PATH}`);
+
+console.log(`Checking out to the commit ${MUNG_COMMIT_HASH}...`);
+execSync(`git -C ${MUNG_PATH} -c "advice.detachedHead=false" checkout ${MUNG_COMMIT_HASH}`);
 
 console.log("Pyodide mung package is ready.");
 console.log("");

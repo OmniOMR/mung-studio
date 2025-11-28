@@ -1,3 +1,4 @@
+import { marshalMaskRgb, unmarshalMaskRgb } from "./marshalling";
 import { PyodideWorkerConnection } from "./PyodideWorkerConnection";
 
 /**
@@ -17,28 +18,21 @@ export class BackgroundImageToolsApi {
   public async otsuBinarizeRegion(region: ImageData): Promise<ImageData> {
     const result = await this.connection.executePython(
       `
-        import numpy as np
+        from mstudio.marshalling import marshal_mask_rgba, unmarshal_mask_rgba
         from mstudio.background_image_tools.otsu_binarize_region \\
           import otsu_binarize_region
-
-        region = np.asarray(data.to_py(), dtype=np.uint8) \\
-          .reshape((height, width, 4))
         
-        out_region = otsu_binarize_region(region)
+        region = unmarshal_mask_rgba(marshalled_region)
+        mask = otsu_binarize_region(region)
+        marshalled_mask = marshal_mask_rgba(mask)
 
-        out_region.flatten() # return as one big array
+        marshalled_mask  # return
       `,
       {
-        width: region.width,
-        height: region.height,
-        data: region.data,
+        marshalled_region: marshalMaskRgb(region),
       },
     );
-
-    const data = new Uint8ClampedArray((result as Uint8Array).buffer);
-    const outRegion = new ImageData(data, region.width, region.height);
-
-    return outRegion;
+    return unmarshalMaskRgb(result);
   }
 
   /**
@@ -47,27 +41,20 @@ export class BackgroundImageToolsApi {
   public async detectStafflines(region: ImageData): Promise<ImageData> {
     const result = await this.connection.executePython(
       `
-        import numpy as np
+        from mstudio.marshalling import marshal_mask_rgba, unmarshal_mask_rgba
         from mstudio.background_image_tools.detect_stafflines \\
           import detect_stafflines
-
-        region = np.asarray(data.to_py(), dtype=np.uint8) \\
-          .reshape((height, width, 4))
         
-        out_region = detect_stafflines(region)
+        region = unmarshal_mask_rgba(marshalled_region)
+        mask = detect_stafflines(region)
+        marshalled_mask = marshal_mask_rgba(mask)
 
-        out_region.flatten() # return as one big array
+        marshalled_mask  # return
       `,
       {
-        width: region.width,
-        height: region.height,
-        data: region.data,
+        marshalled_region: marshalMaskRgb(region),
       },
     );
-
-    const data = new Uint8ClampedArray((result as Uint8Array).buffer);
-    const outRegion = new ImageData(data, region.width, region.height);
-
-    return outRegion;
+    return unmarshalMaskRgb(result);
   }
 }

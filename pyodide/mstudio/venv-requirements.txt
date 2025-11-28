@@ -1,0 +1,26 @@
+# These requirements are here only to set up the .venv used for
+# running the mstudio python code directly (not via pyodide)
+# and for the Pylance checker in VS Code. Packages actually used during
+# MuNG Studio runtime are defined in the pyodide-web-worker.ts file.
+
+# mung deps, also explicitly installed in pyodide
+numpy
+lxml
+scikit-image
+opencv-python
+
+# Here you'd expect the "mung" package be listed.
+# However to keep it in sync with the developed fork on github,
+# it is installed separately in the Makefile.
+#
+# I tried using the symlink installation:
+#
+#   .venv/bin/pip3 install -e ../mung
+#
+# and that worked in runtime, but VS Code Pylance complained and didn't work.
+# So I decided to just install it as a copy (no symlink) from that folder:
+#
+#   .venv/bin/pip3 install ../mung
+#
+# Downside being you have to re-run "make setup" each time you modify the
+# cloned mung package.
