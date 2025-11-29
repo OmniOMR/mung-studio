@@ -9,6 +9,7 @@ import {
 } from "../../../../mung/linkAppearance";
 import { useContext } from "react";
 import { EditorContext } from "../../../EditorContext";
+import { computeLinkCoordinates as computeLinkRenderCoordinates } from "../computeLinkRenderCoordinates";
 
 export interface SvgLinkProps {
   readonly link: Link;
@@ -20,6 +21,7 @@ export function SvgLink(props: SvgLinkProps) {
     selectionStore,
     editorStateStore,
     classVisibilityStore,
+    staffGeometryStore,
   } = useContext(EditorContext);
 
   const linkWithNodes = useAtomValue(
@@ -50,10 +52,11 @@ export function SvgLink(props: SvgLinkProps) {
   );
 
   // line coordinates
-  const x1 = linkWithNodes.fromNode.left + linkWithNodes.fromNode.width / 2;
-  const y1 = linkWithNodes.fromNode.top + linkWithNodes.fromNode.height / 2;
-  const x2 = linkWithNodes.toNode.left + linkWithNodes.toNode.width / 2;
-  const y2 = linkWithNodes.toNode.top + linkWithNodes.toNode.height / 2;
+  const { x1, y1, x2, y2 } = computeLinkRenderCoordinates(
+    linkWithNodes.fromNode,
+    linkWithNodes.toNode,
+    staffGeometryStore,
+  );
 
   // determine the link color
   let color =

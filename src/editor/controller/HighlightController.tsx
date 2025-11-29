@@ -9,6 +9,7 @@ import { SignalAtomWrapper } from "../model/SignalAtomWrapper";
 import { IController } from "./IController";
 import { EditorTool } from "../model/EditorTool";
 import { ToolbeltController } from "./ToolbeltController";
+import { StaffGeometryStore } from "../model/StaffGeometryStore";
 
 /**
  * Contains logic and state related to node highlighting.
@@ -24,6 +25,7 @@ export class HighlightController implements IController {
   private readonly classVisibilityStore: ClassVisibilityStore;
   private readonly zoomController: ZoomController;
   private readonly toolbeltController: ToolbeltController;
+  private readonly staffGeometryStore: StaffGeometryStore;
 
   constructor(
     jotaiStore: JotaiStore,
@@ -31,12 +33,14 @@ export class HighlightController implements IController {
     classVisibilityStore: ClassVisibilityStore,
     zoomController: ZoomController,
     toolbeltController: ToolbeltController,
+    staffGeometryStore: StaffGeometryStore,
   ) {
     this.jotaiStore = jotaiStore;
     this.notationGraphStore = notationGraphStore;
     this.classVisibilityStore = classVisibilityStore;
     this.zoomController = zoomController;
     this.toolbeltController = toolbeltController;
+    this.staffGeometryStore = staffGeometryStore;
   }
 
   public isEnabledAtom: Atom<boolean> = atom((get) => {
@@ -93,6 +97,8 @@ export class HighlightController implements IController {
   public onMouseMove(e: MouseEvent) {
     const t = this.zoomController.currentTransform;
 
+    // TODO: get data from the MousePointerController instead,
+    // to better handle edgecases
     const x = t.invertX(e.offsetX);
     const y = t.invertY(e.offsetY);
 
@@ -104,25 +110,43 @@ export class HighlightController implements IController {
   // Pointer node interaction //
   //////////////////////////////
 
-  private getNodeUnderPointer(
-    pointer_x: number,
-    pointer_y: number,
-  ): Node | null {
+  /**
+   * Given pointer coordinates in scene space, return the node that is being
+   * highlighted (called on each mouse move)
+   */
+  private getNodeUnderPointer(x: number, y: number): Node | null {
     // NOTE: this is a simple iteration as there are only 2K rectangle objects;
-    // This could be improved, either so that it respects polygons, or that
+    // This could be improved, either so that it respects masks, or that
     // it runs faster with some k-d trees or such.
 
     let highlightedNode: Node | null = null;
 
+    // go through nodes bottom-up and end up with the last one we're hitting
     for (let node of this.notationGraphStore.nodesInSceneOrder) {
+      // skip nodes that are invisible
       if (!this.classVisibilityStore.visibleClasses.has(node.className))
         continue;
-      if (node.left > pointer_x || node.left + node.width < pointer_x) continue;
-      if (node.top > pointer_y || node.top + node.height < pointer_y) continue;
+
+      // skip nodes that don't have their bbox under the pointer
+      // (this is the behaviour for 99% of nodes)
+      if (node.left > x || node.left + node.width < x) continue;
+      if (node.top > y || node.top + node.height < y) continue;
+
+      // for stafflines and staffspaces be more strict in intersection
+      if (node.className === "staffLine" || node.className === "staffSpace") {
+        const scaleUp = node.className === "staffLine" ? 2 : 1; // easier to hit
+        const lineY = this.staffGeometryStore.getYForX(node.id, x);
+        const lineMass = this.staffGeometryStore.getMassForX(node.id, x);
+        // skip node if the pointer is outside the "line with thickness"
+        if (y < lineY - (scaleUp * lineMass) / 2) continue;
+        if (y > lineY + (scaleUp * lineMass) / 2) continue;
+      }
+
+      // the node is securely under our pointer, store it in the accumulator
       highlightedNode = node;
-      // continue to get the last node (the most on-top node)
     }
 
+    // return the last (top-most) node
     return highlightedNode;
   }
 
@@ -130,12 +154,44 @@ export class HighlightController implements IController {
   // Rendering //
   ///////////////
 
+  private computeStaffPositionNodePathData(node: Node): string {
+    const stride = 30;
+    let d = "";
+
+    const addPoint = (first: boolean, x: number, factor: number) => {
+      const y = this.staffGeometryStore.getYForX(node.id, x);
+      const m = this.staffGeometryStore.getMassForX(node.id, x);
+      d += first ? "M " : "L ";
+      d += x + "," + (y + (factor * m) / 2) + " ";
+    };
+
+    // top line going left-to-right
+    for (let x = node.left; x < node.left + node.width; x += stride) {
+      addPoint(x === node.left, x, -1);
+    }
+    addPoint(false, node.left + node.width, -1);
+
+    // bottom line going right-to-left
+    for (let x = node.left + node.width; x >= node.left; x -= stride) {
+      addPoint(false, x, +1);
+    }
+    addPoint(false, node.left, +1);
+
+    d += "Z";
+
+    return d;
+  }
+
   public renderSVG(): JSX.Element | null {
     const highlightedNode = useAtomValue(this.highlightedNodeAtom);
 
     if (highlightedNode === null) {
       return null;
     }
+
+    const isStaffPositionNode =
+      highlightedNode.className === "staffLine" ||
+      highlightedNode.className === "staffSpace";
 
     // render the highlight rectangle
     return (
@@ -156,15 +212,25 @@ export class HighlightController implements IController {
         >
           {highlightedNode.className}
         </text>
-        <rect
-          x={highlightedNode.left}
-          y={highlightedNode.top}
-          width={highlightedNode.width}
-          height={highlightedNode.height}
-          fill="none"
-          stroke="white"
-          strokeWidth="calc(var(--scene-screen-pixel) * 2)"
-        />
+        {isStaffPositionNode && (
+          <path
+            d={this.computeStaffPositionNodePathData(highlightedNode)}
+            fill="none"
+            stroke="white"
+            strokeWidth="calc(var(--scene-screen-pixel) * 2)"
+          />
+        )}
+        {!isStaffPositionNode && (
+          <rect
+            x={highlightedNode.left}
+            y={highlightedNode.top}
+            width={highlightedNode.width}
+            height={highlightedNode.height}
+            fill="none"
+            stroke="white"
+            strokeWidth="calc(var(--scene-screen-pixel) * 2)"
+          />
+        )}
         {highlightedNode.textTranscription && (
           <text
             x={highlightedNode.left}

@@ -24,6 +24,7 @@ import { ValidationController } from "./controller/ValidationController";
 import { DeltaInterpreter } from "./model/DeltaInterpreter";
 import { BackgroundImageStore } from "./model/BackgroundImageStore";
 import { StafflinesToolController } from "./controller/tools/StafflinesToolController";
+import { StaffGeometryStore } from "./model/StaffGeometryStore";
 
 /**
  * All fields present in the editor component's global context
@@ -33,6 +34,7 @@ export interface EditorContextState {
   readonly notationGraphStore: NotationGraphStore;
   readonly selectionStore: SelectionStore;
   readonly classVisibilityStore: ClassVisibilityStore;
+  readonly staffGeometryStore: StaffGeometryStore;
   readonly editorStateStore: EditorStateStore;
   readonly autosaveStore: AutosaveStore;
   readonly settingsStore: SettingsStore;
@@ -81,6 +83,11 @@ export function useConstructContextServices(
 
   const classVisibilityStore = useMemo(
     () => new ClassVisibilityStore(notationGraphStore),
+    [],
+  );
+
+  const staffGeometryStore = useMemo(
+    () => new StaffGeometryStore(notationGraphStore),
     [],
   );
 
@@ -144,6 +151,7 @@ export function useConstructContextServices(
         classVisibilityStore,
         zoomController,
         toolbeltController,
+        staffGeometryStore,
       ),
     [],
   );
@@ -221,6 +229,7 @@ export function useConstructContextServices(
     notationGraphStore,
     selectionStore,
     classVisibilityStore,
+    staffGeometryStore,
     editorStateStore,
     autosaveStore,
     settingsStore,
