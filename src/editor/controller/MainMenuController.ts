@@ -60,6 +60,9 @@ export class MainMenuController implements IController {
     "Shift+S": () => {
       this.generateGraphFromStafflines();
     },
+    "Shift+N": () => {
+      this.snapNodesToStaves();
+    },
     Escape: () => {
       this.clearSelection();
     },
@@ -206,6 +209,44 @@ export class MainMenuController implements IController {
         staffSpace.id,
         LinkType.Syntax,
       );
+    }
+
+    console.log("DONE!");
+  }
+
+  public async snapNodesToStaves(): Promise<void> {
+    const api = this.pythonRuntime.maskManipulation;
+
+    // process the entire graph and get the processed copy
+    console.log("Running object snapping...");
+    const snappedGraph = await api.snapNodesToStaves(
+      this.notationGraphStore.nodes,
+    );
+
+    console.log(snappedGraph);
+
+    // extract all staves, stafflines, and staff spaces
+    const interestingInNodeClasses = ["staff", "staffLine", "staffSpace"];
+    const interestingInNodes = snappedGraph.filter((n) =>
+      interestingInNodeClasses.includes(n.className),
+    );
+
+    // reconstruct created links in our document
+    for (const inNode of interestingInNodes) {
+      for (const inlink of inNode.syntaxInlinks) {
+        const hasLink = this.notationGraphStore.hasLink(
+          inlink,
+          inNode.id,
+          LinkType.Syntax,
+        );
+        if (!hasLink) {
+          this.notationGraphStore.insertLink(
+            inlink,
+            inNode.id,
+            LinkType.Syntax,
+          );
+        }
+      }
     }
 
     console.log("DONE!");

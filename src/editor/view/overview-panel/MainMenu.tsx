@@ -155,6 +155,13 @@ export function MainMenu(props: MainMenuProps) {
           Generate graph from stafflines {renderShortcut("Shift + S")}
         </MyMenuItem>
 
+        <MyMenuItem
+          disabled={false}
+          onClick={() => controller.snapNodesToStaves()}
+        >
+          Snap nodes to staves {renderShortcut("Shift + N")}
+        </MyMenuItem>
+
         <MyListDivider />
         <MyCategoryTitle>Select</MyCategoryTitle>
 

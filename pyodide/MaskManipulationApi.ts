@@ -142,4 +142,26 @@ export class MaskManipulationApi {
     );
     return unmarshalMungNodes(result);
   }
+
+  /**
+   * Snaps noteheads and other nodes to staves, stafflines and staff spaces
+   */
+  public async snapNodesToStaves(nodes: readonly Node[]): Promise<Node[]> {
+    const result = await this.connection.executePython(
+      `
+        from mstudio.marshalling import marshal_mung_nodes, unmarshal_mung_nodes
+        from mstudio.mask_manipulation.snap_nodes_to_staves \\
+          import snap_nodes_to_staves
+
+        nodes = unmarshal_mung_nodes(marshalled_nodes)
+        snapped_nodes = snap_nodes_to_staves(nodes)
+
+        marshal_mung_nodes(snapped_nodes)  # return statement
+      `,
+      {
+        marshalled_nodes: marshalMungNodes(nodes),
+      },
+    );
+    return unmarshalMungNodes(result);
+  }
 }
