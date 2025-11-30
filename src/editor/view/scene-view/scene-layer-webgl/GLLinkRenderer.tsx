@@ -16,11 +16,13 @@ import { ISimpleEventHandler } from "strongly-typed-events";
 import {
   LinkInsertMetadata,
   LinkRemoveMetadata,
+  NodeUpdateMetadata,
 } from "../../../model/notation-graph-store/NodeCollection";
 import { Link } from "../../../../mung/Link";
 import { LinkType } from "../../../../mung/LinkType";
 import { ZoomController } from "../../../controller/ZoomController";
 import { ZoomTransform } from "d3";
+import { getLinksOfNode } from "../../../../mung/getLinksOfNode";
 
 const SHADER_COMMON = `#version 300 es
 
@@ -121,12 +123,15 @@ class LinkGeometry {
   public static readonly PASS_SELECTION = 2;
 
   constructor(
-    private fromNode: Node,
-    private toNode: Node,
+    // node IDs are used instead of nodes, so that state changes, which
+    // create new node objects with same ID, can be linked to the same geometry
+    private notationGraph: NotationGraphStore,
+    private fromNodeId: number,
+    private toNodeId: number,
     private stateProvider: LinkGeometryStateProvider,
     private lineThickness: number = 5,
     private arrowHeadScale: number = 2.0,
-  ) {}
+  ) { }
 
   public allTriangleSource(): GeometrySource {
     return {
@@ -187,8 +192,8 @@ class LinkGeometry {
   }
 
   private generateArrowAllTris(): vec4[] {
-    const fromPoint = this.nodeCenter(this.fromNode);
-    const toPoint = this.nodeCenter(this.toNode);
+    const fromPoint = this.nodeCenter(this.notationGraph.getNode(this.fromNodeId));
+    const toPoint = this.nodeCenter(this.notationGraph.getNode(this.toNodeId));
 
     const toFromNormVec = this.getDirVec(toPoint, fromPoint);
 
@@ -355,6 +360,7 @@ class LinkGeometryDrawable implements GLDrawable {
   private linkInsertSubscription: ISimpleEventHandler<LinkInsertMetadata>;
   private linkRemoveSubscription: ISimpleEventHandler<LinkRemoveMetadata>;
   private linkSelectionSubscription: ISimpleEventHandler<SelectionLinksChangeMetadata>;
+  private nodeUpdatedSubscription: ISimpleEventHandler<NodeUpdateMetadata>;
   private classVisibilitySubscription: ISimpleEventHandler<readonly string[]>;
   private zoomSubscription: ISimpleEventHandler<ZoomTransform>;
 
@@ -386,12 +392,20 @@ class LinkGeometryDrawable implements GLDrawable {
       this.onLinkRemoved(meta);
     };
 
+    this.nodeUpdatedSubscription = (meta) => {
+      if (meta.isLinkUpdate) {
+        return;
+      }
+      getLinksOfNode(meta.newValue).forEach(this.onLinkUpdated.bind(this));
+    };
+
     this.zoomSubscription = (transform) => {
       this.onZoom(transform);
     };
 
     notationGraph.onLinkInserted.subscribe(this.linkInsertSubscription);
     notationGraph.onLinkRemoved.subscribe(this.linkRemoveSubscription);
+    notationGraph.onNodeUpdatedOrLinked.subscribe(this.nodeUpdatedSubscription);
 
     notationGraph.links.forEach((link) => {
       const linkInsertMeta = {
@@ -495,8 +509,9 @@ class LinkGeometryDrawable implements GLDrawable {
     }
     const _this = this;
     const geometry = new LinkGeometry(
-      meta.fromNode,
-      meta.toNode,
+      this.notationGraph,
+      meta.fromNode.id,
+      meta.toNode.id,
       new (class implements LinkGeometryStateProvider {
         isVisible(): boolean {
           const linkClasses = _this.linkToClassMap.get(key);
@@ -539,6 +554,16 @@ class LinkGeometryDrawable implements GLDrawable {
     this.attributeBuffer.addGeometry(geometry.attributesSourceFor(trisSource));
     this.linkToIndexMap.set(key, index);
     //console.log("link insert", key, index);
+  }
+
+  private onLinkUpdated(link: Link) {
+    const key = this.makeLinkKeyFromLink(link);
+    const index = this.linkToIndexMap.get(key);
+    if (index === undefined) {
+      return;
+    }
+    this.triangleBuffer.updateGeometry(index);
+    this.attributeBuffer.updateGeometry(index);
   }
 
   private onLinkRemoved(meta: LinkRemoveMetadata) {
@@ -609,6 +634,7 @@ class LinkGeometryDrawable implements GLDrawable {
   public unsubscribeEvents() {
     this.notationGraph.onLinkInserted.unsubscribe(this.linkInsertSubscription);
     this.notationGraph.onLinkRemoved.unsubscribe(this.linkRemoveSubscription);
+    this.notationGraph.onNodeUpdatedOrLinked.unsubscribe(this.nodeUpdatedSubscription);
     this.selectionStore.onLinksChange.unsubscribe(
       this.linkSelectionSubscription,
     );
