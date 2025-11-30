@@ -303,14 +303,28 @@ export class GlobalMaskTexture implements GLDrawable {
     this.clientBufferIsFresh = false;
   }
 
+  private nodeToRtreeEntry(node: Node, range?: SubImageRange) {
+    if (range) {
+      return {
+        minX: range.x,
+        minY: range.y,
+        maxX: range.x + range.width,
+        maxY: range.y + range.height,
+        value: node,
+      };
+    } else {
+      return {
+        minX: node.left,
+        minY: node.top,
+        maxX: node.left + node.width,
+        maxY: node.top + node.height,
+        value: node,
+      };
+    }
+  }
+
   private insertNodeToIndex(node: Node) {
-    this.nodeBBoxIndex.insert({
-      minX: node.left,
-      minY: node.top,
-      maxX: node.left + node.width,
-      maxY: node.top + node.height,
-      value: node,
-    });
+    this.nodeBBoxIndex.insert(this.nodeToRtreeEntry(node));
     this.currentNodeRanges.set(node.id, {
       x: node.left,
       y: node.top,
@@ -320,8 +334,9 @@ export class GlobalMaskTexture implements GLDrawable {
   }
 
   private removeNodeFromIndex(node: Node) {
-    this.nodeBBoxIndex.remove(node, (a, b) => {
-      return a.value.id == b.id;
+    const currentRange = this.currentNodeRanges.get(node.id);
+    this.nodeBBoxIndex.remove(this.nodeToRtreeEntry(node, currentRange), (a, b) => {
+      return a.value.id == b.value.id;
     });
     this.currentNodeRanges.delete(node.id);
   }
@@ -332,8 +347,8 @@ export class GlobalMaskTexture implements GLDrawable {
   }
 
   private onNodeRemoved(node: Node) {
-    this.removeNodeFromIndex(node);
     this.updateNodeRange(node);
+    this.removeNodeFromIndex(node);
   }
 
   private onNodeUpdated(node: Node) {
@@ -499,12 +514,19 @@ export class GlobalMaskTexture implements GLDrawable {
 
   private processUpdateRequest(update: SubImageRange): void {
     const nodes = this.getNodesInArea(update);
-    if (nodes.length === 0) return;
-    const sortedNodes = this.depthSortNodes(nodes);
-
-    for (let x = update.x; x < update.x + update.width; x++) {
+    if (nodes.length === 0) {
+      //clear area
       for (let y = update.y; y < update.y + update.height; y++) {
-        this.recomposePixel(x, y, sortedNodes);
+        const rowPtr = this.getClientBufPointer(update.x, y);
+        rowPtr.fill(0, 0, update.width * GlobalMaskTexture.PIXEL_STRIDE);
+      }
+    } else {
+      const sortedNodes = this.depthSortNodes(nodes);
+
+      for (let x = update.x; x < update.x + update.width; x++) {
+        for (let y = update.y; y < update.y + update.height; y++) {
+          this.recomposePixel(x, y, sortedNodes);
+        }
       }
     }
 
