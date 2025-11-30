@@ -131,7 +131,7 @@ export class GlobalMaskTexture implements GLDrawable {
 
   private nodeBBoxIndex: RBush<Node> = new RBush<Node>();
   private currentNodeRanges: Map<number, SubImageRange> = new Map();
-  private hiddenNodes: Set<number>;
+  private hiddenNodes: Set<number> = new Set();
 
   private nodeInsertSubscription: ISimpleEventHandler<Node>;
   private nodeRemoveSubscription: ISimpleEventHandler<Node>;
@@ -757,5 +757,6 @@ export class GlobalMaskTexture implements GLDrawable {
 
     this.forceFullUpload = false;
     this.requestTextureResize = false;
+    this.queuedUpdates.clear();
   }
 }
