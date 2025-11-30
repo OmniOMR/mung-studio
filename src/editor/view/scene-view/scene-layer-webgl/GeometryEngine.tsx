@@ -70,7 +70,6 @@ type BufferDataType = Float32Array | Int32Array | Uint32Array;
 export class GeometryBuffer implements GLBuffer {
   private static readonly INITIAL_BUFFER_SIZE = 65536;
   private static readonly BUFFER_GROWTH_FACTOR = 2;
-  private static readonly VERTEX_STRIDE = 2;
 
   private config: GeometryBufferConfig;
 
@@ -172,8 +171,8 @@ export class GeometryBuffer implements GLBuffer {
     } else {
       //move data to the left
       const start =
-        this.getGeomVertexStart(index) * GeometryBuffer.VERTEX_STRIDE; //start of the NEXT geometry (after splice)
-      const target = geometry.vertexOffset * GeometryBuffer.VERTEX_STRIDE; //start of the geometry that was removed
+        this.getGeomVertexStart(index) * this.config.elementCount; //start of the NEXT geometry (after splice)
+      const target = geometry.vertexOffset * this.config.elementCount; //start of the geometry that was removed
       this.buffer.copyWithin(target, start);
 
       this.vertexTopIndex -= geometry.vertexCount;
