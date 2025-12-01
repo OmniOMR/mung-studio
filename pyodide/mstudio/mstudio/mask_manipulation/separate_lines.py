@@ -41,7 +41,7 @@ def slice_out_a_mask(
         cut_polygon: list[tuple[int, int]],
 ) -> tuple[int, int, int, int, np.ndarray]:
     cut_stencil = np.zeros(shape=(height, width), dtype=np.uint8)
-    cv2.fillPoly(cut_stencil, np.array([cut_polygon], dtype=np.int32), 1)
+    cv2.fillPoly(cut_stencil, [np.array(cut_polygon, dtype=np.int32)], 1)
 
     cut_mask = original_mask * cut_stencil[:, :, np.newaxis]
     
