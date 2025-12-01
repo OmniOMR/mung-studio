@@ -77,29 +77,18 @@ export const PRECEDENCE_LINK_ANNOTATION_CLASSES = new Set([
 ]);
 
 /**
- * Classes that should be visible when doing staff link annotation
+ * Classes that should be visible when reviewing links for staves
  */
-export const STAFF_LINK_ANNOTATION_CLASSES = new Set([
-  // see MUSCIMA++ 2.0 "mff-muscima-mlclasses-annot.deprules" file,
-  // which classes can be attached to the "staff" class,
-  // plus noteheads and rests
+export const STAVES_REVIEW_ANNOTATION_CLASSES = new Set([
+  "staff",
 
   // clefs
   "gClef",
   "cClef",
   "fClef",
-  "cClefSquare",
-  "unpitchedPercussionClef1",
-  "unpitchedPercussionClef2",
-  "semipitchedPercussionClef1",
-  "semipitchedPercussionClef2",
-  "6stringTabClef",
-  "4stringTabClef",
   "gClefChange",
   "cClefChange",
   "fClefChange",
-  "clef8",
-  "clef15",
 
   // signatures
   "keySignature",
@@ -110,22 +99,12 @@ export const STAFF_LINK_ANNOTATION_CLASSES = new Set([
   "staffGrouping",
 
   // noteheads
-  "noteheadDoubleWhole",
-  "noteheadDoubleWholeSquare",
   "noteheadWhole",
   "noteheadHalf",
   "noteheadBlack",
   "noteheadFull",
-  "noteheadXBlack",
-  "noteheadXOrnate",
-  "noteheadSlashVerticalEnds",
-  "noteheadSlashHorizontalEnds",
-  "noteheadSlashWhiteWhole",
-  "noteheadSlashWhiteHalf",
 
   // rests
-  "multiMeasureRest",
-  "restMaxima",
   "restLonga",
   "restDoubleWhole",
   "restWhole",
@@ -140,10 +119,41 @@ export const STAFF_LINK_ANNOTATION_CLASSES = new Set([
   "rest512th",
   "rest1024th",
   "restHBar",
-  "restDoubleWholeLegerLine",
-  "restWholeLegerLine",
-  "restHalfLegerLine",
+
+  // repeats
   "repeat1Bar",
+
+  // unisono text
+  // TODO
+
+  // custos
+  "custos",
+]);
+
+/**
+ * Classes that should be visible when reviewing links
+ * for staff lines and spaces
+ */
+export const STAFF_LINES_SPACES_ANNOTATION_CLASSES = new Set([
+  "staffLine",
+  "staffSpace",
+
+  // noteheads
+  "noteheadWhole",
+  "noteheadHalf",
+  "noteheadBlack",
+  "noteheadFull",
+
+  // clefs
+  "gClef",
+  "cClef",
+  "fClef",
+  "gClefChange",
+  "cClefChange",
+  "fClefChange",
+
+  // custos
+  "custos",
 ]);
 
 export class ClassVisibilityStore {

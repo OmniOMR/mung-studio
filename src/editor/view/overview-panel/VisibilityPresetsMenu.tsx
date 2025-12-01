@@ -8,7 +8,8 @@ import { classNameToUnicode } from "../../../mung/classNameToUnicode";
 import {
   DEFAULT_HIDDEN_CLASSES,
   PRECEDENCE_LINK_ANNOTATION_CLASSES,
-  STAFF_LINK_ANNOTATION_CLASSES,
+  STAVES_REVIEW_ANNOTATION_CLASSES,
+  STAFF_LINES_SPACES_ANNOTATION_CLASSES,
 } from "../../model/ClassVisibilityStore";
 import { useContext } from "react";
 import { EditorContext } from "../../EditorContext";
@@ -30,8 +31,14 @@ export function VisibilityPresetsMenu() {
     );
   }
 
-  function staffLinksAnnotation() {
-    classVisibilityStore.showOnlyTheseClasses(STAFF_LINK_ANNOTATION_CLASSES);
+  function stavesReview() {
+    classVisibilityStore.showOnlyTheseClasses(STAVES_REVIEW_ANNOTATION_CLASSES);
+  }
+
+  function staffLinesSpacesReview() {
+    classVisibilityStore.showOnlyTheseClasses(
+      STAFF_LINES_SPACES_ANNOTATION_CLASSES,
+    );
   }
 
   function showAllClasses() {
@@ -69,16 +76,30 @@ export function VisibilityPresetsMenu() {
         Precedence links annotation
       </MyMenuItem>
 
-      <MyMenuItem onClick={staffLinksAnnotation}>
+      <MyMenuItem onClick={stavesReview}>
         <ListItemDecorator>
           <Typography
             level="title-md"
             sx={{ minWidth: "1em", textAlign: "center", color: "inherit" }}
           >
-            <span className="bravura">{classNameToUnicode("staff")}</span>
+            <span className="bravura">{classNameToUnicode("restWhole")}</span>
           </Typography>
         </ListItemDecorator>
-        Staff links annotation
+        Staves review
+      </MyMenuItem>
+
+      <MyMenuItem onClick={staffLinesSpacesReview}>
+        <ListItemDecorator>
+          <Typography
+            level="title-md"
+            sx={{ minWidth: "1em", textAlign: "center", color: "inherit" }}
+          >
+            <span className="bravura">
+              {"\u{E01A}\u{00A0}\u{00A0}\u{1D15F}"}
+            </span>
+          </Typography>
+        </ListItemDecorator>
+        Staff lines/spaces review
       </MyMenuItem>
 
       <MyListDivider />
