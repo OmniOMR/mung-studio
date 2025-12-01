@@ -220,6 +220,7 @@ export function useConstructContextServices(
         selectionStore,
         toolbeltController,
         pythonRuntime,
+        classVisibilityStore,
       ),
     [],
   );

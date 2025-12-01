@@ -8,6 +8,7 @@ import { ToolbeltController } from "./ToolbeltController";
 import { EditorTool } from "../model/EditorTool";
 import { PythonRuntime } from "../../../pyodide/PythonRuntime";
 import { Node } from "../../mung/Node";
+import { ClassVisibilityStore } from "../model/ClassVisibilityStore";
 
 /**
  * Implements the logic and keyboard shortcuts behind actions from
@@ -22,6 +23,7 @@ export class MainMenuController implements IController {
   private readonly selectionStore: SelectionStore;
   private readonly toolbeltController: ToolbeltController;
   private readonly pythonRuntime: PythonRuntime;
+  private readonly classVisibilityStore: ClassVisibilityStore;
 
   constructor(
     jotaiStore: JotaiStore,
@@ -29,12 +31,14 @@ export class MainMenuController implements IController {
     selectionStore: SelectionStore,
     toolbeltController: ToolbeltController,
     pythonRuntime: PythonRuntime,
+    classVisibilityStore: ClassVisibilityStore,
   ) {
     this.jotaiStore = jotaiStore;
     this.notationGraphStore = notationGraphStore;
     this.selectionStore = selectionStore;
     this.toolbeltController = toolbeltController;
     this.pythonRuntime = pythonRuntime;
+    this.classVisibilityStore = classVisibilityStore;
   }
 
   public readonly isEnabledAtom = atom(true);
@@ -149,13 +153,18 @@ export class MainMenuController implements IController {
     const api = this.pythonRuntime.maskManipulation;
 
     // get the stafflines
-    const stafflines = this.jotaiStore.get(
-      this.selectionStore.selectedNodesAtom,
-    );
+    // (and remove all syntax from stafflines as to not interfere with python)
+    const staffLines = this.jotaiStore
+      .get(this.selectionStore.selectedNodesAtom)
+      .map((s) => ({
+        ...s,
+        syntaxInlinks: [],
+        syntaxOutlinks: [],
+      }));
 
     // create the staff object
     console.log("Generating the staff...");
-    const proposedStaff = await api.generateStaffFromStafflines(stafflines);
+    const proposedStaff = await api.generateStaffFromStafflines(staffLines);
     const staff: Node = {
       id: this.notationGraphStore.getFreeId(),
       className: "staff",
@@ -175,17 +184,18 @@ export class MainMenuController implements IController {
     this.notationGraphStore.insertNode(staff);
 
     // add syntax links from the new staff to all stafflines
-    for (const line of stafflines) {
+    for (const line of staffLines) {
       this.notationGraphStore.insertLink(staff.id, line.id, LinkType.Syntax);
     }
 
     // create the staffspace objects and link them from the staff
     console.log("Generating staff spaces...");
     const proposedStaffspaces = await api.generateStaffspaces(
-      [...stafflines.map((s) => s.id), staff.id].map((id) =>
+      [...staffLines.map((s) => s.id), staff.id].map((id) =>
         this.notationGraphStore.getNode(id),
       ),
     );
+    const staffSpaces: Node[] = [];
     for (const proposedStaffspace of proposedStaffspaces) {
       const staffSpace: Node = {
         id: this.notationGraphStore.getFreeId(),
@@ -203,6 +213,7 @@ export class MainMenuController implements IController {
         data: {},
         polygon: null,
       };
+      staffSpaces.push(staffSpace);
       this.notationGraphStore.insertNode(staffSpace);
       this.notationGraphStore.insertLink(
         staff.id,
@@ -210,6 +221,16 @@ export class MainMenuController implements IController {
         LinkType.Syntax,
       );
     }
+
+    // make sure the new objects are visible
+    this.classVisibilityStore.setClassVisibility("staff", true);
+    this.classVisibilityStore.setClassVisibility("staffSpace", true);
+
+    // select the new nodes
+    this.selectionStore.changeSelection([
+      staff.id,
+      ...staffSpaces.map((n) => n.id),
+    ]);
 
     console.log("DONE!");
   }

@@ -19,6 +19,7 @@ Development documentation:
 - [Performance bottlenecks](docs/performance-bottlenecks.md)
 - [Simple PHP backend](docs/simple-php-backend.md)
 - [Pyodide Python Runtime](docs/pyodide-python-runtime.md)
+- [WebGL Renderer](docs/webgl-renderer.md)
 - [Development setup](docs/development-setup.md)
 
 
