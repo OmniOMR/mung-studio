@@ -335,9 +335,12 @@ export class GlobalMaskTexture implements GLDrawable {
 
   private removeNodeFromIndex(node: Node) {
     const currentRange = this.currentNodeRanges.get(node.id);
-    this.nodeBBoxIndex.remove(this.nodeToRtreeEntry(node, currentRange), (a, b) => {
-      return a.value.id == b.value.id;
-    });
+    this.nodeBBoxIndex.remove(
+      this.nodeToRtreeEntry(node, currentRange),
+      (a, b) => {
+        return a.value.id == b.value.id;
+      },
+    );
     this.currentNodeRanges.delete(node.id);
   }
 

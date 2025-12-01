@@ -170,8 +170,7 @@ export class GeometryBuffer implements GLBuffer {
       this.vertexTopIndex -= geometry.vertexCount;
     } else {
       //move data to the left
-      const start =
-        this.getGeomVertexStart(index) * this.config.elementCount; //start of the NEXT geometry (after splice)
+      const start = this.getGeomVertexStart(index) * this.config.elementCount; //start of the NEXT geometry (after splice)
       const target = geometry.vertexOffset * this.config.elementCount; //start of the geometry that was removed
       this.buffer.copyWithin(target, start);
 

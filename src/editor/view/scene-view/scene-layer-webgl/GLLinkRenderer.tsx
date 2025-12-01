@@ -131,7 +131,7 @@ class LinkGeometry {
     private stateProvider: LinkGeometryStateProvider,
     private lineThickness: number = 5,
     private arrowHeadScale: number = 2.0,
-  ) { }
+  ) {}
 
   public allTriangleSource(): GeometrySource {
     return {
@@ -192,7 +192,9 @@ class LinkGeometry {
   }
 
   private generateArrowAllTris(): vec4[] {
-    const fromPoint = this.nodeCenter(this.notationGraph.getNode(this.fromNodeId));
+    const fromPoint = this.nodeCenter(
+      this.notationGraph.getNode(this.fromNodeId),
+    );
     const toPoint = this.nodeCenter(this.notationGraph.getNode(this.toNodeId));
 
     const toFromNormVec = this.getDirVec(toPoint, fromPoint);
@@ -634,7 +636,9 @@ class LinkGeometryDrawable implements GLDrawable {
   public unsubscribeEvents() {
     this.notationGraph.onLinkInserted.unsubscribe(this.linkInsertSubscription);
     this.notationGraph.onLinkRemoved.unsubscribe(this.linkRemoveSubscription);
-    this.notationGraph.onNodeUpdatedOrLinked.unsubscribe(this.nodeUpdatedSubscription);
+    this.notationGraph.onNodeUpdatedOrLinked.unsubscribe(
+      this.nodeUpdatedSubscription,
+    );
     this.selectionStore.onLinksChange.unsubscribe(
       this.linkSelectionSubscription,
     );
