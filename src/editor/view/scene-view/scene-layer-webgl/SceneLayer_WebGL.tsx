@@ -7,7 +7,7 @@ import {
   PrecedenceLinkGeometryDrawable,
   SyntaxLinkGeometryDrawable,
 } from "./GLLinkRenderer";
-import { GlobalMaskTexture } from "./GLNodeMaskRenderer";
+import { GlobalMaskTexture, MaskAtlasRenderer } from "./GLNodeMaskRenderer";
 
 /**
  * Scene layer, rendered via WebGL
@@ -41,11 +41,16 @@ export function SceneLayer_WebGL() {
       glRef.current = new GLRenderer(gl);
     }
 
-    const maskDrawable = GlobalMaskTexture.withAutoSize(notationGraphStore, {
+    /*const maskDrawable = GlobalMaskTexture.withAutoSize(notationGraphStore, classVisibilityStore, {
       paddingMultiplier: 1.5,
       paddingExtraPixels: 256,
     });
-    glRef.current.addDrawable(maskDrawable);
+    glRef.current.addDrawable(maskDrawable);*/
+    const masks = new MaskAtlasRenderer(
+      notationGraphStore,
+      classVisibilityStore,
+    );
+    glRef.current.addDrawable(masks);
 
     const syntaxLinks = new SyntaxLinkGeometryDrawable(
       notationGraphStore,
@@ -141,7 +146,8 @@ export function SceneLayer_WebGL() {
       editorStateStore.displaySyntaxLinksChangeEvent.unsubscribe(onGraphUpdate);
       syntaxLinks.unsubscribeEvents();
       precedenceLinks.unsubscribeEvents();
-      maskDrawable.unsubscribeEvents();
+      //maskDrawable.unsubscribeEvents();
+      masks.unsubscribeEvents();
       resizeObserver.disconnect();
     };
   }, []);

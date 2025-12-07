@@ -138,6 +138,7 @@ export class GLRenderer {
     internalFormat: GLenum = this.gl.RGBA,
     format: GLenum = this.gl.RGBA,
     dataType: GLenum = this.gl.UNSIGNED_BYTE,
+    data: ArrayBufferView | null = null,
   ): void {
     this.gl.bindTexture(this.gl.TEXTURE_2D, texture);
     this.gl.texImage2D(
@@ -149,7 +150,7 @@ export class GLRenderer {
       0,
       format,
       dataType,
-      null,
+      data,
     );
   }
 
@@ -344,6 +345,13 @@ export class GLDrawableComposite implements GLDrawable {
 
   public addDrawable(drawable: GLDrawable) {
     this.drawables.push(drawable);
+  }
+
+  public removeDrawable(drawable: GLDrawable) {
+    const index = this.drawables.indexOf(drawable);
+    if (index !== -1) {
+      this.drawables.splice(index, 1);
+    }
   }
 
   attach(gl: GLRenderer): void {

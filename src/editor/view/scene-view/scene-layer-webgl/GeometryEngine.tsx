@@ -65,7 +65,12 @@ interface GeometryBufferConfig {
   elementCount: number; // number of elements per vertex
 }
 
-type BufferDataType = Float32Array | Int32Array | Uint32Array;
+type BufferDataType =
+  | Float32Array
+  | Int32Array
+  | Uint32Array
+  | Uint16Array
+  | Int16Array;
 
 export class GeometryBuffer implements GLBuffer {
   private static readonly INITIAL_BUFFER_SIZE = 65536;
@@ -102,6 +107,10 @@ export class GeometryBuffer implements GLBuffer {
         return new Uint32Array(size);
       case WebGL2RenderingContext.INT:
         return new Int32Array(size);
+      case WebGL2RenderingContext.UNSIGNED_SHORT:
+        return new Uint16Array(size);
+      case WebGL2RenderingContext.SHORT:
+        return new Int16Array(size);
       default:
         throw new Error(`Unsupported data type: ${dataType}`);
     }
@@ -260,7 +269,9 @@ export class GeometryBuffer implements GLBuffer {
     const dt = this.config.dataType;
     return (
       dt === WebGL2RenderingContext.INT ||
-      dt === WebGL2RenderingContext.UNSIGNED_INT
+      dt === WebGL2RenderingContext.UNSIGNED_INT ||
+      dt === WebGL2RenderingContext.SHORT ||
+      dt === WebGL2RenderingContext.UNSIGNED_SHORT
     );
   }
 
