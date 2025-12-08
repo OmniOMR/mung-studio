@@ -149,7 +149,7 @@ export function useConstructContextServices(
         jotaiStore,
         notationGraphStore,
         classVisibilityStore,
-        zoomController,
+        mousePointerController,
         toolbeltController,
         staffGeometryStore,
       ),

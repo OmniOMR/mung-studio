@@ -3,13 +3,13 @@ import { Node } from "../../mung/Node";
 import { Atom, atom, useAtomValue } from "jotai";
 import { ClassVisibilityStore } from "../model/ClassVisibilityStore";
 import { NotationGraphStore } from "../model/notation-graph-store/NotationGraphStore";
-import { ZoomController } from "./ZoomController";
 import { JotaiStore } from "../model/JotaiStore";
 import { SignalAtomWrapper } from "../model/SignalAtomWrapper";
 import { IController } from "./IController";
 import { EditorTool } from "../model/EditorTool";
 import { ToolbeltController } from "./ToolbeltController";
 import { StaffGeometryStore } from "../model/StaffGeometryStore";
+import { MousePointerController } from "./MousePointerController";
 
 /**
  * Contains logic and state related to node highlighting.
@@ -23,7 +23,6 @@ export class HighlightController implements IController {
 
   private readonly notationGraphStore: NotationGraphStore;
   private readonly classVisibilityStore: ClassVisibilityStore;
-  private readonly zoomController: ZoomController;
   private readonly toolbeltController: ToolbeltController;
   private readonly staffGeometryStore: StaffGeometryStore;
 
@@ -31,14 +30,13 @@ export class HighlightController implements IController {
     jotaiStore: JotaiStore,
     notationGraphStore: NotationGraphStore,
     classVisibilityStore: ClassVisibilityStore,
-    zoomController: ZoomController,
+    mousePointerController: MousePointerController,
     toolbeltController: ToolbeltController,
     staffGeometryStore: StaffGeometryStore,
   ) {
     this.jotaiStore = jotaiStore;
     this.notationGraphStore = notationGraphStore;
     this.classVisibilityStore = classVisibilityStore;
-    this.zoomController = zoomController;
     this.toolbeltController = toolbeltController;
     this.staffGeometryStore = staffGeometryStore;
 
@@ -48,6 +46,9 @@ export class HighlightController implements IController {
     );
     this.notationGraphStore.onNodeRemoved.subscribe((removedNode) =>
       this.onNodeRemoved(removedNode),
+    );
+    mousePointerController.onScenePointerChange.subscribe((point) =>
+      this.onScenePointerChange(point),
     );
   }
 
@@ -130,13 +131,11 @@ export class HighlightController implements IController {
   // Mouse interaction //
   ///////////////////////
 
-  public onMouseMove(e: MouseEvent) {
-    const t = this.zoomController.currentTransform;
-
-    // TODO: get data from the MousePointerController instead,
-    // to better handle edgecases
-    const x = t.invertX(e.offsetX);
-    const y = t.invertY(e.offsetY);
+  /**
+   * Called whenever the mouse pointer changes position in the scene coords
+   */
+  private onScenePointerChange(point: DOMPointReadOnly) {
+    const { x, y } = point;
 
     const newHighlightedNode = this.getNodeUnderPointer(x, y);
     this.setHighlightedNode(newHighlightedNode);
