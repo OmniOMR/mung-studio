@@ -131,7 +131,7 @@ class LinkGeometry {
     private stateProvider: LinkGeometryStateProvider,
     private lineThickness: number = 5,
     private arrowHeadScale: number = 2.0,
-  ) { }
+  ) {}
 
   public allTriangleSource(): GeometrySource {
     return {
@@ -602,9 +602,9 @@ class LinkGeometryDrawable implements GLDrawable {
     return `${data.fromNode.id}-${data.toNode.id}-${data.linkType}`;
   }
 
-  public attach(gl: GLRenderer) { }
+  public attach(gl: GLRenderer) {}
 
-  public release(gl: GLRenderer) { }
+  public release(gl: GLRenderer) {}
 
   public hasSelectedLinks(): boolean {
     return this.selectedLinks.size > 0;

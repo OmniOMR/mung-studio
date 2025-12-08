@@ -41,6 +41,14 @@ export class HighlightController implements IController {
     this.zoomController = zoomController;
     this.toolbeltController = toolbeltController;
     this.staffGeometryStore = staffGeometryStore;
+
+    // register event handlers
+    this.notationGraphStore.onNodeUpdatedOrLinked.subscribe((metadata) =>
+      this.onNodeUpdatedOrLinked(metadata.newValue),
+    );
+    this.notationGraphStore.onNodeRemoved.subscribe((removedNode) =>
+      this.onNodeRemoved(removedNode),
+    );
   }
 
   public isEnabledAtom: Atom<boolean> = atom((get) => {
@@ -88,6 +96,34 @@ export class HighlightController implements IController {
     // change highlighted node
     this._highlightedNode = node;
     this.signalAtom.signal(this.jotaiStore.set);
+  }
+
+  ///////////////////////////////
+  // Reacting to scene changes //
+  ///////////////////////////////
+
+  /**
+   * Called whenever a scene node is updated or linked
+   */
+  private onNodeUpdatedOrLinked(updatedNode: Node) {
+    if (updatedNode.id !== this.highlightedNode?.id) {
+      return;
+    }
+
+    // update the node value that we hold as "highlighted"
+    this.setHighlightedNode(updatedNode);
+  }
+
+  /**
+   * Called whenever a scene node is removed
+   */
+  private onNodeRemoved(removedNode: Node) {
+    if (removedNode.id !== this.highlightedNode?.id) {
+      return;
+    }
+
+    // blur the node
+    this.setHighlightedNode(null);
   }
 
   ///////////////////////

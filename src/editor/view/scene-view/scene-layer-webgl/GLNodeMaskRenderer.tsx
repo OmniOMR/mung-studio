@@ -984,7 +984,7 @@ class TextureAtlasAllocator {
   }
 
   private coalesceFreeTiles(row: TextureAtlasTile[]): void {
-    for (let tileX = 0; tileX < row.length - 1;) {
+    for (let tileX = 0; tileX < row.length - 1; ) {
       const tile = row[tileX];
       const nextTile = row[tileX + 1];
       if (!tile.used && !nextTile.used) {
@@ -1345,10 +1345,10 @@ class NodeMaskAtlasManager {
       console.log(
         "Created new NodeMaskAtlas of template",
         NodeMaskAtlasTemplate[requiredTemplate] +
-        ", caused by allocation request of size " +
-        width +
-        "x" +
-        height,
+          ", caused by allocation request of size " +
+          width +
+          "x" +
+          height,
       );
     }
     const allocation = this.allocateFromAtlas(newAtlas, width, height);
@@ -1358,10 +1358,10 @@ class NodeMaskAtlasManager {
     }
     console.log(
       "Failed to allocate from new NodeMaskAtlas - " +
-      width +
-      "x" +
-      height +
-      " too large?",
+        width +
+        "x" +
+        height +
+        " too large?",
     );
 
     return null;
@@ -1436,7 +1436,7 @@ class NodeMaskLayer {
     private classVisibilityStore: ClassVisibilityStore,
     private colorMap: MaskColorMap,
     private atlas: NodeMaskAtlas | null,
-  ) { }
+  ) {}
 
   public addNode(
     nodeId: number,
