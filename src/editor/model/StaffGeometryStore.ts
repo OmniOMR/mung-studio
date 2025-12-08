@@ -236,6 +236,24 @@ function computeNodeGeometry(node: Node, stride: number): NodeGeometry {
     lastYPosition = yPositions[i];
   }
 
+  // === Phase 4: Discard edge slots ===
+
+  // The first and last slot are close to the edge of the rectangle.
+  // Because the rectangle may not have a completely vertical sides,
+  // it may shift the computed slice "center" down/up and it looks weird
+  // during link rendering. So we discard the edge slots and copy into them
+  // values from their immediate closer-to-center neighbors.
+
+  if (count >= 3) {
+    // first slot
+    masses[0] = masses[1];
+    yPositions[0] = yPositions[1];
+
+    // last slot
+    masses[count - 1] = masses[count - 2];
+    yPositions[count - 1] = yPositions[count - 2];
+  }
+
   // done, return the result
   return {
     node,

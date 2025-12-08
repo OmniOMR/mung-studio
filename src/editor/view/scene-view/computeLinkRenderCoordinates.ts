@@ -21,14 +21,14 @@ export function computeLinkCoordinates(
   // to stafflines/spaces - to the right and hit the line/space
   if (toNode.className === "staffLine" || toNode.className === "staffSpace") {
     if (fromNode.className !== "staff") {
-      x2 = x1 + fromNode.width;
+      x2 = clamp_horizontally(x1 + fromNode.width, toNode);
     }
     y2 = staffGeometryStore.getYForX(toNode.id, x2);
   }
 
   // to staves - directly up/down to the center of the staff
   if (toNode.className === "staff") {
-    x2 = x1;
+    x2 = clamp_horizontally(x1, toNode);
     y2 = staffGeometryStore.getYForX(toNode.id, x2);
   }
 
@@ -40,4 +40,14 @@ export interface LinkRenderCoordinates {
   readonly y1: number;
   readonly x2: number;
   readonly y2: number;
+}
+
+/**
+ * Clamps a given X coordinate to be within
+ * the horizontal bounds of a node
+ */
+function clamp_horizontally(x: number, node: Node): number {
+  if (x < node.left) return node.left;
+  if (x > node.left + node.width) return node.left + node.width;
+  return x;
 }
