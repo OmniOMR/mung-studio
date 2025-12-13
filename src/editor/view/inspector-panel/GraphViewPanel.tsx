@@ -183,7 +183,7 @@ function buildChartGraph(
           };
     return {
       id: id,
-      title: node.className + " (" + id + ")",
+      title: node.className,
       color: `hsl(${hue}, 100%, 40%)`,
       radius: 5,
       isFullySelected: selectedNodeIds.has(id),

@@ -121,15 +121,15 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     smuflEquivalents: ["barlineSingle"],
   },
   barlineSingle: { uc: "\u{E030}" },
-  barlineDouble: { uc: "\u{E031}" },
+  // barlineDouble: { uc: "\u{E031}" },
   barlineFinal: { uc: "\u{E032}" },
-  barlineReverseFinal: { uc: "\u{E033}" },
+  // barlineReverseFinal: { uc: "\u{E033}" },
   barlineHeavy: { uc: "\u{E034}", mpp: true },
-  barlineHeavyHeavy: { uc: "\u{E035}" },
-  barlineDashed: { uc: "\u{E036}" },
-  barlineDotted: { uc: "\u{E037}", mpp: true },
-  barlineShort: { uc: "\u{E038}" },
-  barlineTick: { uc: "\u{E039}" },
+  // barlineHeavyHeavy: { uc: "\u{E035}" },
+  // barlineDashed: { uc: "\u{E036}" },
+  // barlineDotted: { uc: "\u{E037}", mpp: true },
+  // barlineShort: { uc: "\u{E038}" },
+  // barlineTick: { uc: "\u{E039}" },
 
   // 4.4. Repeats
   // https://w3c.github.io/smufl/latest/tables/repeats.html
