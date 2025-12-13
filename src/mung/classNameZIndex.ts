@@ -359,6 +359,8 @@ const lookupTable = {
 
   arpeggio: 10_300,
   arpeggiato: 10_300,
+  arpeggiatoUp: 10_300,
+  arpeggiatoDown: 10_300,
 
   breathMark: 10_400,
   fermataAbove: 10_400,

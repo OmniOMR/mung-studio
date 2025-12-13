@@ -644,6 +644,8 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     smuflEquivalents: ["arpeggiato"],
   },
   arpeggiato: { uc: "\u{E63C}" },
+  arpeggiatoUp: { uc: "\u{E634}" },
+  arpeggiatoDown: { uc: "\u{E635}" },
 
   // 4.75. Tuplets
   // https://w3c.github.io/smufl/latest/tables/tuplets.html
