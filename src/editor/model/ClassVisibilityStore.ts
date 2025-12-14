@@ -103,6 +103,9 @@ export const STAVES_REVIEW_ANNOTATION_CLASSES = new Set([
   "noteheadHalf",
   "noteheadBlack",
   "noteheadFull",
+  "noteheadWholeSmall",
+  "noteheadHalfSmall",
+  "noteheadBlackSmall",
 
   // rests
   "restLonga",
@@ -143,6 +146,9 @@ export const STAFF_LINES_SPACES_ANNOTATION_CLASSES = new Set([
   "noteheadHalf",
   "noteheadBlack",
   "noteheadFull",
+  "noteheadWholeSmall",
+  "noteheadHalfSmall",
+  "noteheadBlackSmall",
 
   // clefs
   "gClef",
