@@ -27,13 +27,17 @@ function blobToBase64Url(blob: Blob): Promise<string> {
 }
 
 async function storeUserData(userData: UserData) {
-  localStorage.setItem(STORAGE_NODES_KEY, JSON.stringify(userData.mung));
-  if (userData.imageUrl === null) {
-    localStorage.removeItem(STORAGE_IMAGE_KEY);
-  } else {
-    const blob = await (await fetch(userData.imageUrl)).blob();
-    const base64Url = await blobToBase64Url(blob);
-    localStorage.setItem(STORAGE_IMAGE_KEY, base64Url);
+  try {
+    localStorage.setItem(STORAGE_NODES_KEY, JSON.stringify(userData.mung));
+    if (userData.imageUrl === null) {
+      localStorage.removeItem(STORAGE_IMAGE_KEY);
+    } else {
+      const blob = await (await fetch(userData.imageUrl)).blob();
+      const base64Url = await blobToBase64Url(blob);
+      localStorage.setItem(STORAGE_IMAGE_KEY, base64Url);
+    }
+  } catch (e) {
+    console.error(e);
   }
 }
 
