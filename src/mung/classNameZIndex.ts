@@ -48,10 +48,12 @@ const lookupTable = {
   barlineShort: 4_002,
   barlineTick: 4_002,
   barNumber: 4_003,
+  barlineWing: 4_003,
   repeatDot: 4_004,
   repeatDots: 4_004,
 
   // bar repeats
+  repeatText: 4_500,
   repeat1Bar: 4_500,
   repeatOneBar: 4_500,
   repeat2Bars: 4_500,
@@ -59,6 +61,10 @@ const lookupTable = {
   repeatBarUpperDot: 4_500,
   repeatBarSlash: 4_500,
   repeatBarLowerDot: 4_500,
+
+  // unisono
+  unisonoText: 5_600,
+  unisonoContinuation: 5_600,
 
   // key / time signatures, clefs
   keySignature: 5_000,
@@ -102,6 +108,7 @@ const lookupTable = {
 
   // slurs, ties, spanners
   volta: 6_000,
+  voltaText: 6_001,
   slur: 6_001,
   tie: 6_002,
 
@@ -206,6 +213,7 @@ const lookupTable = {
   codaSquare: 6_600,
   segnoSerpent1: 6_600,
   segnoSerpent2: 6_600,
+  segnoSerpent: 6_600,
 
   transpositionText: 6_700,
   ottava: 6_700,

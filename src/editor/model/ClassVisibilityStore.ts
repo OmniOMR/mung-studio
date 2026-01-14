@@ -18,22 +18,13 @@ export const DEFAULT_HIDDEN_CLASSES = new Set([
  * Classes that should be visible when doing precedence link annotation
  */
 export const PRECEDENCE_LINK_ANNOTATION_CLASSES = new Set([
-  // https://muscimarker.readthedocs.io/en/latest/instructions.html#precedence-relationships
-  // links go between noteheads and rests
+  // https://github.com/OmniOMR/mung/blob/main/docs/annotation-instructions/annotation-instructions.md#precedence-graph
 
   // noteheads
-  "noteheadDoubleWhole",
-  "noteheadDoubleWholeSquare",
   "noteheadWhole",
   "noteheadHalf",
   "noteheadBlack",
   "noteheadFull",
-  "noteheadXBlack",
-  "noteheadXOrnate",
-  "noteheadSlashVerticalEnds",
-  "noteheadSlashHorizontalEnds",
-  "noteheadSlashWhiteWhole",
-  "noteheadSlashWhiteHalf",
 
   // gracenote noteheads (have their own disjoint precedence graph)
   "noteheadWholeSmall",
@@ -42,45 +33,107 @@ export const PRECEDENCE_LINK_ANNOTATION_CLASSES = new Set([
   "noteheadFullSmall",
 
   // rests
-  "multiMeasureRest",
-  "restMaxima",
   "restLonga",
   "restDoubleWhole",
-  "restBreve",
   "restWhole",
-  "restSemibreve",
   "restHalf",
-  "restMinim",
   "restQuarter",
-  "restCrotchet",
   "rest8th",
-  "restQuaver",
   "rest16th",
-  "restSemiquaver",
   "rest32nd",
-  "restDemisemiquaver",
   "rest64th",
   "rest128th",
   "rest256th",
   "rest512th",
   "rest1024th",
   "restHBar",
-  "restDoubleWholeLegerLine",
-  "restWholeLegerLine",
-  "restHalfLegerLine",
 
   // bar repeats
   "repeatOneBar",
   "repeat1Bar",
   "repeat2Bar",
   "repeat4Bar",
+
+  // custos
+  "custos",
+
+  // time signatures
+  "timeSig0",
+  "timeSig1",
+  "timeSig2",
+  "timeSig3",
+  "timeSig4",
+  "timeSig5",
+  "timeSig6",
+  "timeSig7",
+  "timeSig8",
+  "timeSig9",
+  "timeSigSlash",
+  "timeSigFractionalSlash",
+  "timeSigPlus",
+  "timeSigEquals",
+
+  // lyrics
+  "lyricsText",
+
+  // dynamic marks
+  "dynamicPiano",
+  "dynamicMezzo",
+  "dynamicForte",
+  "dynamicRinforzando",
+  "dynamicSforzando",
+  "dynamicZ",
+  "dynamicNiente",
+
+  // tuplets
+  "tuplet0",
+  "tuplet1",
+  "tuplet2",
+  "tuplet3",
+  "tuplet4",
+  "tuplet5",
+  "tuplet6",
+  "tuplet7",
+  "tuplet8",
+  "tuplet9",
+  "tupletColon",
 ]);
 
 /**
  * Classes that should be visible when reviewing links for staves
  */
 export const STAVES_REVIEW_ANNOTATION_CLASSES = new Set([
+  // https://github.com/OmniOMR/mung/blob/main/docs/annotation-instructions/annotation-instructions.md#1-assignment-to-staves
+
   "staff",
+
+  // noteheads
+  "noteheadWhole",
+  "noteheadHalf",
+  "noteheadBlack",
+  "noteheadFull",
+
+  // gracenote noteheads
+  "noteheadWholeSmall",
+  "noteheadHalfSmall",
+  "noteheadBlackSmall",
+  "noteheadFullSmall",
+
+  // rests
+  "restLonga",
+  "restDoubleWhole",
+  "restWhole",
+  "restHalf",
+  "restQuarter",
+  "rest8th",
+  "rest16th",
+  "rest32nd",
+  "rest64th",
+  "rest128th",
+  "rest256th",
+  "rest512th",
+  "rest1024th",
+  "restHBar",
 
   // clefs
   "gClef",
@@ -98,36 +151,15 @@ export const STAVES_REVIEW_ANNOTATION_CLASSES = new Set([
   "measureSeparator",
   "staffGrouping",
 
-  // noteheads
-  "noteheadWhole",
-  "noteheadHalf",
-  "noteheadBlack",
-  "noteheadFull",
-  "noteheadWholeSmall",
-  "noteheadHalfSmall",
-  "noteheadBlackSmall",
-
-  // rests
-  "restLonga",
-  "restDoubleWhole",
-  "restWhole",
-  "restHalf",
-  "restQuarter",
-  "rest8th",
-  "rest16th",
-  "rest32nd",
-  "rest64th",
-  "rest128th",
-  "rest256th",
-  "rest512th",
-  "rest1024th",
-  "restHBar",
-
   // repeats
   "repeat1Bar",
 
   // unisono text
-  // TODO
+  "unisonoText",
+  "unisonoContinuation",
+
+  // system divider
+  "systemDivider",
 
   // custos
   "custos",
@@ -138,6 +170,8 @@ export const STAVES_REVIEW_ANNOTATION_CLASSES = new Set([
  * for staff lines and spaces
  */
 export const STAFF_LINES_SPACES_ANNOTATION_CLASSES = new Set([
+  // https://github.com/OmniOMR/mung/blob/main/docs/annotation-instructions/annotation-instructions.md#2-assignment-to-stafflines-and-staffspaces
+
   "staffLine",
   "staffSpace",
 
@@ -146,6 +180,8 @@ export const STAFF_LINES_SPACES_ANNOTATION_CLASSES = new Set([
   "noteheadHalf",
   "noteheadBlack",
   "noteheadFull",
+
+  // grace noteheads
   "noteheadWholeSmall",
   "noteheadHalfSmall",
   "noteheadBlackSmall",

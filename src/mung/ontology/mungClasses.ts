@@ -130,6 +130,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   // barlineDotted: { uc: "\u{E037}", mpp: true },
   // barlineShort: { uc: "\u{E038}" },
   // barlineTick: { uc: "\u{E039}" },
+  barlineWing: { uc: "\u{E002}\u{E043}", notSmufl: true },
 
   // 4.4. Repeats
   // https://w3c.github.io/smufl/latest/tables/repeats.html
@@ -138,19 +139,22 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     mpp: true,
     smuflEquivalents: ["repeatLeft", "repeatRight"],
   },
+  repeatText: { uc: "D.C.", notSmufl: true, transcribable: true },
   volta: { uc: "1.", mpp: true, container: true },
+  voltaText: { uc: "1.", notSmufl: true, transcribable: true },
   repeatLeft: { uc: "\u{E040}" },
   repeatRight: { uc: "\u{E041}" },
-  repeatRightLeft: { uc: "\u{E042}" },
-  repeatDots: { uc: "\u{E043}" },
+  // repeatRightLeft: { uc: "\u{E042}" },
+  // repeatDots: { uc: "\u{E043}" },
   repeatDot: { uc: "\u{E043}", mpp: true },
-  dalSegno: { uc: "\u{E045}" },
-  daCapo: { uc: "\u{E046}" },
+  // dalSegno: { uc: "\u{E045}" },
+  // daCapo: { uc: "\u{E046}" },
   segno: { uc: "\u{E047}", mpp: true },
   coda: { uc: "\u{E048}", mpp: true },
-  codaSquare: { uc: "\u{E049}" },
-  segnoSerpent1: { uc: "\u{E04A}" },
-  segnoSerpent2: { uc: "\u{E04B}" },
+  // codaSquare: { uc: "\u{E049}" },
+  // segnoSerpent1: { uc: "\u{E04A}" },
+  // segnoSerpent2: { uc: "\u{E04B}" },
+  segnoSerpent: { uc: "\u{E04A}", notSmufl: true },
 
   // 4.5. Clefs
   // https://w3c.github.io/smufl/latest/tables/clefs.html
@@ -436,6 +440,10 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   repeatBarUpperDot: { uc: "\u{E503}" },
   repeatBarSlash: { uc: "\u{E504}" },
   repeatBarLowerDot: { uc: "\u{E505}" },
+
+  // unisono
+  unisonoText: { uc: "col.", notSmufl: true, transcribable: true },
+  unisonoContinuation: { uc: "\u{E00A}", notSmufl: true },
 
   // 4.43. Octaves
   // https://w3c.github.io/smufl/latest/tables/octaves.html
