@@ -3,10 +3,18 @@
 # Move to mung package once settled.
 
 import abc
+import re
 from typing import Iterator
 from dataclasses import dataclass
 from mung.node import Node
 from mung.graph import NotationGraph
+from .grammar_syntax import GRAMMAR_SYNTAX
+from .grammar_precedence import GRAMMAR_PRECEDENCE
+from .grammar_alphabet import GRAMMAR_ALPHABET
+from mung2musicxml.grammar_new.grammar import Grammar
+from mung2musicxml.grammar_new.violations \
+    import GrammarViolation, SymbolNotInAlphabetViolation, \
+        EdgeNotInAlphabetViolation, InvalidLinkCountViolation
 
 
 ##############
@@ -186,8 +194,25 @@ def build_default_validation_engine():
         # 4xxx codes are text-nodes related issues
         MandatoryTextTranscriptionRule(4001, "dynamicsText"),
         MandatoryTextTranscriptionRule(4001, "restText"),
+        MandatoryTextTranscriptionRule(4001, "verseNumber"),
+        MandatoryTextTranscriptionRule(4001, "tempoText"),
+        MandatoryTextTranscriptionRule(4001, "tempoRitardando"),
+        MandatoryTextTranscriptionRule(4001, "tempoAccelerando"),
+        MandatoryTextTranscriptionRule(4001, "tempoATempo"),
+        MandatoryTextTranscriptionRule(4001, "interpretationText"),
+        MandatoryTextTranscriptionRule(4001, "measureNumber"),
+        MandatoryTextTranscriptionRule(4001, "pageNumber"),
+        MandatoryTextTranscriptionRule(4001, "repeatText"),
+        MandatoryTextTranscriptionRule(4001, "voltaText"),
         
         # 5xxx codes are grammar validation issues
+        # 5001 - generic grammar issue
+        # 5002 - unknown node class
+        # 5101 - syntax link is present but not allowed by the grammar
+        # 5102 - syntax link cardinality violates grammar
+        # 5201 - precedence link is present but not allowed by the grammar
+        # 5202 - precedence link cardinality violates grammar
+        GrammarRule(),
 
         # 6xxx codes are musicxml conversion issues
     ])
@@ -357,4 +382,150 @@ class MandatoryTextTranscriptionRule(ValidationRule):
             node_id=node.id,
             resolution=None,
             fingerprint=None,
+        )
+
+
+class GrammarRule(ValidationRule):
+    def __init__(self):
+        self.syntax_grammar = Grammar.from_text(
+            GRAMMAR_SYNTAX,
+            GRAMMAR_ALPHABET
+        )
+        self.precedence_grammar = Grammar.from_text(
+            GRAMMAR_PRECEDENCE,
+            GRAMMAR_ALPHABET
+        )
+
+    def scan_graph(self, graph: NotationGraph) -> Iterator[ValidationIssue]:
+        nodes = {node.id: node.class_name for node in graph.vertices}
+        
+        # syntax graph
+        for violation in self.syntax_grammar.find_invalid(
+            nodes,
+            graph.edges
+        ):
+            yield from self.translate_violation(violation, False)
+        
+        # precedence graph
+        for violation in self.precedence_grammar.find_invalid(
+            nodes,
+            graph.precedence_edges
+        ):
+            yield from self.translate_violation(violation, True)
+    
+    def translate_violation(
+            self,
+            violation: GrammarViolation,
+            is_precedence: bool,
+    ) -> Iterator[ValidationIssue]:
+        precode = 5200 if is_precedence else 5200
+        link_badge = "[🟢 precedence]" if is_precedence else "[🔴 syntax]"
+
+        if type(violation) is SymbolNotInAlphabetViolation:
+            if not is_precedence: return # only check by syntax grammar
+            yield self.translate_SymbolNotInAlphabet(violation)
+        elif type(violation) is InvalidLinkCountViolation:
+            yield self.translate_InvalidLinkCount(violation, precode, link_badge)
+        elif type(violation) is EdgeNotInAlphabetViolation:
+            yield self.translate_EdgeNotInAlphabet(violation, precode, link_badge)
+        else:
+            yield self.translate_unknown_violation(violation, link_badge)
+
+    def translate_InvalidLinkCount(
+            self,
+            violation: InvalidLinkCountViolation,
+            precode: int,
+            link_badge: str
+    ) -> ValidationIssue:
+        assert len(violation.affected_nodes) >= 1 # first node is the root node
+        
+        # parse message
+        # Symbol XYZ ("foo") has X in/outlinks to [...], but grammar specifies rule: ...{min=X, max=X} ...
+        message = violation.message
+        pattern = re.compile(
+            r"""^Symbol (\d+) \("(.+)"\) has (\d+) (in|out)links to \[([^\]]+)\], but grammar specifies rule: .+min=(\d+|inf), max=(\d+|inf)"""
+        )
+        match = pattern.match(message)
+        if match is None:
+            return self.translate_unknown_violation(violation, link_badge)
+        
+        node_id = int(match.group(1))
+        node_class = str(match.group(2))
+        link_count = int(match.group(3))
+        direction = str(match.group(4))
+        target_classes = str(match.group(5)).replace("'", "") # remove quotes
+        cardinality_min = str(match.group(6))
+        cardinality_max = str(match.group(7))
+
+        assert node_id == violation.affected_nodes[0].id
+        assert node_class == violation.affected_nodes[0].symbol.name
+
+        # [foo] should have X to Y [syntax] outlinks to [...] but currently has X.
+        cardinality_phrase = f"{cardinality_min} to {cardinality_max}"
+        plural_links = "s"
+        if cardinality_min == cardinality_max:
+            cardinality_phrase = f"exactly {cardinality_min}"
+            if cardinality_min == "1": plural_links = ""
+        elif cardinality_max == "inf":
+            cardinality_phrase = f"at least {cardinality_min}"
+            if cardinality_min == "1": plural_links = ""
+        elif cardinality_min == "0":
+            cardinality_phrase = f"at most {cardinality_max}"
+            if cardinality_max == "1": plural_links = ""
+        direction_phrase = f"outlink{plural_links} to" if direction == "out" else f"inlink{plural_links} from"
+        return ValidationIssue(
+            code=precode + 2,
+            message=f"[{node_class}] should have {cardinality_phrase} {link_badge} {direction_phrase} [{target_classes}] but currently has {link_count}.",
+            node_id=violation.affected_nodes[0].id,
+            resolution=None,
+            fingerprint=message,
+        )
+    
+    def translate_EdgeNotInAlphabet(
+            self,
+            violation: EdgeNotInAlphabetViolation,
+            precode: int,
+            link_badge: str
+    ) -> ValidationIssue:
+        assert len(violation.affected_nodes) == 2
+        source = violation.affected_nodes[0]
+        target = violation.affected_nodes[1]
+        link = f"[{source.symbol}:{source.id}]-->[{target.symbol}:{target.id}]"
+        return ValidationIssue(
+            code=precode + 1,
+            message=f"{link_badge} link {link} is present but not allowed by the grammar.",
+            node_id=source.id,
+            resolution=None,
+            fingerprint=str(target.id),
+        )
+
+    def translate_SymbolNotInAlphabet(
+            self,
+            violation: SymbolNotInAlphabetViolation,
+    ) -> ValidationIssue:
+        assert len(violation.affected_nodes) == 1
+        node_class = violation.affected_nodes[0].symbol.name
+        return ValidationIssue(
+            code=5002,
+            message=f"Class name \"{node_class}\" does not exist in MuNG 2.0",
+            node_id=violation.affected_nodes[0].id,
+            resolution=None,
+            fingerprint=None,
+        )
+
+    def translate_unknown_violation(
+            self,
+            violation: GrammarViolation,
+            link_badge: str
+    ) -> ValidationIssue:
+        node_id = violation.affected_nodes[0].id
+        fingerprint: str | None = None
+        if len(violation.affected_nodes) >= 2:
+            fingerprint = str(violation.affected_nodes[1].id)
+        return ValidationIssue(
+            code=5001,
+            message=f"Grammar for {link_badge}: {str(violation)}",
+            node_id=node_id,
+            resolution=None,
+            fingerprint=fingerprint,
         )
