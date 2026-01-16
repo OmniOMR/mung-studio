@@ -6,6 +6,7 @@ import { JotaiStore } from "../model/JotaiStore";
 import { isMacish } from "../../utils/isMacish";
 import { ToolbeltController } from "./ToolbeltController";
 import { EditorTool } from "../model/EditorTool";
+import { Node } from "../../mung/Node";
 
 /**
  * Function signature for transform change event listener
@@ -44,6 +45,84 @@ export class ZoomController {
    */
   public get currentTransform(): d3.ZoomTransform {
     return this._currentTransform;
+  }
+
+  /**
+   * Holds a reference to the D3.js selection object holding the SVG element,
+   * is null when the controller is not bound to the DOM
+   */
+  private d3SvgElement: d3.Selection<
+    SVGSVGElement,
+    unknown,
+    null,
+    undefined
+  > | null = null;
+
+  /**
+   * Holds a reference to the D3.js zoom behavior,
+   * is null when the controller is not bound to the DOM
+   */
+  private d3ZoomBehavior: d3.ZoomBehavior<Element, unknown> | null = null;
+
+  /////////////
+  // Actions //
+  /////////////
+
+  /**
+   * Zooms the viewport to show a given MuNG node
+   */
+  public zoomToNode(node: Node): void {
+    this.zoomToRectangle(
+      new DOMRect(node.left, node.top, node.width, node.height),
+    );
+  }
+
+  /**
+   * Given a rectangle in scene space, zoom the viewport to the rectangle
+   *
+   * @param rectangle The rectangle to zoom to
+   * @param durationMs How fast should the transition be (in milliseconds)
+   * @param minSizeInView How small can the rectangle be on the screen, before we zoom in to make it bigger
+   * @param maxSizeInView How big can the rectangle be on the screen, before we zoom out to make it smaller
+   * @returns
+   */
+  public zoomToRectangle(
+    rectangle: DOMRect,
+    durationMs: number = 250,
+    minSizeInView: number = 0.05,
+    maxSizeInView: number = 0.9,
+  ): void {
+    if (this.d3SvgElement === null || this.d3ZoomBehavior == null) return;
+
+    const svgWidth = this.d3SvgElement.node()!.clientWidth;
+    const svgHeight = this.d3SvgElement.node()!.clientHeight;
+
+    const rectangleRelativeSize = Math.max(
+      rectangle.width / svgWidth,
+      rectangle.height / svgHeight,
+    );
+
+    const minScale = minSizeInView / rectangleRelativeSize;
+    const maxScale = maxSizeInView / rectangleRelativeSize;
+    const currentScale = this.currentTransform.k;
+
+    let targetScale = currentScale;
+    if (currentScale < minScale) targetScale = minScale;
+    if (currentScale > maxScale) targetScale = maxScale;
+
+    this.d3SvgElement
+      .transition()
+      .duration(durationMs)
+      .call(
+        this.d3ZoomBehavior.transform,
+        d3.zoomIdentity
+          .translate(svgWidth / 2, svgHeight / 2)
+          .scale(targetScale)
+          .translate(
+            -(rectangle.x + rectangle.width / 2),
+            -(rectangle.y + rectangle.height / 2),
+          ),
+      );
   }
 
   ////////////////
@@ -107,6 +186,10 @@ export class ZoomController {
         .on("end", ended);
       svgElement.call(zoom);
       this.customizeD3ZoomBehaviour(svgElement, zoom);
+
+      // store references
+      this.d3SvgElement = svgElement;
+      this.d3ZoomBehavior = zoom;
     }, []);
   }
 

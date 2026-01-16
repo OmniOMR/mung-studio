@@ -10,6 +10,7 @@ import { PythonRuntime } from "../../../pyodide/PythonRuntime";
 import { Node } from "../../mung/Node";
 import { ClassVisibilityStore } from "../model/ClassVisibilityStore";
 import { EditorStateStore } from "../model/EditorStateStore";
+import { ZoomController } from "./ZoomController";
 
 /**
  * Implements the logic and keyboard shortcuts behind actions from
@@ -22,6 +23,7 @@ export class MainMenuController implements IController {
 
   private readonly notationGraphStore: NotationGraphStore;
   private readonly selectionStore: SelectionStore;
+  private readonly zoomController: ZoomController;
   private readonly toolbeltController: ToolbeltController;
   private readonly editorStateStore: EditorStateStore;
   private readonly pythonRuntime: PythonRuntime;
@@ -31,6 +33,7 @@ export class MainMenuController implements IController {
     jotaiStore: JotaiStore,
     notationGraphStore: NotationGraphStore,
     selectionStore: SelectionStore,
+    zoomController: ZoomController,
     toolbeltController: ToolbeltController,
     editorStateStore: EditorStateStore,
     pythonRuntime: PythonRuntime,
@@ -39,6 +42,7 @@ export class MainMenuController implements IController {
     this.jotaiStore = jotaiStore;
     this.notationGraphStore = notationGraphStore;
     this.selectionStore = selectionStore;
+    this.zoomController = zoomController;
     this.toolbeltController = toolbeltController;
     this.editorStateStore = editorStateStore;
     this.pythonRuntime = pythonRuntime;
@@ -53,14 +57,17 @@ export class MainMenuController implements IController {
   //////////////////
 
   public readonly keyBindings = {
+    Delete: () => {
+      this.removeSelectedNodes();
+    },
+    F: () => {
+      this.zoomToSelectedNode();
+    },
     E: () => {
       this.toggleSyntaxLink();
     },
     Q: () => {
       this.togglePrecedenceLink();
-    },
-    Delete: () => {
-      this.removeSelectedNodes();
     },
     "Shift+Delete": () => {
       this.removePartiallySelectedLinks();
@@ -84,6 +91,10 @@ export class MainMenuController implements IController {
     (get) =>
       get(this.selectionStore.selectedNodeIdsAtom).length > 0 &&
       get(this.toolbeltController.currentToolAtom) !== EditorTool.NodeEditing,
+  );
+
+  public canZoomToSelectedNodeAtom = atom(
+    (get) => get(this.selectionStore.selectedNodeIdsAtom).length == 1,
   );
 
   public canRemoveLinksAtom = atom(
@@ -122,6 +133,14 @@ export class MainMenuController implements IController {
     for (const nodeId of this.selectionStore.selectedNodeIds) {
       this.notationGraphStore.removeNodeWithLinks(nodeId);
     }
+  }
+
+  public zoomToSelectedNode(): void {
+    if (!this.jotaiStore.get(this.canZoomToSelectedNodeAtom)) return;
+    const node = this.notationGraphStore.getNode(
+      this.selectionStore.selectedNodeIds[0],
+    );
+    this.zoomController.zoomToNode(node);
   }
 
   public toggleSyntaxLink(): void {

@@ -218,6 +218,7 @@ export function useConstructContextServices(
         jotaiStore,
         notationGraphStore,
         selectionStore,
+        zoomController,
         toolbeltController,
         editorStateStore,
         pythonRuntime,

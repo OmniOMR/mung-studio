@@ -11,6 +11,7 @@ import { Toolbelt } from "./view/toolbelt/Toolbelt";
 import { EditorContext, useConstructContextServices } from "./EditorContext";
 import { SettingsWindow } from "./view/settings-window/SettingsWindow";
 import { ValidationPanel } from "./view/validation-panel/ValidationPanel";
+import { useAtomValue } from "jotai";
 
 export interface EditorProps {
   /**
@@ -62,7 +63,12 @@ export function Editor(props: EditorProps) {
     props.initialMungFileMetadata,
     props.backgroundImageUrl,
   );
-  const { notationGraphStore, autosaveStore } = editorContext;
+  const {
+    notationGraphStore,
+    autosaveStore,
+    backgroundImageStore,
+    zoomController,
+  } = editorContext;
 
   // bind autosave store to the props.onSave method
   useEffect(() => {
@@ -109,6 +115,15 @@ export function Editor(props: EditorProps) {
     e.returnValue = "trigger-confirmation-dialog";
     return "trigger-confirmation-dialog";
   });
+
+  // the background image dimensions have been downloaded,
+  // zoom to the whole page
+  const imageWidth = useAtomValue(backgroundImageStore.widthAtom);
+  const imageHeight = useAtomValue(backgroundImageStore.heightAtom);
+  useEffect(() => {
+    if (imageWidth === 0 || imageHeight === 0) return;
+    zoomController.zoomToRectangle(new DOMRect(0, 0, imageWidth, imageHeight));
+  }, [imageWidth, imageHeight]);
 
   return (
     <EditorContext.Provider value={editorContext}>

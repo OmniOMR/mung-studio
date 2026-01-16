@@ -23,8 +23,13 @@ import BuildIcon from "@mui/icons-material/Build";
 import { computeIssueId } from "../../model/ValidationIssue";
 
 export function ValidationPanel() {
-  const { validationStore, validationController, selectionStore } =
-    useContext(EditorContext);
+  const {
+    validationStore,
+    validationController,
+    selectionStore,
+    zoomController,
+    notationGraphStore,
+  } = useContext(EditorContext);
 
   const [isPanelOpen, setPanelOpen] = useAtom(
     validationController.isValidationPanelOpenAtom,
@@ -172,9 +177,12 @@ export function ValidationPanel() {
                       color="neutral"
                       variant="plain"
                       size="sm"
-                      onClick={() =>
-                        selectionStore.changeSelection([issue.nodeId])
-                      }
+                      onClick={() => {
+                        selectionStore.changeSelection([issue.nodeId]);
+                        zoomController.zoomToNode(
+                          notationGraphStore.getNode(issue.nodeId),
+                        );
+                      }}
                     >
                       {issue.nodeId}
                     </Chip>

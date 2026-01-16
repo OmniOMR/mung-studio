@@ -75,6 +75,9 @@ export function MainMenu(props: MainMenuProps) {
   //////////////////////////
 
   const canRemoveNodes = useAtomValue(controller.canRemoveNodesAtom);
+  const canZoomToSelectedNode = useAtomValue(
+    controller.canZoomToSelectedNodeAtom,
+  );
   const canRemoveLinks = useAtomValue(controller.canRemoveLinksAtom);
   const canToggleLink = useAtomValue(controller.canToggleLinkAtom);
   const canClearSelection = useAtomValue(controller.canClearSelectionAtom);
@@ -121,6 +124,13 @@ export function MainMenu(props: MainMenuProps) {
           onClick={() => controller.removeSelectedNodes()}
         >
           Remove selected nodes {renderShortcut("Del")}
+        </MyMenuItem>
+
+        <MyMenuItem
+          disabled={!canZoomToSelectedNode}
+          onClick={() => controller.zoomToSelectedNode()}
+        >
+          Zoom to selected node {renderShortcut("F")}
         </MyMenuItem>
 
         <MyListDivider />
