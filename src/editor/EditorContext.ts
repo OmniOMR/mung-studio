@@ -25,6 +25,7 @@ import { DeltaInterpreter } from "./model/DeltaInterpreter";
 import { BackgroundImageStore } from "./model/BackgroundImageStore";
 import { StafflinesToolController } from "./controller/tools/StafflinesToolController";
 import { StaffGeometryStore } from "./model/StaffGeometryStore";
+import { NodeNavigationController } from "./controller/NodeNavigationController";
 
 /**
  * All fields present in the editor component's global context
@@ -54,6 +55,7 @@ export interface EditorContextState {
   readonly polygonToolsController: PolygonToolsController;
   readonly stafflinesToolController: StafflinesToolController;
   readonly mainMenuController: MainMenuController;
+  readonly nodeNavigationController: NodeNavigationController;
 }
 
 /**
@@ -227,6 +229,17 @@ export function useConstructContextServices(
     [],
   );
 
+  const nodeNavigationController = useMemo(
+    () =>
+      new NodeNavigationController(
+        jotaiStore,
+        notationGraphStore,
+        selectionStore,
+        zoomController,
+      ),
+    [],
+  );
+
   return {
     backgroundImageStore,
     notationGraphStore,
@@ -252,6 +265,7 @@ export function useConstructContextServices(
     polygonToolsController,
     stafflinesToolController,
     mainMenuController,
+    nodeNavigationController,
   };
 }
 

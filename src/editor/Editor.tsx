@@ -12,6 +12,7 @@ import { EditorContext, useConstructContextServices } from "./EditorContext";
 import { SettingsWindow } from "./view/settings-window/SettingsWindow";
 import { ValidationPanel } from "./view/validation-panel/ValidationPanel";
 import { useAtomValue } from "jotai";
+import { NodeNavigationTab } from "./view/NodeNavigationTab";
 
 export interface EditorProps {
   /**
@@ -162,6 +163,7 @@ export function Editor(props: EditorProps) {
               <SceneView />
               <Toolbelt />
             </Box>
+            <NodeNavigationTab />
             <ValidationPanel />
           </Box>
           <InspectorPanel />
