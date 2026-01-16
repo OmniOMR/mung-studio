@@ -54,7 +54,7 @@ export function DocumentEditorPage() {
     })();
   }, [connection.userToken]);
 
-  async function onSave(mung: MungFile) {
+  async function onSave(mung: MungFile): Promise<void> {
     const mungXmlString = writeMungXmlString(mung);
     const api = new SimpleBackendApi(connection);
     await api.uploadDocumentMung(documentName, mungXmlString);

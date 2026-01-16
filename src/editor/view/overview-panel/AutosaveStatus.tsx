@@ -9,6 +9,7 @@ export function AutosaveStatus() {
   const { autosaveStore } = useContext(EditorContext);
 
   const isDirty = useAtomValue(autosaveStore.isDirtyAtom);
+  const hasProblems = useAtomValue(autosaveStore.hasProblemsAtom);
 
   const icon = isDirty ? (
     <SyncIcon fontSize="small" sx={{ mr: 1 }} />
@@ -18,12 +19,13 @@ export function AutosaveStatus() {
 
   return (
     <Typography
-      sx={{ ml: 1, mb: 0.5 }}
+      sx={{ ml: 1, mb: 0.5, fontWeight: hasProblems ? 700 : undefined }}
       component="span"
       level="body-sm"
       startDecorator={icon}
+      color={hasProblems ? "danger" : "neutral"}
     >
-      {isDirty ? "Saving..." : "Saved."}
+      {hasProblems ? "Retrying..." : isDirty ? "Saving..." : "Saved."}
     </Typography>
   );
 }

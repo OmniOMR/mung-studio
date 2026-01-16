@@ -73,10 +73,11 @@ export function Editor(props: EditorProps) {
 
   // bind autosave store to the props.onSave method
   useEffect(() => {
-    const _handler = () => props.onSave?.(notationGraphStore.getMungFile());
-    autosaveStore.onAutosave.subscribe(_handler);
+    autosaveStore.saveCallback = async () => {
+      await props.onSave?.(notationGraphStore.getMungFile());
+    };
     return () => {
-      autosaveStore.onAutosave.unsubscribe(_handler);
+      autosaveStore.saveCallback = null;
     };
   }, [notationGraphStore, autosaveStore, props.onSave]);
 

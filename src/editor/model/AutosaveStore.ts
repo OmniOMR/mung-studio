@@ -1,7 +1,12 @@
-import { ISignal, SignalDispatcher } from "strongly-typed-events";
 import { NotationGraphStore } from "./notation-graph-store/NotationGraphStore";
 import { Atom, atom, getDefaultStore, PrimitiveAtom } from "jotai";
 import { JotaiStore } from "./JotaiStore";
+
+/**
+ * Type signature for the "save" method that is called back
+ * by the autosave store during saving
+ */
+export type SaveCallback = () => Promise<void>;
 
 /**
  * State store that contains the state and logic related to autosave
@@ -55,29 +60,38 @@ export class AutosaveStore {
   public setClean() {
     this.cancelScheduledAutosave();
     this.jotaiStore.set(this.isDirtyBaseAtom, false);
+    this.jotaiStore.set(this.hasProblemsBaseAtom, false);
   }
 
   /**
    * This method is called when autosaving fires
    */
-  private triggerAutosave() {
-    this._onAutosave.dispatch();
+  private async triggerAutosave() {
+    try {
+      // run the saving procedure
+      await this.saveCallback?.();
+    } catch (e) {
+      // if there's an error, retry in some time
+      // and return since we have not succeeded in saving
+      this.scheduleAutosave();
+      console.error("Autosave failed, retrying:", e);
+      this.jotaiStore.set(this.hasProblemsBaseAtom, true);
+      return;
+    }
+
+    // the saving succeeded, we are saved now
     this.setClean();
   }
 
-  ////////////
-  // Events //
-  ////////////
-
-  private _onAutosave = new SignalDispatcher();
+  //////////////
+  // Callback //
+  //////////////
 
   /**
-   * This event fires when autosave should be executed.
-   * Subscribe to this event to run saving code.
+   * The callback that must be set from the outside and it performs
+   * the saving action asynchronously.
    */
-  public get onAutosave(): ISignal {
-    return this._onAutosave.asEvent();
-  }
+  public saveCallback: SaveCallback | null = null;
 
   ///////////
   // React //
@@ -90,6 +104,16 @@ export class AutosaveStore {
    * When dirty, there are unsaved changes and autosave is scheduled.
    */
   public isDirtyAtom: Atom<boolean> = atom((get) => get(this.isDirtyBaseAtom));
+
+  private hasProblemsBaseAtom: PrimitiveAtom<boolean> = atom<boolean>(false);
+
+  /**
+   * If the last save failed with exception and now we're retrying,
+   * this atom becomes true. Happens during loss of internet connection.
+   */
+  public hasProblemsAtom: Atom<boolean> = atom((get) =>
+    get(this.hasProblemsBaseAtom),
+  );
 
   /////////////////////////
   // Autosave scheduling //
