@@ -1,5 +1,4 @@
 import { useAtom, useAtomValue } from "jotai";
-import { ClassVisibilityStore } from "../../model/ClassVisibilityStore";
 import {
   Dropdown,
   IconButton,
@@ -15,6 +14,7 @@ import VisibilityIcon from "@mui/icons-material/Visibility";
 import UnfoldLessDoubleIcon from "@mui/icons-material/UnfoldLessDouble";
 import MoreVertIcon from "@mui/icons-material/MoreVert";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import CircleIcon from "@mui/icons-material/Circle";
 import { classNameToUnicode } from "../../../mung/classNameToUnicode";
 import { VisibilityPresetsMenu } from "./VisibilityPresetsMenu";
 import { useContext } from "react";
@@ -76,7 +76,6 @@ export function NodesAccordionPanel() {
               <ClassNameRow
                 key={className}
                 className={className}
-                classVisibilityStore={classVisibilityStore}
                 nodeCount={classNameCounts[className] || 0}
               />
             ))}
@@ -89,13 +88,19 @@ export function NodesAccordionPanel() {
 
 interface ClassNameRowProps {
   readonly className: string;
-  readonly classVisibilityStore: ClassVisibilityStore;
   readonly nodeCount: number;
 }
 
 function ClassNameRow(props: ClassNameRowProps) {
+  const {
+    notationGraphStore,
+    classVisibilityStore,
+    selectionStore,
+    zoomController,
+  } = useContext(EditorContext);
+
   const [isVisible, setIsVisible] = useAtom(
-    props.classVisibilityStore.getIsClassVisibleAtom(props.className),
+    classVisibilityStore.getIsClassVisibleAtom(props.className),
   );
 
   return (
@@ -114,10 +119,44 @@ function ClassNameRow(props: ClassNameRowProps) {
           },
         }}
         endAction={
-          <IconButton size="sm" onClick={() => setIsVisible(!isVisible)}>
-            {isVisible ? <VisibilityIcon /> : <VisibilityOffIcon />}
-          </IconButton>
+          <>
+            <Tooltip arrow enterDelay={1000} title="Solo this class">
+              <IconButton
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation(); // whole list item is not clicked
+                  classVisibilityStore.showOnlyTheseClasses([props.className]);
+                }}
+                sx={{ svg: { transform: "scale(0.4)" } }}
+              >
+                <CircleIcon />
+              </IconButton>
+            </Tooltip>
+            <Tooltip arrow enterDelay={1000} title="Toggle class visibility">
+              <IconButton
+                size="sm"
+                onClick={(e) => {
+                  e.stopPropagation(); // whole list item is not clicked
+                  setIsVisible(!isVisible);
+                }}
+              >
+                {isVisible ? <VisibilityIcon /> : <VisibilityOffIcon />}
+              </IconButton>
+            </Tooltip>
+          </>
         }
+        onClick={() => {
+          // select the first node of its class
+          const node = notationGraphStore.nodes.find(
+            (n) => n.className === props.className,
+          );
+          if (node === undefined) return;
+          selectionStore.changeSelection([node.id]);
+          zoomController.zoomToNode(node);
+
+          // move the focus back to the scene
+          (document.activeElement as any)?.blur?.();
+        }}
       >
         <ListItemButton>
           <Typography

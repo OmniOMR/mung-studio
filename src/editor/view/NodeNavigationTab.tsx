@@ -38,7 +38,11 @@ export function NodeNavigationTab() {
           <IconButton
             color="neutral"
             size="sm"
-            onClick={() => nodeNavigationController.navigateToFirstNode()}
+            onClick={() => {
+              nodeNavigationController.navigateToFirstNode();
+              // move the focus back to the scene
+              (document.activeElement as any)?.blur?.();
+            }}
             sx={{
               borderBottomLeftRadius: "0",
               borderBottomRightRadius: "0",
@@ -51,7 +55,11 @@ export function NodeNavigationTab() {
           <IconButton
             color="neutral"
             size="sm"
-            onClick={() => nodeNavigationController.navigateToPreviousNode()}
+            onClick={() => {
+              nodeNavigationController.navigateToPreviousNode();
+              // move the focus back to the scene
+              (document.activeElement as any)?.blur?.();
+            }}
             sx={{
               borderBottomLeftRadius: "0",
               borderBottomRightRadius: "0",
@@ -64,7 +72,11 @@ export function NodeNavigationTab() {
           <IconButton
             color="neutral"
             size="sm"
-            onClick={() => nodeNavigationController.navigateToNextNode()}
+            onClick={() => {
+              nodeNavigationController.navigateToNextNode();
+              // move the focus back to the scene
+              (document.activeElement as any)?.blur?.();
+            }}
             sx={{
               borderBottomLeftRadius: "0",
               borderBottomRightRadius: "0",
@@ -77,7 +89,11 @@ export function NodeNavigationTab() {
           <IconButton
             color="neutral"
             size="sm"
-            onClick={() => nodeNavigationController.navigateToLastNode()}
+            onClick={() => {
+              nodeNavigationController.navigateToLastNode();
+              // move the focus back to the scene
+              (document.activeElement as any)?.blur?.();
+            }}
             sx={{
               borderBottomLeftRadius: "0",
               borderBottomRightRadius: "0",
