@@ -146,7 +146,18 @@ GRAMMAR_ALPHABET: list[str] = [
     "tremoloBeam",
 
     # Figured Bass
-    # TODO ...
+    # TODO: 🚧 Under construction.
+
+    # Fingering
+    # TODO: 🚧 Under construction.
+
+    # Grace notes
+    "graceNoteSlashStemUp",
+    "graceNoteSlashStemDown",
+
+    # Fermata
+    "fermataAbove",
+    "fermataBelow",
 
     # Ornaments
     "ornamentTrill",
@@ -158,7 +169,7 @@ GRAMMAR_ALPHABET: list[str] = [
     "custos",
 
     # Octaves
-    # TODO ...
+    # TODO: 🚧 Under construction.
 
     "arpeggiato",
     "unclassified",

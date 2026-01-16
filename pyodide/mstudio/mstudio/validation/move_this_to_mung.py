@@ -6,6 +6,7 @@ import abc
 import re
 from typing import Iterator
 from dataclasses import dataclass
+from collections import Counter
 from mung.node import Node
 from mung.graph import NotationGraph
 from .grammar_syntax import GRAMMAR_SYNTAX
@@ -192,18 +193,17 @@ def build_default_validation_engine():
         SinglePixelLineRule(3003, "stem", 1),
 
         # 4xxx codes are text-nodes related issues
-        MandatoryTextTranscriptionRule(4001, "dynamicsText"),
         MandatoryTextTranscriptionRule(4001, "restText"),
         MandatoryTextTranscriptionRule(4001, "verseNumber"),
         MandatoryTextTranscriptionRule(4001, "tempoText"),
         MandatoryTextTranscriptionRule(4001, "tempoRitardando"),
         MandatoryTextTranscriptionRule(4001, "tempoAccelerando"),
         MandatoryTextTranscriptionRule(4001, "tempoATempo"),
-        MandatoryTextTranscriptionRule(4001, "interpretationText"),
         MandatoryTextTranscriptionRule(4001, "measureNumber"),
         MandatoryTextTranscriptionRule(4001, "pageNumber"),
-        MandatoryTextTranscriptionRule(4001, "repeatText"),
+        MandatoryTextTranscriptionRule(4001, "dynamicsText"),
         MandatoryTextTranscriptionRule(4001, "voltaText"),
+        MandatoryTextTranscriptionRule(4001, "repeatText"),
         
         # 5xxx codes are grammar validation issues
         # 5001 - generic grammar issue
@@ -213,6 +213,21 @@ def build_default_validation_engine():
         # 5201 - precedence link is present but not allowed by the grammar
         # 5202 - precedence link cardinality violates grammar
         GrammarRule(),
+        PrecedenceSequentionalityRule(5301, "timeSignature", [
+            "timeSig0", "timeSig1", "timeSig2", "timeSig3", "timeSig4",
+            "timeSig5", "timeSig6", "timeSig7", "timeSig8", "timeSig9",
+            "timeSigCommon", "timeSigCutCommon", "timeSigSlash",
+            "timeSigFractionalSlash", "timeSigPlus", "timeSigEquals"
+        ]),
+        PrecedenceSequentionalityRule(5301, "dynamicsText", [
+            "dynamicPiano", "dynamicMezzo", "dynamicForte", "dynamicRinforzando",
+            "dynamicSforzando", "dynamicZ", "dynamicNiente"
+        ]),
+        PrecedenceSequentionalityRule(5301, "tuplet", [
+            "tupletColon", "tuplet0", "tuplet1", "tuplet2", "tuplet3",
+            "tuplet4", "tuplet5", "tuplet6", "tuplet7", "tuplet8", "tuplet9"
+        ]),
+        MeasureSeparatorCardinalityRule(5302),
 
         # 6xxx codes are musicxml conversion issues
     ])
@@ -528,4 +543,94 @@ class GrammarRule(ValidationRule):
             node_id=node_id,
             resolution=None,
             fingerprint=fingerprint,
+        )
+
+
+class MeasureSeparatorCardinalityRule(ValidationRule):
+    def __init__(self, code: int):
+        self.code = code
+
+    def scan_graph(self, graph: NotationGraph) -> Iterator[ValidationIssue]:
+        counter: Counter[int] = Counter()
+        for node in graph.vertices:
+            if node.class_name == "measureSeparator":
+                staves = graph.children(node, ["staff"])
+                counter.update({len(staves): 1})
+        most_common_staff_count, _ = counter.most_common(1)[0]
+
+        # raise an issue for each measureSeparator that has different
+        # staff count than this most common staff count
+        for node in graph.vertices:
+            if node.class_name == "measureSeparator":
+                staves = graph.children(node, ["staff"])
+                if len(staves) != most_common_staff_count:
+                    yield self.build_issue(node, most_common_staff_count, len(staves))
+    
+    def build_issue(
+            self,
+            node: Node,
+            most_common_staff_count: int,
+            this_staff_count: int
+    ) -> ValidationIssue:
+        return ValidationIssue(
+            code=self.code,
+            message=f"⚠️ [{node.class_name}:{node.id}] links to an unexpected number ({this_staff_count}) of [staff] nodes. Most common staff count is {most_common_staff_count}. This may not be an issue in a small minority of pages, but is very suspicious for most.",
+            node_id=node.id,
+            resolution=None,
+            fingerprint=None,
+        )
+
+
+class PrecedenceSequentionalityRule(ValidationRule):
+    def __init__(
+            self,
+            code: int,
+            container_class_name: str,
+            child_class_names: list[str],
+    ):
+        self.code = code
+        self.container_class_name = container_class_name
+        self.child_class_names = child_class_names
+
+    def scan_graph(self, graph: NotationGraph) -> Iterator[ValidationIssue]:
+        for node in graph.vertices:
+            if node.class_name == self.container_class_name:
+                children = graph.children(node, self.child_class_names)
+                yield from self.inspect_container(node, children)
+    
+    def inspect_container(
+            self,
+            container: Node,
+            children: list[Node]
+    ) -> Iterator[ValidationIssue]:
+        # if there are no children, they are considered properly ordered
+        if len(children) == 0:
+            return
+
+        # count sources
+        source_count = 0
+        for child in children:
+            if len(child.precedence_inlinks) == 0:
+                source_count += 1
+
+        # count targets
+        target_count = 0
+        for child in children:
+            if len(child.precedence_outlinks) == 0:
+                target_count += 1
+        
+        # there must be 1 source and 1 target for the graph to be
+        # a DAG with one start and one end. The max inlink/outlink
+        # rule in the precedence grammar will make sure it has to be a line,
+        # not a generic DAG.
+        if source_count != 1 or target_count != 1:
+            yield self.build_issue(container)
+    
+    def build_issue(self, node: Node) -> ValidationIssue:
+        return ValidationIssue(
+            code=self.code,
+            message=f"Children of [{node.class_name}:{node.id}] are not sequentially ordered via [🟢 precedence] links.",
+            node_id=node.id,
+            resolution=None,
+            fingerprint=None,
         )
