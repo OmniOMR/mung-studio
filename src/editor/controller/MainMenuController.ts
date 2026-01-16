@@ -9,6 +9,7 @@ import { EditorTool } from "../model/EditorTool";
 import { PythonRuntime } from "../../../pyodide/PythonRuntime";
 import { Node } from "../../mung/Node";
 import { ClassVisibilityStore } from "../model/ClassVisibilityStore";
+import { EditorStateStore } from "../model/EditorStateStore";
 
 /**
  * Implements the logic and keyboard shortcuts behind actions from
@@ -22,6 +23,7 @@ export class MainMenuController implements IController {
   private readonly notationGraphStore: NotationGraphStore;
   private readonly selectionStore: SelectionStore;
   private readonly toolbeltController: ToolbeltController;
+  private readonly editorStateStore: EditorStateStore;
   private readonly pythonRuntime: PythonRuntime;
   private readonly classVisibilityStore: ClassVisibilityStore;
 
@@ -30,6 +32,7 @@ export class MainMenuController implements IController {
     notationGraphStore: NotationGraphStore,
     selectionStore: SelectionStore,
     toolbeltController: ToolbeltController,
+    editorStateStore: EditorStateStore,
     pythonRuntime: PythonRuntime,
     classVisibilityStore: ClassVisibilityStore,
   ) {
@@ -37,6 +40,7 @@ export class MainMenuController implements IController {
     this.notationGraphStore = notationGraphStore;
     this.selectionStore = selectionStore;
     this.toolbeltController = toolbeltController;
+    this.editorStateStore = editorStateStore;
     this.pythonRuntime = pythonRuntime;
     this.classVisibilityStore = classVisibilityStore;
   }
@@ -136,8 +140,19 @@ export class MainMenuController implements IController {
 
   public removePartiallySelectedLinks(): void {
     if (!this.jotaiStore.get(this.canRemoveLinksAtom)) return;
+
+    const canRemoveSyntaxLinks =
+      this.jotaiStore.get(this.editorStateStore.displaySyntaxLinksAtom) &&
+      this.toolbeltController.currentTool !== EditorTool.PrecedenceLinks;
+    const canRemovePrecedenceLinks =
+      this.jotaiStore.get(this.editorStateStore.displayPrecedenceLinksAtom) &&
+      this.toolbeltController.currentTool !== EditorTool.SyntaxLinks;
+
     const links = this.selectionStore.partiallySelectedLinks;
     for (const link of links) {
+      if (link.type === LinkType.Syntax && !canRemoveSyntaxLinks) continue;
+      if (link.type === LinkType.Precedence && !canRemovePrecedenceLinks)
+        continue;
       this.notationGraphStore.removeLink(link.fromId, link.toId, link.type);
     }
   }

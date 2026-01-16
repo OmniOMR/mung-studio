@@ -219,6 +219,7 @@ export function useConstructContextServices(
         notationGraphStore,
         selectionStore,
         toolbeltController,
+        editorStateStore,
         pythonRuntime,
         classVisibilityStore,
       ),
