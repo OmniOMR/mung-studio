@@ -231,26 +231,26 @@ lyricsText{0,1} | verseNumber{1}
 # tempoText
 # =========
 # tempo text must have a mandatory durable parent
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | tempoText{1}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | tempoText{1}
 
 # tempoRitardando
 # ===============
 # can be owned by 1 or 2 durable parents
 # and may have a spanner that must be owned
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | tempoRitardando{1,2}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | tempoRitardando{1,2}
 tempoRitardando{0,1} | tempoRitardandoSpanner{1}
 
 # tempoAccelerando
 # ================
 # can be owned by 1 or 2 durable parents
 # and may have a spanner that must be owned
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | tempoAccelerando{1,2}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | tempoAccelerando{1,2}
 tempoAccelerando{0,1} | tempoAccelerandoSpanner{1}
 
 # tempoATempo
 # ===========
 # must have a mandatory durable parent
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | tempoATempo{1}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | tempoATempo{1}
 
 ########
 # Text #
@@ -259,7 +259,7 @@ ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | tempoATempo{1}
 # interpretationText
 # ==================
 # must have a mandatory durable parent
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | interpretationText{1}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | interpretationText{1}
 
 # metadataText
 # ============
@@ -268,7 +268,7 @@ ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | interpretationText{
 # measureNumber
 # =============
 # must have a mandatory durable parent
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | measureNumber{1}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | measureNumber{1}
 
 # pageNumber
 # ==========
@@ -360,7 +360,7 @@ ANYOF(""" + _ALL_NOTEHEADS + """) | articMarcatoBelow{1,}
 # dynamicsText
 # ============
 # must have a mandatory durable parent
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | dynamicsText{1}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | dynamicsText{1}
 
 # dynamic[Mark]
 # =============
@@ -377,25 +377,25 @@ dynamicsText | dynamicNiente{1}
 # ================
 # can be owned by 1 or 2 durable parents
 # and may have a spanner that must be owned
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | dynamicCrescendo{1,2}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | dynamicCrescendo{1,2}
 dynamicCrescendo{0,1} | dynamicCrescendoSpanner{1}
 
 # dynamicDiminuendo
 # =================
 # can be owned by 1 or 2 durable parents
 # and may have a spanner that must be owned
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | dynamicDiminuendo{1,2}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | dynamicDiminuendo{1,2}
 dynamicDiminuendo{0,1} | dynamicDiminuendoSpanner{1}
 
 # dynamicCrescendoHairpin
 # =======================
 # can be owned by 1 or 2 durable parents
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | dynamicCrescendoHairpin{1,2}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | dynamicCrescendoHairpin{1,2}
 
 # dynamicDiminuendoHairpin
 # ========================
 # can be owned by 1 or 2 durable parents
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | dynamicDiminuendoHairpin{1,2}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | dynamicDiminuendoHairpin{1,2}
 
 # dynamicNiente
 # =============
@@ -437,12 +437,12 @@ volta{1} | voltaText{1}
 # segno
 # =====
 # must have a mandatory durable parent
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | segno{1}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | segno{1}
 
 # coda
 # ====
 # must have a mandatory durable parent
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | coda{1}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | coda{1}
 
 # segnoSerpent
 # ============
@@ -533,8 +533,8 @@ ANYOF(""" + _GRACE_NOTEHEADS + """) | graceNoteSlashStemDown{1}
 ###########
 
 # fermata must have at least one durable parent
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | fermataAbove{1,}
-ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """) | fermataBelow{1,}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | fermataAbove{1,}
+ANYOF(""" + _NORMAL_NOTEHEADS + " " + _NORMAL_RESTS + """ repeat1Bar) | fermataBelow{1,}
 
 #############
 # Ornaments #
