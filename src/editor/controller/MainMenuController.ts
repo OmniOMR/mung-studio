@@ -61,6 +61,9 @@ export class MainMenuController implements IController {
       this.removeSelectedNodes();
     },
     F: () => {
+      if (this.toolbeltController.currentTool === EditorTool.NodeEditing) {
+        return; // in node-editing, "F" means "fill"
+      }
       this.zoomToSelectedNode();
     },
     E: () => {
