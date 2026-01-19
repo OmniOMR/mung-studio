@@ -62,9 +62,9 @@ staff{6} | staffSpace{1}
 
 # augmentationDot
 # ===============
-# each augmentation dot is linked from exactly one notehead or rest
+# each augmentation dot is linked from at least one notehead or rest
 # (any one of those classes - ANYOF)
-ANYOF(""" + _ALL_NOTEHEADS + " " + _NORMAL_RESTS + """) | augmentationDot{1}
+ANYOF(""" + _ALL_NOTEHEADS + " " + _NORMAL_RESTS + """) | augmentationDot{1,}
 
 # stem
 # ====
