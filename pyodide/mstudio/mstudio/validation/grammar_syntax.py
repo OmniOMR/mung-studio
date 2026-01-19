@@ -300,7 +300,7 @@ ANYOF(measureSeparator) | barlineFinal{1,}
 # barlineWing
 # ===========
 # must have a parent
-ANYOF(barlineSingle barlineHeavy) | barlineWing{1,}
+ANYOF(barlineSingle barlineHeavy barlineFinal) | barlineWing{1,}
 
 # measureSeparator
 # ================
@@ -411,8 +411,8 @@ ANYOF(dynamicCrescendoHairpin dynamicDiminuendoHairpin) | dynamicNienteForHairpi
 ###########
 
 # repeat must link to at least one barline
-repeatLeft{1,} | ANYOF(barlineSingle barlineHeavy)
-repeatRight{1,} | ANYOF(barlineSingle barlineHeavy)
+repeatLeft{1,} | ANYOF(barlineSingle barlineHeavy barlineFinal)
+repeatRight{1,} | ANYOF(barlineSingle barlineHeavy barlineFinal)
 
 # repeat must link to at least one repeat dot
 # (otherwise how do you know it's a repeat?)
