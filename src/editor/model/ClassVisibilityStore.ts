@@ -75,6 +75,7 @@ export const PRECEDENCE_LINK_ANNOTATION_CLASSES = new Set([
 
   // lyrics
   "lyricsText",
+  "lyricsUnisono",
 
   // dynamic marks
   "dynamicPiano",

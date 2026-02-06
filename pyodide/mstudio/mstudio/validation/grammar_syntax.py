@@ -229,6 +229,11 @@ ANYOF(""" + _NORMAL_NOTEHEADS + """) | lyricsText{1,}
 # verse number has exactly one parent, which is lyrics text
 lyricsText{0,1} | verseNumber{1}
 
+# lyricsUnisono
+# ==========
+# lyrics unisono is owned by at least one notehead
+ANYOF(""" + _NORMAL_NOTEHEADS + """) | lyricsUnisono{1,}
+
 #########
 # Tempo #
 #########

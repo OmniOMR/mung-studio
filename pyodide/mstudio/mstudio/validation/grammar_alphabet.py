@@ -74,6 +74,7 @@ GRAMMAR_ALPHABET: list[str] = [
     # Lyrics
     "lyricsText",
     "verseNumber",
+    "lyricsUnisono",
 
     # Tempo
     "tempoText",

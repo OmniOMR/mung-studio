@@ -14,10 +14,11 @@ GRAMMAR_PRECEDENCE = """
 timeSig0{,1} timeSig1{,1} timeSig2{,1} timeSig3{,1} timeSig4{,1} timeSig5{,1} timeSig6{,1} timeSig7{,1} timeSig8{,1} timeSig9{,1} timeSigCommon{,1} timeSigCutCommon{,1} timeSigSlash{,1} timeSigFractionalSlash{,1} timeSigPlus{,1} timeSigEquals{,1} | ANYOF(timeSig0 timeSig1 timeSig2 timeSig3 timeSig4 timeSig5 timeSig6 timeSig7 timeSig8 timeSig9 timeSigCommon timeSigCutCommon timeSigSlash timeSigFractionalSlash timeSigPlus timeSigEquals)
 ANYOF(timeSig0 timeSig1 timeSig2 timeSig3 timeSig4 timeSig5 timeSig6 timeSig7 timeSig8 timeSig9 timeSigCommon timeSigCutCommon timeSigSlash timeSigFractionalSlash timeSigPlus timeSigEquals) | timeSig0{,1} timeSig1{,1} timeSig2{,1} timeSig3{,1} timeSig4{,1} timeSig5{,1} timeSig6{,1} timeSig7{,1} timeSig8{,1} timeSig9{,1} timeSigCommon{,1} timeSigCutCommon{,1} timeSigSlash{,1} timeSigFractionalSlash{,1} timeSigPlus{,1} timeSigEquals{,1}
 
-# lyricsText
-# ==========
-# each lyricsText must have at most one inlink and one outlink
-lyricsText{,1} | lyricsText{,1}
+# lyricsText & lyricsUnisono
+# ==========================
+# each lyricsText and lyricsUnisono must have at most one inlink and one outlink
+lyricsText{,1} lyricsUnisono{,1} | ANYOF(lyricsText lyricsUnisono)
+ANYOF(lyricsText lyricsUnisono) | lyricsText{,1} lyricsUnisono{,1}
 
 # dynamicMark
 # ===========

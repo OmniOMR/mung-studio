@@ -547,6 +547,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     notSmufl: true,
     transcribable: true,
   },
+  lyricsUnisono: { uc: "\u{E00A}", notSmufl: true },
   // lyricsElision: { uc: "\u{E551}" },
   // lyricsHyphenBaseline: { uc: "\u{E553}" },
   // lyricsTextRepeat: { uc: "\u{E555}" },

@@ -246,6 +246,7 @@ const lookupTable = {
 
   lyricsText: 6_900,
   verseNumber: 6_900,
+  lyricsUnisono: 6_900,
   // lyricsElision: 6_900,
   // lyricsHyphenBaseline: 6_900,
   // lyricsTextRepeat: 6_900,
