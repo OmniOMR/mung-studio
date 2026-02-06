@@ -64,6 +64,7 @@ GRAMMAR_ALPHABET: list[str] = [
     "timeSig0", "timeSig1", "timeSig2", "timeSig3", "timeSig4",
     "timeSig5", "timeSig6", "timeSig7", "timeSig8", "timeSig9",
     "timeSigCommon",
+    "timeSigCutCommon",
     "timeSigSlash",
     "timeSigFractionalSlash",
     "timeSigPlus",
