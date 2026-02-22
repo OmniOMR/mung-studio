@@ -61,14 +61,16 @@ The scale of arrows and the displacement of highlight outlines is calculated in 
 
 ## Node mask rendering
 
-As far as the GPU is concerned, rendering of node masks is trivial. In the general case, they are rendered as a single rectangle with a texture mapped onto it. However, there is a fallback for GPUs that do not support large texture sizes, where the rectangle is subdivided into smaller chunks. This is, however, done transparently when being uploaded to the GPU, using `GL_UNPACK_ROW_LENGTH`, so that the texture on the host/CPU side can be interacted with as a single buffer.
+Node mask rendering is done in a similar way as link rendering, using geometry buffers that only manage simple quads (pairs of triangles) this time. These are further
+sorted into "layers" so that z-ordering of node classes is properly expressed. Layers are then drawn from back to front, ensuring proper blending of transparency.
 
-As foreshadowed above, the actual calculation of the node mask pixel data is done on the CPU. This has the unfortunate effect of longer startup times, but given that further updates do not necessitate the recalculation of the whole texture (only smaller regions), it is a one-time cost.
+To make this process more efficient, though, the node mask textures are not kept one by one, but stored in a [texture atlas](https://en.wikipedia.org/wiki/Texture_atlas)
+which remains the same for an entire layer (if either exceeds space constraints, it is automatically subdivided). A layer can therefore be drawn in one call using one
+geometry buffer, texture and shader. This reduces the host-device communication overhead to linear with the number of node classes X texture atlases per layer.
 
-Individual texture pixels are constructed from a list of influencing nodes using the OVER alpha compositing operator - see https://en.wikipedia.org/wiki/Alpha_compositing. The influencing nodes are obtained from a R-Tree-based spatial index once for each update - it is assumed that individual updates do not span more than a couple of nodes and are not overly large in dimension.
+2D allocation of space in the texture atlas is done using a custom version of the [slab allocator](https://mozillagfx.wordpress.com/2021/02/04/improving-texture-atlas-allocation-in-webrender/). It is based on measured ratios of different sizes of tiles in a large dataset of MuNG files and
+its memory is split in advance based on this statistics. Unlike a regular slab allocator, it only fixes the size to a certain power of 2 in one dimension
+and uses a standard 1D malloc-like process for allocating in the other. This allows for less wasteful management of extremely long/wide textures, such as staff lines.
 
-Nodes can be made visible or invisible, but this always necessitates a full recalculation of the affected texture region, as alpha blending has to be redone.
-
-### Dynamic re-dimensioning of the node mask texture
-
-Since MuNG does not have a fixed canvas size, the size of the mask texture is approximately estimated when it is first initialized. However, as new nodes are drawn, it will dynamically increase. The parameters for this operation can be controlled using the `TextureSafezones` interface, which will add some padding beyond the maximum used coordinate as well as copy whitespace in the left/top regions with a certain multiplier.
+As a special case, node that are too large in both dimensions are allocated their own separate layer and texture memory. There are very little of those in most files
+(usually less than 10), so the performance impact is negligible.

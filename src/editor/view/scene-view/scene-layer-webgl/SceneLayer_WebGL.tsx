@@ -7,7 +7,7 @@ import {
   PrecedenceLinkGeometryDrawable,
   SyntaxLinkGeometryDrawable,
 } from "./GLLinkRenderer";
-import { GlobalMaskTexture, MaskAtlasRenderer } from "./GLNodeMaskRenderer";
+import { MaskAtlasRenderer } from "./GLNodeMaskRenderer";
 
 /**
  * Scene layer, rendered via WebGL
@@ -41,11 +41,6 @@ export function SceneLayer_WebGL() {
       glRef.current = new GLRenderer(gl);
     }
 
-    /*const maskDrawable = GlobalMaskTexture.withAutoSize(notationGraphStore, classVisibilityStore, {
-      paddingMultiplier: 1.5,
-      paddingExtraPixels: 256,
-    });
-    glRef.current.addDrawable(maskDrawable);*/
     const masks = new MaskAtlasRenderer(
       notationGraphStore,
       classVisibilityStore,
