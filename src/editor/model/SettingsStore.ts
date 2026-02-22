@@ -1,5 +1,6 @@
 import { atom } from "jotai";
 import { JotaiStore } from "./JotaiStore";
+import { atomWithStorage } from "jotai/utils";
 
 export enum SceneRenderingEngine {
   SVG = "SVG",
@@ -25,7 +26,8 @@ export class SettingsStore {
   /**
    * Controls the method for scene layer rendering
    */
-  public readonly sceneRenderingEngineAtom = atom<SceneRenderingEngine>(
+  public readonly sceneRenderingEngineAtom = atomWithStorage<SceneRenderingEngine>(
+    "sceneRenderingEngine",
     SceneRenderingEngine.SVG,
   );
 }
