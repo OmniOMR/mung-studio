@@ -23,6 +23,8 @@ import { LinkType } from "../../../../mung/LinkType";
 import { ZoomController } from "../../../controller/ZoomController";
 import { ZoomTransform } from "d3";
 import { getLinksOfNode } from "../../../../mung/getLinksOfNode";
+import { computeLinkCoordinates, LinkRenderCoordinates } from "../computeLinkRenderCoordinates";
+import { StaffGeometryStore } from "../../../model/StaffGeometryStore";
 
 const SHADER_COMMON = `#version 300 es
 
@@ -126,12 +128,13 @@ class LinkGeometry {
     // node IDs are used instead of nodes, so that state changes, which
     // create new node objects with same ID, can be linked to the same geometry
     private notationGraph: NotationGraphStore,
+    private staffGeometryStore: StaffGeometryStore,
     private fromNodeId: number,
     private toNodeId: number,
     private stateProvider: LinkGeometryStateProvider,
     private lineThickness: number = 5,
     private arrowHeadScale: number = 2.0,
-  ) {}
+  ) { }
 
   public allTriangleSource(): GeometrySource {
     return {
@@ -192,10 +195,14 @@ class LinkGeometry {
   }
 
   private generateArrowAllTris(): vec4[] {
-    const fromPoint = this.nodeCenter(
+    const coordinates: LinkRenderCoordinates = computeLinkCoordinates(
       this.notationGraph.getNode(this.fromNodeId),
+      this.notationGraph.getNode(this.toNodeId),
+      this.staffGeometryStore,
     );
-    const toPoint = this.nodeCenter(this.notationGraph.getNode(this.toNodeId));
+
+    const fromPoint = vec2.fromValues(coordinates.x1, coordinates.y1);
+    const toPoint = vec2.fromValues(coordinates.x2, coordinates.y2);
 
     const toFromNormVec = this.getDirVec(toPoint, fromPoint);
 
@@ -343,6 +350,7 @@ class LinkGeometryDrawable implements GLDrawable {
   private static readonly LINK_WIDTH: number = 5.0;
 
   private notationGraph: NotationGraphStore;
+  private staffGeometryStore: StaffGeometryStore;
   private editorState: EditorStateStore;
   private selectionStore: SelectionStore;
   private classVisibilityStore: ClassVisibilityStore;
@@ -375,12 +383,14 @@ class LinkGeometryDrawable implements GLDrawable {
 
   constructor(
     notationGraph: NotationGraphStore,
+    staffGeometryStore: StaffGeometryStore,
     editorStateStore: EditorStateStore,
     selectionStore: SelectionStore,
     classVisibilityStore: ClassVisibilityStore,
     zoomController: ZoomController,
   ) {
     this.notationGraph = notationGraph;
+    this.staffGeometryStore = staffGeometryStore;
     this.editorState = editorStateStore;
     this.selectionStore = selectionStore;
     this.classVisibilityStore = classVisibilityStore;
@@ -512,6 +522,7 @@ class LinkGeometryDrawable implements GLDrawable {
     const _this = this;
     const geometry = new LinkGeometry(
       this.notationGraph,
+      this.staffGeometryStore,
       meta.fromNode.id,
       meta.toNode.id,
       new (class implements LinkGeometryStateProvider {

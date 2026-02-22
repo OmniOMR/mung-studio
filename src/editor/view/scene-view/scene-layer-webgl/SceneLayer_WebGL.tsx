@@ -15,6 +15,7 @@ import { MaskAtlasRenderer } from "./GLNodeMaskRenderer";
 export function SceneLayer_WebGL() {
   const {
     notationGraphStore,
+    staffGeometryStore,
     selectionStore,
     classVisibilityStore,
     editorStateStore,
@@ -50,6 +51,7 @@ export function SceneLayer_WebGL() {
 
     const syntaxLinks = new SyntaxLinkGeometryDrawable(
       notationGraphStore,
+      staffGeometryStore,
       editorStateStore,
       selectionStore,
       classVisibilityStore,
@@ -57,6 +59,7 @@ export function SceneLayer_WebGL() {
     );
     const precedenceLinks = new PrecedenceLinkGeometryDrawable(
       notationGraphStore,
+      staffGeometryStore,
       editorStateStore,
       selectionStore,
       classVisibilityStore,
