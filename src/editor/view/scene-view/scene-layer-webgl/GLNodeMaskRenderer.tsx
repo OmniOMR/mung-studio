@@ -10,7 +10,7 @@ import {
   GLRenderer,
 } from "./WebGLDriver";
 import * as d3 from "d3";
-import RBush from "rbush";
+
 import { NodeUpdateMetadata } from "../../../model/notation-graph-store/NodeCollection";
 import { GeometryBuffer } from "./GeometryEngine";
 import { ClassVisibilityStore } from "../../../model/ClassVisibilityStore";
