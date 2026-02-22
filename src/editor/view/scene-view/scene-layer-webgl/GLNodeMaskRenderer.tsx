@@ -15,6 +15,7 @@ import { NodeUpdateMetadata } from "../../../model/notation-graph-store/NodeColl
 import { GeometryBuffer } from "./GeometryEngine";
 import { ClassVisibilityStore } from "../../../model/ClassVisibilityStore";
 import { MUNG_CLASS_NAMES } from "../../../../mung/ontology/mungClasses";
+import { SelectionNodeChangeMetadata, SelectionStore } from "../../../model/SelectionStore";
 
 const SHADER_COMMON = `#version 300 es
 `;
@@ -186,7 +187,7 @@ class TextureAtlasAllocator {
   }
 
   private coalesceFreeTiles(row: TextureAtlasTile[]): void {
-    for (let tileX = 0; tileX < row.length - 1; ) {
+    for (let tileX = 0; tileX < row.length - 1;) {
       const tile = row[tileX];
       const nextTile = row[tileX + 1];
       if (!tile.used && !nextTile.used) {
@@ -547,10 +548,10 @@ class NodeMaskAtlasManager {
       console.log(
         "Created new NodeMaskAtlas of template",
         NodeMaskAtlasTemplate[requiredTemplate] +
-          ", caused by allocation request of size " +
-          width +
-          "x" +
-          height,
+        ", caused by allocation request of size " +
+        width +
+        "x" +
+        height,
       );
     }
     const allocation = this.allocateFromAtlas(newAtlas, width, height);
@@ -560,10 +561,10 @@ class NodeMaskAtlasManager {
     }
     console.log(
       "Failed to allocate from new NodeMaskAtlas - " +
-        width +
-        "x" +
-        height +
-        " too large?",
+      width +
+      "x" +
+      height +
+      " too large?",
     );
 
     return null;
@@ -636,9 +637,10 @@ class NodeMaskLayer {
   public constructor(
     private notationGraph: NotationGraphStore,
     private classVisibilityStore: ClassVisibilityStore,
+    private selectionStore: SelectionStore,
     private colorMap: MaskColorMap,
     private atlas: NodeMaskAtlas | null,
-  ) {}
+  ) { }
 
   public addNode(
     nodeId: number,
@@ -646,6 +648,7 @@ class NodeMaskLayer {
   ): void {
     const notationGraph = this.notationGraph;
     const classVisibilityStore = this.classVisibilityStore;
+    const selectionStore = this.selectionStore;
     const atlas = this.atlas;
     const colorMap = this.colorMap;
 
@@ -721,6 +724,9 @@ class NodeMaskLayer {
         }
         if (classVisibilityStore.visibleClasses.has(node.className)) {
           flags |= MaskAtlasRenderer.FLAG_VISIBLE;
+        }
+        if (selectionStore.isNodeSelected(nodeId)) {
+          flags |= MaskAtlasRenderer.FLAG_HIGHLIGHTED;
         }
 
         for (let i = 0; i < this.VERTEX_COUNT; i++) {
@@ -800,11 +806,44 @@ const MASK_FRAGMENT_SHADER_SOURCE =
   uniform sampler2D u_texture;
   uniform sampler2D u_color_map;
 
+  uniform float u_highlight_thickness_px;
+
   in vec2 v_texcoord;
   flat in uint v_flags;
   flat in uint v_colorIndex;
 
   out vec4 fragColor;
+
+  float calcHighlightPixelIndicator() {
+    ivec2 texSize = textureSize(u_texture, 0);
+    float texelSizeX = 1.0 / float(texSize.x);
+    float texelSizeY = 1.0 / float(texSize.y);
+    
+    float radiusX = u_highlight_thickness_px * texelSizeX;
+    float radiusY = u_highlight_thickness_px * texelSizeY;
+
+    float alphaSum = 0.0;
+    float maxAlphaSum = 0.0;
+    for (float y = -radiusY; y <= radiusY; y += texelSizeY) {
+      for (float x = -radiusX; x <= radiusX; x += texelSizeX) {
+        vec2 uv = v_texcoord + vec2(x, y);
+        float alpha;
+        if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0) {
+          alpha = 0.0; //treat out-of-bounds as fully transparent
+        } else {
+          alpha = texture(u_texture, uv).r;
+        }
+        alphaSum += alpha;
+        maxAlphaSum += 1.0;
+      }
+    }
+
+    if (alphaSum == maxAlphaSum) {
+      return 0.0; //fully surrounded by mask pixels - not a highlight pixel
+    } else {
+      return 1.0; //at least partially exposed - highlight pixel
+    }
+  }
 
   void main() {
     if ((v_flags & FLAG_VISIBLE) == 0u) {
@@ -820,6 +859,14 @@ const MASK_FRAGMENT_SHADER_SOURCE =
       float maskAlpha = texture(u_texture, v_texcoord).r * MASK_ALPHA;
       vec4 colorMapValue = texelFetch(u_color_map, ivec2(v_colorIndex, 0), 0);
       outColor = vec4(colorMapValue.rgb, maskAlpha);
+    }
+
+    if ((v_flags & FLAG_HIGHLIGHTED) != 0u && outColor.a > 0.0) {
+      vec4 standardColor = outColor;
+      vec4 highlightColor = vec4(1.0, 1.0, 1.0, 1.0);
+
+      // branchless programming is fun
+      outColor = mix(standardColor, highlightColor, calcHighlightPixelIndicator());
     }
 
     fragColor = vec4(outColor.rgb * outColor.a, outColor.a);
@@ -871,8 +918,11 @@ export class MaskAtlasRenderer implements GLDrawable {
   public static readonly FLAG_HIGHLIGHTED = 1 << 1;
   public static readonly FLAG_VISIBLE = 1 << 2;
 
+  public static readonly HIGHLIGHT_THICKNESS_PX = 1.5;
+
   private notationGraph: NotationGraphStore;
   private classVisibilityStore: ClassVisibilityStore;
+  private selectionStore: SelectionStore;
 
   private colorMapData: MaskColorMap = new MaskColorMap();
 
@@ -888,46 +938,66 @@ export class MaskAtlasRenderer implements GLDrawable {
   private nodeRemovedSubscription: ISimpleEventHandler<Node>;
   private nodeUpdatedSubscription: ISimpleEventHandler<NodeUpdateMetadata>;
   private classVisibilitySubscription: ISimpleEventHandler<readonly string[]>;
+  private nodeSelectionSubscription: ISimpleEventHandler<SelectionNodeChangeMetadata>;
 
   public constructor(
     notationGraph: NotationGraphStore,
     classVisibilityStore: ClassVisibilityStore,
+    selectionStore: SelectionStore
   ) {
     this.notationGraph = notationGraph;
     this.classVisibilityStore = classVisibilityStore;
+    this.selectionStore = selectionStore;
     this.colorMapData = new MaskColorMap();
 
     this.notationGraph.onNodeInserted.subscribe(
-      (this.nodeInsertedSubscription = this.onNodeInserted.bind(this)),
+      (this.nodeInsertedSubscription = this.onNodeInserted.bind(this))
     );
     this.notationGraph.onNodeRemoved.subscribe(
-      (this.nodeRemovedSubscription = this.onNodeRemoved.bind(this)),
+      (this.nodeRemovedSubscription = this.onNodeRemoved.bind(this))
     );
     this.notationGraph.onNodeUpdatedOrLinked.subscribe(
       (this.nodeUpdatedSubscription = (update: NodeUpdateMetadata) => {
         if (!update.isLinkUpdate) {
           this.onNodeUpdated(update.newValue);
         }
-      }),
+      })
     );
     this.classVisibilityStore.onChange.subscribe(
       (this.classVisibilitySubscription = (classNames: readonly string[]) => {
         notationGraph.nodes.forEach((node) => {
           if (classNames.includes(node.className)) {
-            const layerKey = this.makeLayerKeyForNode(
-              node,
-              this.nodeAllocations.get(node.id) || null,
-            );
-            const layer = this.layers.get(layerKey);
-            if (layer) {
-              layer.updateNodeAttributes(node.id);
-            }
+            this.updateLayerAttributesForNode(node);
           }
         });
-      }),
+      })
+    );
+    this.selectionStore.onNodesChange.subscribe(
+      (this.nodeSelectionSubscription = (change: SelectionNodeChangeMetadata) => {
+        change.nodeSetAdditions.forEach((nodeId) => this.updateLayerAttributesForNodeId(nodeId));
+        change.nodeSetRemovals.forEach((nodeId) => this.updateLayerAttributesForNodeId(nodeId));
+      })
     );
 
     this.notationGraph.nodes.forEach(this.onNodeInserted.bind(this));
+  }
+
+  private updateLayerAttributesForNodeId(nodeId: number): void {
+    const node = this.notationGraph.getNode(nodeId);
+    if (node) {
+      this.updateLayerAttributesForNode(node);
+    }
+  }
+
+  private updateLayerAttributesForNode(node: Node): void {
+    const layerKey = this.makeLayerKeyForNode(
+      node,
+      this.nodeAllocations.get(node.id) || null,
+    );
+    const layer = this.layers.get(layerKey);
+    if (layer) {
+      layer.updateNodeAttributes(node.id);
+    }
   }
 
   attach(gl: GLRenderer): void {
@@ -963,6 +1033,7 @@ export class MaskAtlasRenderer implements GLDrawable {
     this.atlases.flush(gl);
     gl.useProgram(this.shader);
     gl.useTexture(1, "u_color_map", this.colorMapTexture);
+    gl.setUniformFloat("u_highlight_thickness_px", MaskAtlasRenderer.HIGHLIGHT_THICKNESS_PX);
     gl.configureTextureUnit(
       1,
       WebGL2RenderingContext.CLAMP_TO_EDGE,
@@ -998,6 +1069,7 @@ export class MaskAtlasRenderer implements GLDrawable {
       layer = new NodeMaskLayer(
         this.notationGraph,
         this.classVisibilityStore,
+        this.selectionStore,
         this.colorMapData,
         maskAlloc?.atlas || null,
       );

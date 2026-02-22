@@ -145,7 +145,7 @@ function buildChartGraph(
   selectionStore: SelectionStore,
 ): [nodes: ChartNode[], links: ChartLink[]] {
   // build up links
-  const selectedNodeIds = new Set<number>(selectionStore.selectedNodeIds);
+  const selectedNodeIds = selectionStore.selectedNodeIDSet;
   const links: ChartLink[] = selectionStore.partiallySelectedLinks.map((l) => ({
     source: l.fromId,
     target: l.toId,

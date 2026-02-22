@@ -44,6 +44,7 @@ export function SceneLayer_WebGL() {
     const masks = new MaskAtlasRenderer(
       notationGraphStore,
       classVisibilityStore,
+      selectionStore
     );
     glRef.current.addDrawable(masks);
 
@@ -125,6 +126,7 @@ export function SceneLayer_WebGL() {
     classVisibilityStore.onChange.subscribe(onGraphUpdate);
     editorStateStore.displayPrecedenceLinksChangeEvent.subscribe(onGraphUpdate);
     editorStateStore.displaySyntaxLinksChangeEvent.subscribe(onGraphUpdate);
+    selectionStore.onNodesChange.subscribe(onGraphUpdate);
 
     // Cleanup
     return () => {
@@ -139,6 +141,7 @@ export function SceneLayer_WebGL() {
         onGraphUpdate,
       );
       editorStateStore.displaySyntaxLinksChangeEvent.unsubscribe(onGraphUpdate);
+      selectionStore.onNodesChange.unsubscribe(onGraphUpdate);
       syntaxLinks.unsubscribeEvents();
       precedenceLinks.unsubscribeEvents();
       //maskDrawable.unsubscribeEvents();

@@ -31,6 +31,13 @@ export class SelectionStore {
   private _selectedNodeIds: readonly number[] = [];
 
   /**
+   * Set of selected node IDs for O(1) lookup.
+   * It mirrors the list of selected node IDs and is updated together with it,
+   * but it does not preserve ordering.
+   */
+  private _selectedNodeIDSet: ReadonlySet<number> = new Set<number>();
+
+  /**
    * Computed list of links where at least one terminal node is selected.
    */
   private _partiallySelectedLinks: readonly Link[] = [];
@@ -69,29 +76,33 @@ export class SelectionStore {
    * changes the set of selected nodes, recalculates all relevant state,
    * triggers atom updates and emits events.
    */
-  public changeSelection(newNodeSet: readonly number[]) {
-    const oldNodeSet = this._selectedNodeIds;
+  public changeSelection(newNodeList: readonly number[]) {
+    const oldNodeList = this._selectedNodeIds;
+    const oldNodeSet = this._selectedNodeIDSet;
+
+    const newNodeSet = new Set<number>(newNodeList);
 
     // compute nodes that have been newly selected
     // (in the order they have in the new selection)
-    const nodeSetAdditions = newNodeSet.filter(
-      (id) => !oldNodeSet.includes(id),
+    const nodeSetAdditions = newNodeList.filter(
+      (id) => !oldNodeSet.has(id),
     );
 
     // compute nodes that have been de-selected
     // (in the order they had in the old selection)
-    const nodeSetRemovals = oldNodeSet.filter((id) => !newNodeSet.includes(id));
+    const nodeSetRemovals = oldNodeList.filter((id) => !newNodeSet.has(id));
 
     // describe the nodes change
     const nodesChangeMetadata: SelectionNodeChangeMetadata = {
-      oldNodeSet,
-      newNodeSet,
+      oldNodeSet: oldNodeList,
+      newNodeSet: newNodeList,
       nodeSetAdditions,
       nodeSetRemovals,
     };
 
     // update nodes state
-    this._selectedNodeIds = newNodeSet;
+    this._selectedNodeIds = newNodeList;
+    this._selectedNodeIDSet = newNodeSet;
 
     // update link state and produce the change metadata
     const linksChangeMetadata = this.recalculateLinkSelection();
@@ -117,8 +128,8 @@ export class SelectionStore {
     // build up the list of current fully selected links
     const newFullLinkSet: Link[] = newPartialLinkSet.filter(
       (link) =>
-        this._selectedNodeIds.includes(link.fromId) &&
-        this._selectedNodeIds.includes(link.toId),
+        this.isNodeSelected(link.fromId) &&
+        this.isNodeSelected(link.toId),
     );
 
     // partial link set modifications
@@ -216,6 +227,13 @@ export class SelectionStore {
   }
 
   /**
+   * Set of selected nodes IDs in no particular order, with better query performance.
+   */
+  public get selectedNodeIDSet(): ReadonlySet<number> {
+    return this._selectedNodeIDSet;
+  }
+
+  /**
    * List of links for which at least one node is selected
    */
   public get partiallySelectedLinks(): readonly Link[] {
@@ -240,7 +258,7 @@ export class SelectionStore {
    * Removes a node from selection if selected and does nothing if not
    */
   public deselectNode(nodeId: number) {
-    if (!this.selectedNodeIds.includes(nodeId)) return;
+    if (!this.isNodeSelected(nodeId)) return;
     this.changeSelection(this.selectedNodeIds.filter((id) => id !== nodeId));
   }
 
@@ -248,7 +266,7 @@ export class SelectionStore {
    * Adds a node to the selection or does nothing if already selected
    */
   public addNodeToSelection(nodeId: number) {
-    if (this.selectedNodeIds.includes(nodeId)) return;
+    if (this.isNodeSelected(nodeId)) return;
     this.changeSelection([...this.selectedNodeIds, nodeId]);
   }
 
@@ -257,6 +275,13 @@ export class SelectionStore {
    */
   public addNodesToSelection(nodeIds: number[]) {
     this.changeSelection([...this.selectedNodeIds, ...nodeIds]);
+  }
+
+  /**
+   * Check if a node ID is selected. This has O(1) complexity.
+   */
+  public isNodeSelected(nodeId: number): boolean {
+    return this._selectedNodeIDSet.has(nodeId);
   }
 
   ////////////
@@ -329,7 +354,7 @@ export class SelectionStore {
         nodeId,
         atom((get) => {
           this.nodeSignalAtoms.get(nodeId).subscribe(get);
-          return this._selectedNodeIds.includes(nodeId);
+          return this.isNodeSelected(nodeId);
         }),
       );
     }

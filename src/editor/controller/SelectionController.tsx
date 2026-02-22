@@ -137,7 +137,7 @@ export class SelectionController implements IController {
     // click on a node selects that node
     if (highlightedNode !== null) {
       // unless that node is already selected, then it de-selects
-      if (this.selectionStore.selectedNodeIds.includes(highlightedNode.id)) {
+      if (this.selectionStore.isNodeSelected(highlightedNode.id)) {
         this.selectionStore.deselectNode(highlightedNode.id);
         return;
       }
