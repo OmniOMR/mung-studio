@@ -25,6 +25,7 @@ import { ZoomTransform } from "d3";
 import { getLinksOfNode } from "../../../../mung/getLinksOfNode";
 import { computeLinkCoordinates, LinkRenderCoordinates } from "../computeLinkRenderCoordinates";
 import { StaffGeometryStore } from "../../../model/StaffGeometryStore";
+import { LINK_STROKE_WIDTH } from "../../../../mung/linkAppearance";
 
 const SHADER_COMMON = `#version 300 es
 
@@ -100,8 +101,8 @@ const LINE_FRAGMENT_SHADER_SOURCE =
     }
 
     vec4 color = u_pass == PASS_OUTLINE ? u_outline_color : u_color;
-    if (u_selecting && !highlighted) {
-      color.a = 0.15;
+    if (u_pass != PASS_OUTLINE) {
+      color.a = 0.8;
     }
 
     fragColor = vec4(color.rgb * color.a, color.a); //premultiply alpha
@@ -347,7 +348,7 @@ export class LinkGeometryMasterDrawable extends GLDrawableComposite {
 }
 
 class LinkGeometryDrawable implements GLDrawable {
-  private static readonly LINK_WIDTH: number = 5.0;
+  private static readonly LINK_WIDTH: number = LINK_STROKE_WIDTH;
 
   private notationGraph: NotationGraphStore;
   private staffGeometryStore: StaffGeometryStore;
@@ -547,7 +548,7 @@ class LinkGeometryDrawable implements GLDrawable {
         }
       })(),
       LinkGeometryDrawable.LINK_WIDTH,
-      1.5,
+      2.25,
     );
 
     const linkClasses = new Set([
@@ -631,7 +632,7 @@ class LinkGeometryDrawable implements GLDrawable {
       scale = scale * scale;
       zoomDisp = -LinkGeometryDrawable.LINK_WIDTH * 0.5 * (1.0 - scale);
     } else {
-      scale = Math.min(2, scale);
+      scale = Math.min(3, scale);
       zoomDisp = LinkGeometryDrawable.LINK_WIDTH * 0.5 * (scale - 1.0);
     }
     gl.setUniformFloat("u_calcZoomDisp", zoomDisp);
