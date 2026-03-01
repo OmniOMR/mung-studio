@@ -245,6 +245,7 @@ class NodeMaskAtlas {
     ]);
 
   public static readonly TEXTURE_MARGIN = 1;
+  public static readonly MARGIN_MARKER_ALPHA = 1;
 
   private id: number;
 
@@ -423,15 +424,17 @@ class NodeMaskAtlas {
     srcHeight: number,
   ): void {
     const margin = this.getEffectiveMargin();
+    const widthWithMargin = srcWidth + 2 * margin;
+    const heightWithMargin = srcHeight + 2 * margin;
     if (allocation.transpose) {
       //transpose data
       const transposedDataWithMargin = new Uint8Array(
-        (srcWidth + 2 * margin) * (srcHeight + 2 * margin),
+        widthWithMargin * heightWithMargin,
       );
       for (let y = 0; y < srcHeight; y++) {
         for (let x = 0; x < srcWidth; x++) {
           transposedDataWithMargin[
-            (x + margin) * (srcHeight + 2 * margin) + (y + margin)
+            (x + margin) * (heightWithMargin) + (y + margin)
           ] = data[y * srcWidth + x];
         }
       }
@@ -439,17 +442,19 @@ class NodeMaskAtlas {
       const temp = srcWidth;
       srcWidth = srcHeight;
       srcHeight = temp;
+      this.fillMarginMarker(data, heightWithMargin, widthWithMargin);
     } else if (!this.noMargin) {
       const dataWithMargin = new Uint8Array(
-        (srcWidth + 2 * margin) * (srcHeight + 2 * margin),
+        widthWithMargin * heightWithMargin,
       );
       for (let y = 0; y < srcHeight; y++) {
         dataWithMargin.set(
           data.subarray(y * srcWidth, (y + 1) * srcWidth),
-          (y + margin) * (srcWidth + 2 * margin) + margin,
+          (y + margin) * widthWithMargin + margin,
         );
       }
       data = dataWithMargin;
+      this.fillMarginMarker(data, widthWithMargin, heightWithMargin);
     }
 
     srcWidth += 2 * margin;
@@ -461,6 +466,20 @@ class NodeMaskAtlas {
       srcWidth: srcWidth,
       srcHeight: srcHeight,
     });
+  }
+
+  private fillMarginMarker(data: Uint8Array, width: number, height: number): void {
+    const margin = this.getEffectiveMargin();
+    for (let y = 0; y < height; y++) {
+      for (let x = 0; x < width; x++) {
+        if (
+          x < margin || x >= width - margin ||
+          y < margin || y >= height - margin
+        ) {
+          data[y * width + x] = NodeMaskAtlas.MARGIN_MARKER_ALPHA;
+        }
+      }
+    }
   }
 
   public getTexture(): WebGLTexture | null {
@@ -802,6 +821,7 @@ const MASK_FRAGMENT_SHADER_SOURCE =
   const uint FLAG_VISIBLE = (1u << 2);
 
   const float MASK_ALPHA = 0.2;
+  const float MARGIN_ALPHA = 1.0 / 255.0;
 
   uniform sampler2D u_texture;
   uniform sampler2D u_color_map;
@@ -814,7 +834,7 @@ const MASK_FRAGMENT_SHADER_SOURCE =
 
   out vec4 fragColor;
 
-  float calcHighlightPixelIndicator() {
+  vec2 calcHighlightPixelIndicator() {
     ivec2 texSize = textureSize(u_texture, 0);
     float texelSizeX = 1.0 / float(texSize.x);
     float texelSizeY = 1.0 / float(texSize.y);
@@ -824,25 +844,29 @@ const MASK_FRAGMENT_SHADER_SOURCE =
 
     float alphaSum = 0.0;
     float maxAlphaSum = 0.0;
+    bool hasMarginMarker = false;
     for (float y = -radiusY; y <= radiusY; y += texelSizeY) {
       for (float x = -radiusX; x <= radiusX; x += texelSizeX) {
         vec2 uv = v_texcoord + vec2(x, y);
         float alpha;
         if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0) {
           alpha = 0.0; //treat out-of-bounds as fully transparent
+          hasMarginMarker = true;
         } else {
           alpha = texture(u_texture, uv).r;
         }
         alphaSum += alpha;
         maxAlphaSum += 1.0;
+        if (alpha == MARGIN_ALPHA) {
+          hasMarginMarker = true;
+        }
       }
     }
 
-    if (alphaSum == maxAlphaSum) {
-      return 0.0; //fully surrounded by mask pixels - not a highlight pixel
-    } else {
-      return 1.0; //at least partially exposed - highlight pixel
-    }
+    float outlineIndicator = alphaSum == maxAlphaSum ? 0.0 : 1.0;
+    float bboxIndicator = hasMarginMarker ? 1.0 : 0.0;
+
+    return vec2(outlineIndicator, bboxIndicator);
   }
 
   void main() {
@@ -861,12 +885,20 @@ const MASK_FRAGMENT_SHADER_SOURCE =
       outColor = vec4(colorMapValue.rgb, maskAlpha);
     }
 
-    if ((v_flags & FLAG_HIGHLIGHTED) != 0u && outColor.a > 0.0) {
-      vec4 standardColor = outColor;
-      vec4 highlightColor = vec4(1.0, 1.0, 1.0, 1.0);
+    if ((v_flags & FLAG_HIGHLIGHTED) != 0u) {
+      vec2 indicators = calcHighlightPixelIndicator();
 
-      // branchless programming is fun
-      outColor = mix(standardColor, highlightColor, calcHighlightPixelIndicator());
+      if (outColor.a > 0.0 || indicators.y > 0.0) {
+        vec4 standardColor = outColor;
+        vec4 highlightColor = vec4(1.0, 1.0, 1.0, 1.0);
+
+        // branchless programming is fun
+        outColor = mix(standardColor, highlightColor, max(indicators.x, indicators.y));
+      }
+    } else {
+      if (outColor.a == MARGIN_ALPHA) {
+        outColor.a = 0.0;
+      }
     }
 
     fragColor = vec4(outColor.rgb * outColor.a, outColor.a);
@@ -1128,6 +1160,9 @@ export class MaskAtlasRenderer implements GLDrawable {
     );
     this.classVisibilityStore.onChange.unsubscribe(
       this.classVisibilitySubscription,
+    );
+    this.selectionStore.onNodesChange.unsubscribe(
+      this.nodeSelectionSubscription,
     );
   }
 }
