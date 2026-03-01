@@ -430,13 +430,13 @@ class LinkGeometryDrawable implements GLDrawable {
     });
 
     this.linkSelectionSubscription = (meta) => {
-      meta.fullLinkSetRemovals.forEach(this.onLinkDeselected.bind(this));
-      meta.fullLinkSetAdditions.forEach(this.onLinkSelected.bind(this));
+      meta.partialLinkSetRemovals.forEach(this.onLinkDeselected.bind(this));
+      meta.partialLinkSetAdditions.forEach(this.onLinkSelected.bind(this));
     };
 
     selectionStore.onLinksChange.subscribe(this.linkSelectionSubscription);
 
-    selectionStore.fullySelectedLinks.forEach((link) => {
+    selectionStore.partiallySelectedLinks.forEach((link) => {
       this.onLinkSelected(link);
     });
 
