@@ -25,7 +25,7 @@ import { ZoomTransform } from "d3";
 import { getLinksOfNode } from "../../../../mung/getLinksOfNode";
 import { computeLinkCoordinates, LinkRenderCoordinates } from "../computeLinkRenderCoordinates";
 import { StaffGeometryStore } from "../../../model/StaffGeometryStore";
-import { LINK_STROKE_WIDTH } from "../../../../mung/linkAppearance";
+import { LINK_OUTLINE_STROKE_WIDTH, LINK_STROKE_WIDTH } from "../../../../mung/linkAppearance";
 
 const SHADER_COMMON = `#version 300 es
 
@@ -39,15 +39,17 @@ const SHADER_COMMON = `#version 300 es
 
 const LINE_VERTEX_SHADER_SOURCE =
   SHADER_COMMON +
-  ` in vec4 a_position;
+  `
+  in vec4 a_position;
+  in vec2 a_normal;
   in uint a_attributes;
 
   uniform mat4 u_mvp_matrix;
   uniform uint u_pass;
   uniform bool u_selecting;
 
-  uniform float u_calcZoomDisp;
-  uniform float u_highlightOutlineDisp;
+  uniform float u_arrow_scale;
+  uniform float u_outline_thickness;
 
   flat out uint v_attributes;
 
@@ -57,11 +59,12 @@ const LINE_VERTEX_SHADER_SOURCE =
     //this is more efficient than an if/else, as it is branch free
     //it will also degenerate the triangle to a point, which will either not be rendered,
     //or will be discarded by the fragment shader (but there will still be way less fragments to process)
-    float finalZoom = u_calcZoomDisp;
+    float positionScale = u_arrow_scale;
+    float normalScale = 0.0;
     if (u_pass == PASS_OUTLINE) {
-      finalZoom += u_highlightOutlineDisp;
+      normalScale = u_outline_thickness;
     }
-    vec4 basePos = u_mvp_matrix * vec4(a_position.xy + a_position.zw * finalZoom, 0, 1);
+    vec4 basePos = u_mvp_matrix * vec4(a_position.xy + a_position.zw * positionScale + a_normal * normalScale, 0, 1);
     if (u_pass == PASS_OUTLINE) {
       gl_Position = basePos * float(a_attributes & FLAG_VISIBLE) * float(a_attributes & FLAG_HIGHLIGHTED) * 0.5;
     } else if (u_pass == PASS_SELECTION) {
@@ -114,6 +117,12 @@ interface LinkGeometryStateProvider {
   isHighlighted(): boolean;
 }
 
+interface LinkVertex {
+  origin: vec2;
+  delta: vec2;
+  normal: vec2;
+}
+
 const ZERO_VEC: vec2 = [0, 0];
 
 class LinkGeometry {
@@ -137,12 +146,23 @@ class LinkGeometry {
     private arrowHeadScale: number = 2.0,
   ) { }
 
-  public allTriangleSource(): GeometrySource {
+  public positionSource(): GeometrySource {
     return {
       VERTEX_COUNT: 9,
       generateVertices: (consumer) => {
         this.generateArrowAllTris().forEach((coords) => {
-          consumer(...coords);
+          consumer(...coords.origin, ...coords.delta);
+        });
+      },
+    };
+  }
+
+  public normalSource(): GeometrySource {
+    return {
+      VERTEX_COUNT: 9,
+      generateVertices: (consumer) => {
+        this.generateArrowAllTris().forEach((coords) => {
+          consumer(...coords.normal);
         });
       },
     };
@@ -195,7 +215,7 @@ class LinkGeometry {
     return vec2.normalize(diff, diff);
   }
 
-  private generateArrowAllTris(): vec4[] {
+  private generateArrowAllTris(): LinkVertex[] {
     const coordinates: LinkRenderCoordinates = computeLinkCoordinates(
       this.notationGraph.getNode(this.fromNodeId),
       this.notationGraph.getNode(this.toNodeId),
@@ -239,11 +259,11 @@ class LinkGeometry {
       [bodyBottomLeft, bodyBottomRight],
       [bodyBottomRight, bodyTopRight],
     );
-    const bodyBottomLeftN = this.vec2Pair(bodyBottomLeft, normalBL);
-    const bodyBottomRightN = this.vec2Pair(bodyBottomRight, normalBR);
+    const bodyBottomLeftN = this.makeCoord(fromPoint, bodyBottomLeft, normalBL);
+    const bodyBottomRightN = this.makeCoord(fromPoint, bodyBottomRight, normalBR);
     //stretch away from tip - do not overlap arrow triangle
-    const bodyTopRightN = this.vec2Pair(bodyTopRight, normalBR);
-    const bodyTopLeftN = this.vec2Pair(bodyTopLeft, normalBL);
+    const bodyTopRightN = this.makeCoord(toPoint, bodyTopRight, normalBR);
+    const bodyTopLeftN = this.makeCoord(toPoint, bodyTopLeft, normalBL);
 
     //measured manually for a straight pointing-up arrow
     const sideNL: vec2 = [-1.1443, Math.sqrt(2) / 2];
@@ -258,10 +278,10 @@ class LinkGeometry {
     vec2.rotate(normalHeadR, sideNR, ZERO_VEC, sideNRotation);
     vec2.rotate(normalHeadT, topN, ZERO_VEC, sideNRotation);
 
-    const headTipN = this.vec2Pair(headTip, normalHeadT);
+    const headTipN = this.makeCoord(toPoint, headTip, normalHeadT);
     //scale the head normal to reach the body
-    const headLeftN = this.vec2Pair(headLeft, normalHeadL);
-    const headRightN = this.vec2Pair(headRight, normalHeadR);
+    const headLeftN = this.makeCoord(toPoint, headLeft, normalHeadL);
+    const headRightN = this.makeCoord(toPoint, headRight, normalHeadR);
 
     return [
       bodyBottomLeftN,
@@ -276,8 +296,13 @@ class LinkGeometry {
     ];
   }
 
-  private vec2Pair(a: vec2, b: vec2): vec4 {
-    return [a[0], a[1], b[0], b[1]];
+  private makeCoord(origin: vec2, pos: vec2, normal: vec2): LinkVertex {
+    const relPos = vec2.sub(vec2.create(), pos, origin);
+    return {
+      origin: origin,
+      delta: relPos,
+      normal: normal,
+    };
   }
 
   private calcAvgNormal(...edges: vec2[][]): vec2 {
@@ -359,7 +384,12 @@ class LinkGeometryDrawable implements GLDrawable {
 
   private triangleBuffer = new GeometryBuffer({
     dataType: WebGL2RenderingContext.FLOAT,
-    elementCount: 4, // x, y, nx, ny coordinates
+    elementCount: 4, // ox, oy, dx, dy coordinates
+    elementSizeof: Float32Array.BYTES_PER_ELEMENT,
+  });
+  private normalBuffer = new GeometryBuffer({
+    dataType: WebGL2RenderingContext.FLOAT,
+    elementCount: 2, // nx, ny
     elementSizeof: Float32Array.BYTES_PER_ELEMENT,
   });
   private attributeBuffer = new GeometryBuffer({
@@ -563,8 +593,9 @@ class LinkGeometryDrawable implements GLDrawable {
       this.classToLinkMap.get(className)!.add(key);
     }
 
-    const trisSource = geometry.allTriangleSource();
+    const trisSource = geometry.positionSource();
     const index = this.triangleBuffer.addGeometry(trisSource);
+    this.normalBuffer.addGeometry(geometry.normalSource());
     this.attributeBuffer.addGeometry(geometry.attributesSourceFor(trisSource));
     this.linkToIndexMap.set(key, index);
     //console.log("link insert", key, index);
@@ -577,6 +608,7 @@ class LinkGeometryDrawable implements GLDrawable {
       return;
     }
     this.triangleBuffer.updateGeometry(index);
+    this.normalBuffer.updateGeometry(index);
     this.attributeBuffer.updateGeometry(index);
   }
 
@@ -588,6 +620,7 @@ class LinkGeometryDrawable implements GLDrawable {
       return;
     }
     this.triangleBuffer.removeGeometry(index);
+    this.normalBuffer.removeGeometry(index);
     this.attributeBuffer.removeGeometry(index);
     this.linkToIndexMap.delete(key);
 
@@ -627,20 +660,10 @@ class LinkGeometryDrawable implements GLDrawable {
       return;
     }
     let scale = this.scale;
-    let zoomDisp;
-    if (scale < 1) {
-      scale = scale * scale;
-      zoomDisp = -LinkGeometryDrawable.LINK_WIDTH * 0.5 * (1.0 - scale);
-    } else {
-      scale = Math.min(3, scale);
-      zoomDisp = LinkGeometryDrawable.LINK_WIDTH * 0.5 * (scale - 1.0);
-    }
-    gl.setUniformFloat("u_calcZoomDisp", zoomDisp);
-    gl.setUniformFloat(
-      "u_highlightOutlineDisp",
-      LinkGeometryDrawable.LINK_WIDTH * Math.sqrt(scale),
-    );
+    gl.setUniformFloat("u_arrow_scale", this.scale);
+    gl.setUniformFloat("u_outline_thickness", this.scale * (LINK_OUTLINE_STROKE_WIDTH - LINK_STROKE_WIDTH) / 2);
     gl.bindBuffer(this.triangleBuffer, "a_position");
+    gl.bindBuffer(this.normalBuffer, "a_normal");
     gl.bindBuffer(this.attributeBuffer, "a_attributes");
     gl.drawArrayByBuffer(WebGL2RenderingContext.TRIANGLES, this.triangleBuffer);
   }
