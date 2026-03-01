@@ -16,6 +16,8 @@ import { GeometryBuffer } from "./GeometryEngine";
 import { ClassVisibilityStore } from "../../../model/ClassVisibilityStore";
 import { MUNG_CLASS_NAMES } from "../../../../mung/ontology/mungClasses";
 import { SelectionNodeChangeMetadata, SelectionStore } from "../../../model/SelectionStore";
+import { ZoomController } from "../../../controller/ZoomController";
+import { ZoomTransform } from "d3";
 
 const SHADER_COMMON = `#version 300 es
 `;
@@ -845,8 +847,8 @@ const MASK_FRAGMENT_SHADER_SOURCE =
     float alphaSum = 0.0;
     float maxAlphaSum = 0.0;
     bool hasMarginMarker = false;
-    for (float y = -radiusY; y <= radiusY; y += texelSizeY) {
-      for (float x = -radiusX; x <= radiusX; x += texelSizeX) {
+    for (float y = -radiusY; y <= radiusY; y += min(radiusY, texelSizeY)) {
+      for (float x = -radiusX; x <= radiusX; x += min(radiusX, texelSizeX)) {
         vec2 uv = v_texcoord + vec2(x, y);
         float alpha;
         if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0) {
@@ -950,11 +952,12 @@ export class MaskAtlasRenderer implements GLDrawable {
   public static readonly FLAG_HIGHLIGHTED = 1 << 1;
   public static readonly FLAG_VISIBLE = 1 << 2;
 
-  public static readonly HIGHLIGHT_THICKNESS_PX = 1.5;
+  private static readonly HIGHLIGHT_THICKNESS_SCREENSPACE_PX = 2.0;
 
   private notationGraph: NotationGraphStore;
   private classVisibilityStore: ClassVisibilityStore;
   private selectionStore: SelectionStore;
+  private zoomController: ZoomController;
 
   private colorMapData: MaskColorMap = new MaskColorMap();
 
@@ -971,15 +974,18 @@ export class MaskAtlasRenderer implements GLDrawable {
   private nodeUpdatedSubscription: ISimpleEventHandler<NodeUpdateMetadata>;
   private classVisibilitySubscription: ISimpleEventHandler<readonly string[]>;
   private nodeSelectionSubscription: ISimpleEventHandler<SelectionNodeChangeMetadata>;
+  private zoomSubscription: ISimpleEventHandler<ZoomTransform>;
 
   public constructor(
     notationGraph: NotationGraphStore,
     classVisibilityStore: ClassVisibilityStore,
-    selectionStore: SelectionStore
+    selectionStore: SelectionStore,
+    zoomController: ZoomController
   ) {
     this.notationGraph = notationGraph;
     this.classVisibilityStore = classVisibilityStore;
     this.selectionStore = selectionStore;
+    this.zoomController = zoomController;
     this.colorMapData = new MaskColorMap();
 
     this.notationGraph.onNodeInserted.subscribe(
@@ -1065,7 +1071,7 @@ export class MaskAtlasRenderer implements GLDrawable {
     this.atlases.flush(gl);
     gl.useProgram(this.shader);
     gl.useTexture(1, "u_color_map", this.colorMapTexture);
-    gl.setUniformFloat("u_highlight_thickness_px", MaskAtlasRenderer.HIGHLIGHT_THICKNESS_PX);
+    gl.setUniformFloat("u_highlight_thickness_px", this.calcWorldSpaceZoom());
     gl.configureTextureUnit(
       1,
       WebGL2RenderingContext.CLAMP_TO_EDGE,
@@ -1078,6 +1084,10 @@ export class MaskAtlasRenderer implements GLDrawable {
     sortedLayers.forEach((layerEntry) => {
       layerEntry[1].draw(gl);
     });
+  }
+
+  private calcWorldSpaceZoom(): number {
+    return MaskAtlasRenderer.HIGHLIGHT_THICKNESS_SCREENSPACE_PX / this.zoomController.currentTransform.k;
   }
 
   private makeLayerKeyForNode(

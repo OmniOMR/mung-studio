@@ -45,7 +45,8 @@ export function SceneLayer_WebGL() {
     const masks = new MaskAtlasRenderer(
       notationGraphStore,
       classVisibilityStore,
-      selectionStore
+      selectionStore,
+      zoomController
     );
     glRef.current.addDrawable(masks);
 
