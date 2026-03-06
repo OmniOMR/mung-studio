@@ -2,6 +2,7 @@ import { atom } from "jotai";
 import { JotaiStore } from "../model/JotaiStore";
 import { EditorTool } from "../model/EditorTool";
 import { IController } from "./IController";
+import { ISimpleEvent, SimpleEventDispatcher } from "ste-simple-events";
 
 /**
  * State and logic behind the toolbelt.
@@ -28,6 +29,16 @@ export class ToolbeltController implements IController {
    */
   public readonly currentToolAtom = atom<EditorTool>(EditorTool.Pointer);
 
+  private _onToolChange =
+    new SimpleEventDispatcher<ToolChangeMetadata>();
+
+  /**
+   * Fires whenever a new tool is activated.
+   */
+  public get onToolChange(): ISimpleEvent<ToolChangeMetadata> {
+    return this._onToolChange.asEvent();
+  }
+
   /**
    * Returns the currently selected editor tool
    */
@@ -42,8 +53,15 @@ export class ToolbeltController implements IController {
     // do nothing if we're changing to the tool we currently have equipped
     if (this.currentTool === tool) return;
 
+    const oldTool = this.currentTool;
+
     // change the tool
     this.jotaiStore.set(this.currentToolAtom, tool);
+
+    this._onToolChange.dispatch({
+      previousTool: oldTool,
+      newTool: tool,
+    });
   }
 
   //////////////////
@@ -67,4 +85,9 @@ export class ToolbeltController implements IController {
       this.setCurrentTool(EditorTool.PrecedenceLinks);
     },
   };
+}
+
+export interface ToolChangeMetadata {
+  previousTool: EditorTool;
+  newTool: EditorTool;
 }

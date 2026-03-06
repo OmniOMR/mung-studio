@@ -7,7 +7,8 @@ import {
   PrecedenceLinkGeometryDrawable,
   SyntaxLinkGeometryDrawable,
 } from "./GLLinkRenderer";
-import { MaskAtlasRenderer } from "./GLNodeMaskRenderer";
+import { HighlightDisplayMode, MaskAtlasRenderer } from "./GLNodeMaskRenderer";
+import { EditorTool } from "../../../model/EditorTool";
 
 /**
  * Scene layer, rendered via WebGL
@@ -20,6 +21,7 @@ export function SceneLayer_WebGL() {
     classVisibilityStore,
     editorStateStore,
     zoomController,
+    toolbeltController
   } = useContext(EditorContext);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -107,6 +109,15 @@ export function SceneLayer_WebGL() {
       }
     };
 
+    const syncHighlightModeWithTool = (tool) => {
+      if (tool == EditorTool.NodeEditing) {
+        masks.setHighlightDisplayMode(HighlightDisplayMode.HIDE);
+      } else {
+        masks.setHighlightDisplayMode(HighlightDisplayMode.OUTLINE);
+      }
+    };
+
+    syncHighlightModeWithTool(toolbeltController.currentTool);
     onGraphUpdate();
 
     //https://wikis.khronos.org/webgl/HandlingHighDPI
@@ -138,6 +149,11 @@ export function SceneLayer_WebGL() {
       render();
     }
 
+    const toolChangeHandler = (e) => {
+      syncHighlightModeWithTool(e.newTool);
+      render();
+    };
+
     zoomController.onTransformChange.subscribe(onZoom);
     notationGraphStore.onNodeUpdatedOrLinked.subscribe(onGraphUpdate);
     notationGraphStore.onNodeInserted.subscribe(onGraphUpdate);
@@ -147,6 +163,7 @@ export function SceneLayer_WebGL() {
     editorStateStore.displayPrecedenceLinksChangeEvent.subscribe(onGraphUpdate);
     editorStateStore.displaySyntaxLinksChangeEvent.subscribe(onGraphUpdate);
     selectionStore.onNodesChange.subscribe(onGraphUpdate);
+    toolbeltController.onToolChange.subscribe(toolChangeHandler);
 
     // Cleanup
     return () => {
@@ -162,9 +179,9 @@ export function SceneLayer_WebGL() {
       );
       editorStateStore.displaySyntaxLinksChangeEvent.unsubscribe(onGraphUpdate);
       selectionStore.onNodesChange.unsubscribe(onGraphUpdate);
+      toolbeltController.onToolChange.unsubscribe(toolChangeHandler);
       syntaxLinks.unsubscribeEvents();
       precedenceLinks.unsubscribeEvents();
-      //maskDrawable.unsubscribeEvents();
       masks.unsubscribeEvents();
       resizeObserver.disconnect();
     };

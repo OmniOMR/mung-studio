@@ -4,9 +4,7 @@ import { classNameZIndex } from "../../../../mung/classNameZIndex";
 import { Node } from "../../../../mung/Node";
 import { NotationGraphStore } from "../../../model/notation-graph-store/NotationGraphStore";
 import {
-  GLBuffer,
   GLDrawable,
-  GLDrawableComposite,
   GLRenderer,
 } from "./WebGLDriver";
 import * as d3 from "d3";
@@ -17,7 +15,6 @@ import { ClassVisibilityStore } from "../../../model/ClassVisibilityStore";
 import { MUNG_CLASS_NAMES } from "../../../../mung/ontology/mungClasses";
 import { SelectionNodeChangeMetadata, SelectionStore } from "../../../model/SelectionStore";
 import { ZoomController } from "../../../controller/ZoomController";
-import { ZoomTransform } from "d3";
 
 const SHADER_COMMON = `#version 300 es
 `;
@@ -828,9 +825,14 @@ const MASK_FRAGMENT_SHADER_SOURCE =
   const float MASK_ALPHA = 0.2;
   const float MARGIN_ALPHA = 1.0 / 255.0;
 
+  const int HIGHLIGHT_DISPLAY_MODE_OUTLINE = 0;
+  const int HIGHLIGHT_DISPLAY_MODE_NONE = 1;
+  const int HIGHLIGHT_DISPLAY_MODE_HIDE = 2;
+
   uniform sampler2D u_texture;
   uniform sampler2D u_color_map;
 
+  uniform int u_highlight_display_mode;
   uniform float u_highlight_thickness_px;
   uniform float u_highlight_anim_weight;
 
@@ -887,6 +889,9 @@ const MASK_FRAGMENT_SHADER_SOURCE =
     if ((v_flags & FLAG_VISIBLE) == 0u) {
       discard;
     }
+    if (u_highlight_display_mode == HIGHLIGHT_DISPLAY_MODE_HIDE && (v_flags & FLAG_HIGHLIGHTED) != 0u) {
+      discard;
+    }
 
     vec4 outColor;
 
@@ -899,7 +904,7 @@ const MASK_FRAGMENT_SHADER_SOURCE =
       outColor = vec4(colorMapValue.rgb, maskAlpha);
     }
 
-    if ((v_flags & FLAG_HIGHLIGHTED) != 0u) {
+    if (u_highlight_display_mode == HIGHLIGHT_DISPLAY_MODE_OUTLINE && (v_flags & FLAG_HIGHLIGHTED) != 0u) {
       vec2 indicators = calcHighlightPixelIndicator();
 
       if (outColor.a > 0.0 || indicators.y > 0.0) {
@@ -959,6 +964,12 @@ class MaskColorMap {
   }
 }
 
+export enum HighlightDisplayMode {
+  OUTLINE,
+  NONE,
+  HIDE
+}
+
 export class MaskAtlasRenderer implements GLDrawable {
   public static readonly FLAG_ALLOCATION_FAILED = 1 << 0;
   public static readonly FLAG_HIGHLIGHTED = 1 << 1;
@@ -986,7 +997,8 @@ export class MaskAtlasRenderer implements GLDrawable {
   private nodeUpdatedSubscription: ISimpleEventHandler<NodeUpdateMetadata>;
   private classVisibilitySubscription: ISimpleEventHandler<readonly string[]>;
   private nodeSelectionSubscription: ISimpleEventHandler<SelectionNodeChangeMetadata>;
-  private zoomSubscription: ISimpleEventHandler<ZoomTransform>;
+
+  private highlightDisplayMode: HighlightDisplayMode = HighlightDisplayMode.OUTLINE;
 
   public constructor(
     notationGraph: NotationGraphStore,
@@ -1083,6 +1095,7 @@ export class MaskAtlasRenderer implements GLDrawable {
     this.atlases.flush(gl);
     gl.useProgram(this.shader);
     gl.useTexture(1, "u_color_map", this.colorMapTexture);
+    gl.setUniformInt("u_highlight_display_mode", this.highlightDisplayMode);
     gl.setUniformFloat("u_highlight_thickness_px", this.calcWorldSpaceZoom());
     gl.setUniformFloat("u_highlight_anim_weight", this.calcHighlightAnimationWeight());
     gl.configureTextureUnit(
@@ -1195,5 +1208,9 @@ export class MaskAtlasRenderer implements GLDrawable {
 
   public hasLiveAnimation(): boolean {
     return this.selectionStore.selectedNodeIDSet.size > 0;
+  }
+
+  public setHighlightDisplayMode(mode: HighlightDisplayMode): void {
+    this.highlightDisplayMode = mode;
   }
 }
