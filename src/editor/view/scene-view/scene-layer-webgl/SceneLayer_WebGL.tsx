@@ -82,16 +82,32 @@ export function SceneLayer_WebGL() {
     };
 
     glRef.current!.updateTransform(zoomController.currentTransform);
-    render();
 
     const onZoom = (transform: d3.ZoomTransform) => {
       glRef.current!.updateTransform(transform);
       render();
     };
 
+    function shouldUseLiveRender() {
+      return masks.hasLiveAnimation();
+    }
+
+    const liveRenderLoop = () => {
+      render();
+      if (shouldUseLiveRender()) {
+        requestAnimationFrame(liveRenderLoop);
+      }
+    }
+
     const onGraphUpdate = () => {
-      setTimeout(render); // We need to do this on the next frame so that all the geometry has been updated before rendering is invoked
+      if (masks.hasLiveAnimation()) {
+        requestAnimationFrame(liveRenderLoop);
+      } else {
+        setTimeout(render); // We need to do this on the next frame so that all the geometry has been updated before rendering is invoked
+      }
     };
+
+    onGraphUpdate();
 
     //https://wikis.khronos.org/webgl/HandlingHighDPI
 

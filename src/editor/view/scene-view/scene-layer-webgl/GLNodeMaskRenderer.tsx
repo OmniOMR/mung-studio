@@ -802,14 +802,17 @@ const MASK_VERTEX_SHADER_SOURCE =
   uniform mat4 u_mvp_matrix;
 
   out vec2 v_texcoord;
+  out vec2 v_screenspace_pos;
   flat out uint v_flags;
   flat out uint v_colorIndex;
 
   void main() {
-    gl_Position = u_mvp_matrix * vec4(a_position.xy, 0.0, 1.0);
+    vec4 pos = u_mvp_matrix * vec4(a_position.xy, 0.0, 1.0);
     v_texcoord = a_position.zw;
+    v_screenspace_pos = pos.xy;
     v_flags = a_attributes.x;
     v_colorIndex = a_attributes.y;
+    gl_Position = pos;
   }
 `;
 
@@ -829,8 +832,11 @@ const MASK_FRAGMENT_SHADER_SOURCE =
   uniform sampler2D u_color_map;
 
   uniform float u_highlight_thickness_px;
+  uniform float u_highlight_anim_weight;
 
   in vec2 v_texcoord;
+  in vec2 v_screenspace_pos;
+
   flat in uint v_flags;
   flat in uint v_colorIndex;
 
@@ -871,6 +877,12 @@ const MASK_FRAGMENT_SHADER_SOURCE =
     return vec2(outlineIndicator, bboxIndicator);
   }
 
+  vec4 getHighlightPixelColor() {
+    vec2 coords = v_screenspace_pos;
+    float pattern = step(0.5, fract((coords.x * 0.5 + coords.y * 0.5) * 100.0 + u_highlight_anim_weight));
+    return vec4(vec3(pattern), 1.0);
+  }
+
   void main() {
     if ((v_flags & FLAG_VISIBLE) == 0u) {
       discard;
@@ -892,7 +904,7 @@ const MASK_FRAGMENT_SHADER_SOURCE =
 
       if (outColor.a > 0.0 || indicators.y > 0.0) {
         vec4 standardColor = outColor;
-        vec4 highlightColor = vec4(1.0, 1.0, 1.0, 1.0);
+        vec4 highlightColor = getHighlightPixelColor();
 
         // branchless programming is fun
         outColor = mix(standardColor, highlightColor, max(indicators.x, indicators.y));
@@ -1072,6 +1084,7 @@ export class MaskAtlasRenderer implements GLDrawable {
     gl.useProgram(this.shader);
     gl.useTexture(1, "u_color_map", this.colorMapTexture);
     gl.setUniformFloat("u_highlight_thickness_px", this.calcWorldSpaceZoom());
+    gl.setUniformFloat("u_highlight_anim_weight", this.calcHighlightAnimationWeight());
     gl.configureTextureUnit(
       1,
       WebGL2RenderingContext.CLAMP_TO_EDGE,
@@ -1088,6 +1101,10 @@ export class MaskAtlasRenderer implements GLDrawable {
 
   private calcWorldSpaceZoom(): number {
     return MaskAtlasRenderer.HIGHLIGHT_THICKNESS_SCREENSPACE_PX / this.zoomController.currentTransform.k;
+  }
+
+  private calcHighlightAnimationWeight(): number {
+    return (performance.now() % 1000) / 1000;
   }
 
   private makeLayerKeyForNode(
@@ -1174,5 +1191,9 @@ export class MaskAtlasRenderer implements GLDrawable {
     this.selectionStore.onNodesChange.unsubscribe(
       this.nodeSelectionSubscription,
     );
+  }
+
+  public hasLiveAnimation(): boolean {
+    return this.selectionStore.selectedNodeIDSet.size > 0;
   }
 }
