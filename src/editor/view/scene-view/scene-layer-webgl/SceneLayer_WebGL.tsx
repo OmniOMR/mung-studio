@@ -94,16 +94,23 @@ export function SceneLayer_WebGL() {
       return masks.hasLiveAnimation();
     }
 
+    let usingLiveRender = false;
+
     const liveRenderLoop = () => {
       render();
       if (shouldUseLiveRender()) {
         requestAnimationFrame(liveRenderLoop);
+      } else {
+        usingLiveRender = false;
       }
     }
 
     const onGraphUpdate = () => {
       if (masks.hasLiveAnimation()) {
-        requestAnimationFrame(liveRenderLoop);
+        if (!usingLiveRender) {
+          usingLiveRender = true;
+          requestAnimationFrame(liveRenderLoop);
+        }
       } else {
         setTimeout(render); // We need to do this on the next frame so that all the geometry has been updated before rendering is invoked
       }
