@@ -659,9 +659,9 @@ class LinkGeometryDrawable implements GLDrawable {
     if (!this.isLayerVisible(this.editorState)) {
       return;
     }
-    let scale = this.scale;
-    gl.setUniformFloat("u_arrow_scale", this.scale);
-    gl.setUniformFloat("u_outline_thickness", this.scale * (LINK_OUTLINE_STROKE_WIDTH - LINK_STROKE_WIDTH) / 2);
+    let scale = this.scale * gl.getViewport().pixelScaleX;
+    gl.setUniformFloat("u_arrow_scale", scale);
+    gl.setUniformFloat("u_outline_thickness", scale * (LINK_OUTLINE_STROKE_WIDTH - LINK_STROKE_WIDTH) / 2);
     gl.bindBuffer(this.triangleBuffer, "a_position");
     gl.bindBuffer(this.normalBuffer, "a_normal");
     gl.bindBuffer(this.attributeBuffer, "a_attributes");

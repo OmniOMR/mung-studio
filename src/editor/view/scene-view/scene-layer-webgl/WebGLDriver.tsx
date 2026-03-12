@@ -13,10 +13,30 @@ export interface GLBuffer {
   numVertices(): number;
 }
 
+export interface GLViewport {
+  /** Width of the viewport in device (physical) pixels */
+  width: number;
+  /** Height of the viewport in device (physical) pixels */
+  height: number;
+  /** 
+   * Horizontal ratio between DOM and device pixels.
+   * The width of the viewport is already scaled by this ratio
+   * (rendering is done in device pixels).
+   */
+  pixelScaleX: number;
+  /**
+   * Vertical ratio between DOM and device pixels.
+   * The height of the viewport is already scaled by this ratio
+   * (rendering is done in device pixels).
+   */
+  pixelScaleY: number;
+};
+
 export class GLRenderer {
   private gl: WebGL2RenderingContext;
   private drawables: GLDrawable[] = [];
   private transform: d3.ZoomTransform = d3.zoomIdentity;
+  private viewport: GLViewport | null = null;
 
   private currentProgram: WebGLProgram | null = null;
   private currentMatrix: mat4 = mat4.create();
@@ -192,6 +212,23 @@ export class GLRenderer {
     this.transform = transform;
   }
 
+  public setViewport(viewport: GLViewport) {
+    this.viewport = viewport;
+  }
+
+  public getViewport(): GLViewport {
+    if (this.viewport === null) {
+      const canvas = this.gl.canvas as HTMLCanvasElement;
+      return {
+        width: canvas.width,
+        height: canvas.height,
+        pixelScaleX: devicePixelRatio,
+        pixelScaleY: devicePixelRatio,
+      };
+    }
+    return this.viewport;
+  }
+
   public useProgram(program: WebGLProgram): boolean {
     if (this.currentProgram !== program) {
       this.gl.useProgram(program);
@@ -291,10 +328,10 @@ export class GLRenderer {
   }
 
   public draw() {
-    const canvas = this.gl.canvas as HTMLCanvasElement;
-    //console.log("viewport", canvas.width, canvas.height);
+    const viewport = this.getViewport();
+    //console.log("viewport", viewport.width, viewport.height);
 
-    this.gl.viewport(0, 0, canvas.width, canvas.height);
+    this.gl.viewport(0, 0, viewport.width, viewport.height);
     this.gl.clearColor(0, 0, 0, 0);
     this.gl.clearDepth(1);
 
@@ -307,8 +344,8 @@ export class GLRenderer {
     mat4.ortho(
       this.currentMatrix,
       transform.invertX(0),
-      transform.invertX(canvas.clientWidth),
-      transform.invertY(canvas.clientHeight),
+      transform.invertX(viewport.width / viewport.pixelScaleX),
+      transform.invertY(viewport.height / viewport.pixelScaleY),
       transform.invertY(0),
       -1,
       1,

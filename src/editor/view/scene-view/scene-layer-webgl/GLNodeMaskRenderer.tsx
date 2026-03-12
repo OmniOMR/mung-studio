@@ -1099,7 +1099,7 @@ export class MaskAtlasRenderer implements GLDrawable {
     gl.useProgram(this.shader);
     gl.useTexture(1, "u_color_map", this.colorMapTexture);
     gl.setUniformInt("u_highlight_display_mode", this.highlightDisplayMode);
-    gl.setUniformFloat("u_highlight_thickness_px", this.calcWorldSpaceZoom());
+    gl.setUniformFloat("u_highlight_thickness_px", this.calcWorldSpaceZoom() * gl.getViewport().pixelScaleX);
     gl.setUniformFloat("u_highlight_anim_weight", this.calcHighlightAnimationWeight());
     gl.configureTextureUnit(
       1,

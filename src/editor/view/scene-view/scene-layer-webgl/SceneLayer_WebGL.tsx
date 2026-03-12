@@ -1,7 +1,7 @@
 import { useEffect, useRef, useContext } from "react";
 import * as d3 from "d3";
 import { EditorContext } from "../../../EditorContext";
-import { GLRenderer } from "./WebGLDriver";
+import { GLRenderer, GLViewport } from "./WebGLDriver";
 import {
   LinkGeometryMasterDrawable,
   PrecedenceLinkGeometryDrawable,
@@ -44,6 +44,13 @@ export function SceneLayer_WebGL() {
       glRef.current = new GLRenderer(gl);
     }
 
+    const viewport: GLViewport = {
+      width: canvasRef.current.width,
+      height: canvasRef.current.height,
+      pixelScaleX: devicePixelRatio,
+      pixelScaleY: devicePixelRatio
+    };
+
     const masks = new MaskAtlasRenderer(
       notationGraphStore,
       classVisibilityStore,
@@ -84,6 +91,7 @@ export function SceneLayer_WebGL() {
     };
 
     glRef.current!.updateTransform(zoomController.currentTransform);
+    glRef.current!.setViewport(viewport);
 
     const onZoom = (transform: d3.ZoomTransform) => {
       glRef.current!.updateTransform(transform);
@@ -138,20 +146,33 @@ export function SceneLayer_WebGL() {
       const entry = entries[0];
       let width;
       let height;
+      let ratioX;
+      let ratioY;
       if (entry.devicePixelContentBoxSize) {
+        console.log(entry);
         width = entry.devicePixelContentBoxSize[0].inlineSize;
         height = entry.devicePixelContentBoxSize[0].blockSize;
+        ratioX = width / entry.contentBoxSize[0].inlineSize;
+        ratioY = height / entry.contentBoxSize[0].blockSize;
       } else if (entry.contentBoxSize) {
         // fallback for Safari that will not always be correct
+        ratioX = devicePixelRatio;
+        ratioY = devicePixelRatio;
         width = Math.round(
-          entry.contentBoxSize[0].inlineSize * devicePixelRatio,
+          entry.contentBoxSize[0].inlineSize * ratioX,
         );
         height = Math.round(
-          entry.contentBoxSize[0].blockSize * devicePixelRatio,
+          entry.contentBoxSize[0].blockSize * ratioY,
         );
       }
       canvas.width = width;
       canvas.height = height;
+
+      viewport.width = width;
+      viewport.height = height;
+      viewport.pixelScaleX = ratioX;
+      viewport.pixelScaleY = ratioY;
+      glRef.current!.setViewport(viewport);
 
       render();
     }
