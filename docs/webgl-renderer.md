@@ -43,7 +43,13 @@ when being overlaid on top of the browser-rendered background image. In most cas
 
 ## Syntax/precedence link rendering
 
-I will spare the readers of an explanation of how exactly the syntax/precedence link geometry is generated, as the algorithm involves a lot of trial and error, and focus mainly on rendering in this section. What is important to consider is that the rather exotic algorithm outputs 4-component vectors, wherein the `x,y` components are the actual `x,y` coordinates of the "arrows" that represent the links, and the `z,w` coordinates are the `x,y` coordinates of "normal vectors" that can be scaled at will and then summed with the `x,y` coordinates to produce larger arrows without the need for separate draw calls/transform matrices and with no geometry overlaps. For avoidance of confusion, I will remark that these are **not** actually normal vectors (in most cases) and they are sometimes of non-unit lengths. They are quite similar to vertex normals, but they have a different purpose.
+I will spare the readers of an explanation of how exactly the syntax/precedence link geometry is generated, as the algorithm involves a lot of trial and error, and focus mainly on rendering in this section. What is important to consider is that the rather exotic algorithm outputs sets of three 2-component coordinates labeled `ox, oy`, `dx, dy` and `nx, ny`. Their role are as follows:
+
+- `ox, oy` - per-vertex coordinate origin. For vertices close to the arrowhead, it is the vertex of the arrow's tip, while for the other end, it is the center of the arrow's base. This allows scaling these groups of vertices independently when zooming.
+- `dx, dy` - vertex position coordinate relative to the origin (`ox, oy`). These are scaled by the global scaling factor and then added to `ox, oy` to produce the final position.
+- `nx, ny` - magic "normal" vectors. These can be scaled at will and then summed with the `x,y` coordinates to produce larger arrows without the need for separate draw calls/transform matrices and with no geometry overlaps. For avoidance of confusion, I will remark that these are **not** actually normal vectors (in most cases) and they are sometimes of non-unit lengths. They are quite similar to vertex normals, but they have a different purpose.
+
+![Link renderer visualization](link-renderer-visualization.png)
 
 The link renderer implements the `GeometrySource` interface as mentioned above and synchronizes the editor repository with the renderer using event callbacks. It uses two buffers - one for the 4-component geometry and another for integer-based per-vertex "attributes". These control the visibility of individual arrows within the large geometry buffer as well as whether they are highlighted or not.
 
@@ -74,3 +80,14 @@ and uses a standard 1D malloc-like process for allocating in the other. This all
 
 As a special case, node that are too large in both dimensions are allocated their own separate layer and texture memory. There are very little of those in most files
 (usually less than 10), so the performance impact is negligible.
+
+### Highlighting
+
+For better contrast, selected node masks are highlighted using a diagonal striped pattern, similarly to e. g. MS Paint or Photoshop. This pattern is drawn as a screen-space overlay that is "carved" into shape by the outlines and bounding boxes of individual node masks.
+
+Bounding boxes and outlines are created in the fragment shader by probing neighboring pixels and drawing a highlight if either of the following criteria is matched:
+
+- the pixel is opaque and there is a transparent neighbour. This is an edge of the node mask, so draw an outline.
+- the pixel has a neighbour with a special alpha value that is used for node allocation margins, or is at the edge of the normalized coordinate space (for nodes allocated as their own texture, outside the texture atlas). This is an edge of the node mask's bounds, so draw a bounding box.
+
+The color of the outline/bounding box is then determined by generating the diagonal stripe pattern using screen-space coordinates.
