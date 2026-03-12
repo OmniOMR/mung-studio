@@ -1045,6 +1045,9 @@ export class MaskAtlasRenderer implements GLDrawable {
   }
 
   private updateLayerAttributesForNodeId(nodeId: number): void {
+    if (!this.notationGraph.hasNode(nodeId)) {
+      return; //bugfix: deselection events may be fired after node removal
+    }
     const node = this.notationGraph.getNode(nodeId);
     if (node) {
       this.updateLayerAttributesForNode(node);

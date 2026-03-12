@@ -415,7 +415,10 @@ export interface SelectionNodeChangeMetadata {
   nodeSetAdditions: readonly number[];
 
   /**
-   * Node IDs that were removed from the selection
+   * Node IDs that were removed from the selection. The set may contain
+   * nodes that are no longer present in the notation graph, such as when
+   * a node is simultaneously removed and de-selected. It is advised to
+   * handle this case using notationGraphStore.hasNode() checks.
    */
   nodeSetRemovals: readonly number[];
 }
