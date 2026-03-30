@@ -855,9 +855,9 @@ const MASK_FRAGMENT_SHADER_SOURCE =
     float alphaSum = 0.0;
     float maxAlphaSum = 0.0;
     bool hasMarginMarker = false;
-    for (float y = -radiusY; y <= radiusY + texelSizeY; y += min(radiusY, texelSizeY)) {
-      for (float x = -radiusX; x <= radiusX + texelSizeX; x += min(radiusX, texelSizeX)) {
-        vec2 uv = v_texcoord + vec2(min(x, radiusX), min(y, radiusY));
+    for (float y = -radiusY; y <= radiusY; y += radiusY) {
+      for (float x = -radiusX; x <= radiusX; x += radiusX) {
+        vec2 uv = v_texcoord + vec2(x, y);
         float alpha;
         if (uv.x < 0.0 || uv.x >= 1.0 || uv.y < 0.0 || uv.y >= 1.0) {
           alpha = 0.0; //treat out-of-bounds as fully transparent

@@ -114,7 +114,7 @@ export function SceneLayer_WebGL() {
     }
 
     const onGraphUpdate = () => {
-      if (masks.hasLiveAnimation()) {
+      if (shouldUseLiveRender()) {
         if (!usingLiveRender) {
           usingLiveRender = true;
           requestAnimationFrame(liveRenderLoop);
