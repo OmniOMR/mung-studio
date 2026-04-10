@@ -202,6 +202,8 @@ def build_default_validation_engine():
         MandatoryTextTranscriptionRule(4001, "measureNumber"),
         MandatoryTextTranscriptionRule(4001, "pageNumber"),
         MandatoryTextTranscriptionRule(4001, "dynamicsText"),
+        MandatoryTextTranscriptionRule(4001, "dynamicCrescendo"),
+        MandatoryTextTranscriptionRule(4001, "dynamicDiminuendo"),
         MandatoryTextTranscriptionRule(4001, "voltaText"),
         MandatoryTextTranscriptionRule(4001, "repeatText"),
         
