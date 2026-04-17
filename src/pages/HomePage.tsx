@@ -2,6 +2,8 @@ import { Link as RouterLink } from "react-router-dom";
 import Link from "@mui/joy/Link";
 import Typography from "@mui/joy/Typography";
 import Box from "@mui/joy/Box";
+import Button from "@mui/joy/Button";
+import Input from "@mui/joy/Input";
 import { Card, Grid } from "@mui/joy";
 import ComputerIcon from "@mui/icons-material/Computer";
 import ConstructionIcon from "@mui/icons-material/Construction";
@@ -11,9 +13,11 @@ import SchoolIcon from "@mui/icons-material/School";
 import LocalLibraryIcon from "@mui/icons-material/LocalLibrary";
 import ElderlyIcon from "@mui/icons-material/Elderly";
 import ErrorIcon from "@mui/icons-material/Error";
+import BugReportIcon from "@mui/icons-material/BugReport";
 
 import packageJson from "../../package.json";
-import { JSX } from "react";
+import { JSX, useMemo, useRef, useState } from "react";
+import { ModelRunnerWorkerConnection } from "../../models/ModelRunnerWorkerConnection";
 const VERSION = packageJson.version;
 
 const HAS_SIMPLE_PHP_BACKEND =
@@ -22,6 +26,64 @@ const HAS_SIMPLE_PHP_BACKEND =
 const DATASET_ERRATA_URL = process.env["DATASET_ERRATA_URL"] || null;
 
 export function HomePage() {
+  // note: this UI is a temporary hack
+  // it will be removed before merging to master.
+
+  const modelRunner = useMemo(() => new ModelRunnerWorkerConnection(), []);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [debugDpi, setDebugDpi] = useState<string>("300");
+  const [debugStatus, setDebugStatus] = useState<string>("");
+
+  const openFileDialog = () => {
+    fileInputRef.current?.click();
+  };
+
+  const onDebugDpiChange = (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    setDebugDpi(event.target.value);
+  };
+
+  const onDebugImagePicked = async (
+    event: React.ChangeEvent<HTMLInputElement>
+  ) => {
+    const file = event.target.files?.[0];
+    event.target.value = "";
+    if (!file) {
+      return;
+    }
+
+    try {
+      const dpi = Number(debugDpi);
+      if (!Number.isFinite(dpi) || dpi <= 0) {
+        setDebugStatus("Debug DPI must be a positive number.");
+        return;
+      }
+
+      const imageData = await loadFileAsImageData(file);
+      const jobId = modelRunner.runSegmentationJob({
+        image: imageData,
+        imageRect: null,
+        dpi,
+      });
+
+      setDebugStatus(
+        `Segmentation job submitted (${jobId}) for ${file.name} (${imageData.width}x${imageData.height}) at ${dpi} DPI.`
+      );
+      console.log("Debug segmentation job submitted", {
+        jobId,
+        fileName: file.name,
+        width: imageData.width,
+        height: imageData.height,
+        dpi,
+      });
+    } catch (error) {
+      const message = error instanceof Error ? error.message : String(error);
+      setDebugStatus(`Failed to submit segmentation job: ${message}`);
+      console.error("Debug segmentation job failed", error);
+    }
+  };
+
   return (
     <Box
       sx={{
@@ -119,8 +181,76 @@ export function HomePage() {
           />
         </Grid>
       </Grid>
+
+      {(
+        <>
+          <Typography level="h2" gutterBottom>
+            Debug
+          </Typography>
+          <Card variant="soft" sx={{ p: 2, mb: 4 }}>
+            <Typography startDecorator={<BugReportIcon />} level="h4" gutterBottom>
+              Run Segmentation From Local Image
+            </Typography>
+            <Typography level="body-sm" sx={{ mb: 2 }}>
+              Debug-only helper: pick an image file and submit a segmentation job through ModelRunnerWorkerConnection.
+            </Typography>
+            <Box sx={{ display: "flex", gap: 1.5, alignItems: "center", flexWrap: "wrap" }}>
+              <Input
+                type="number"
+                value={debugDpi}
+                onChange={onDebugDpiChange}
+                slotProps={{ input: { min: 1, step: 1 } }}
+                sx={{ width: 160 }}
+                placeholder="Input DPI"
+              />
+              <Button onClick={openFileDialog}>Pick Image And Run</Button>
+            </Box>
+            <input
+              ref={fileInputRef}
+              type="file"
+              accept="image/*"
+              hidden
+              onChange={onDebugImagePicked}
+            />
+            {debugStatus && (
+              <Typography level="body-sm" sx={{ mt: 1.5 }}>
+                {debugStatus}
+              </Typography>
+            )}
+          </Card>
+        </>
+      )}
     </Box>
   );
+}
+
+async function loadFileAsImageData(file: File): Promise<ImageData> {
+  const objectUrl = URL.createObjectURL(file);
+  try {
+    const image = new Image();
+    image.decoding = "async";
+
+    const imageLoaded = new Promise<void>((resolve, reject) => {
+      image.onload = () => resolve();
+      image.onerror = () => reject(new Error(`Unable to decode image: ${file.name}`));
+    });
+
+    image.src = objectUrl;
+    await imageLoaded;
+
+    const canvas = document.createElement("canvas");
+    canvas.width = image.width;
+    canvas.height = image.height;
+    const context = canvas.getContext("2d", { willReadFrequently: true });
+    if (!context) {
+      throw new Error("Unable to create 2D canvas context.");
+    }
+
+    context.drawImage(image, 0, 0);
+    return context.getImageData(0, 0, canvas.width, canvas.height);
+  } finally {
+    URL.revokeObjectURL(objectUrl);
+  }
 }
 
 interface ClickableCardProps {

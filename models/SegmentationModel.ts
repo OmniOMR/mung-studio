@@ -1,0 +1,57 @@
+import * as ort from "onnxruntime-web/dist/ort.webgl.min.mjs";
+import { SEGMENTATION_MODEL_RESOLUTION, SEGMENTATION_MODEL_URL } from "./SegmentationModelPaths";
+import modelConfig from "./SegmentationModelConfig.yaml";
+
+export class SegmentationModel {
+  private session?: ort.InferenceSession;
+
+  async init() {
+    console.log("Initializing segmentation model from", SEGMENTATION_MODEL_URL);
+    this.session = await ort.InferenceSession.create(SEGMENTATION_MODEL_URL, {
+      executionProviders: ["webgl"],
+    });
+    console.log("Segmentation model initialized successfully.");
+  }
+
+  private async predict(input: ort.Tensor): Promise<ort.Tensor> {
+    if (!this.session) {
+      throw new Error("Model not initialized. Call init() before predict().");
+    }
+    const output = await this.session.run({ input });
+    return output.output;
+  }
+
+  public getImageResolution() {
+    return SEGMENTATION_MODEL_RESOLUTION;
+  }
+
+  public getModelDpi() {
+    return 300;
+  }
+
+  public checkImageResolution(imageData: ImageData) {
+    return imageData.width <= SEGMENTATION_MODEL_RESOLUTION && imageData.height <= SEGMENTATION_MODEL_RESOLUTION;
+  }
+
+  private assertImageResolution(imageData: ImageData) {
+    if (!this.checkImageResolution(imageData)) {
+      throw new Error(`Input image resolution must be ${SEGMENTATION_MODEL_RESOLUTION}x${SEGMENTATION_MODEL_RESOLUTION}.`);
+    }
+  }
+
+  private async predictForImage(imageData: ImageData): Promise<ort.Tensor> {
+    this.assertImageResolution(imageData);
+    const inputTensor = await ort.Tensor.fromImage(imageData, {
+      tensorFormat: 'BGR',
+      dataType: 'float32',
+      tensorLayout: 'NHWC'
+    });
+    return await this.predict(inputTensor);
+  }
+
+  public async predictTest(imageData: ImageData) {
+    const res = await this.predictForImage(imageData);
+    console.log(res);
+    console.log(modelConfig);
+  }
+}

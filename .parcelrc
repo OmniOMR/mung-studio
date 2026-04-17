@@ -5,7 +5,7 @@
       "@parcel/transformer-js",
       "@parcel/transformer-react-refresh-wrap"
     ],
-    "*.{zip,py}": ["@parcel/transformer-raw"],
+    "*.{zip,py,onnx}": ["@parcel/transformer-raw"],
     "*pyodide-packages": ["@mung-studio/parcel-transformer-ms/pyodide"]
   },
   "packagers": {

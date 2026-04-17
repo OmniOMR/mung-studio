@@ -26,6 +26,7 @@ import { BackgroundImageStore } from "./model/BackgroundImageStore";
 import { StafflinesToolController } from "./controller/tools/StafflinesToolController";
 import { StaffGeometryStore } from "./model/StaffGeometryStore";
 import { NodeNavigationController } from "./controller/NodeNavigationController";
+import { ModelRunnerWorkerConnection } from "../../models/ModelRunnerWorkerConnection";
 
 /**
  * All fields present in the editor component's global context
@@ -43,6 +44,7 @@ export interface EditorContextState {
   readonly deltaInterpreter: DeltaInterpreter;
 
   readonly pythonRuntime: PythonRuntime;
+  readonly modelRunner: ModelRunnerWorkerConnection;
 
   readonly validationController: ValidationController;
   readonly redrawTrigger: RedrawTrigger;
@@ -115,7 +117,8 @@ export function useConstructContextServices(
   );
 
   const pythonRuntime = useMemo(() => PythonRuntime.resolveInstance(), []);
-
+  const modelRunner = useMemo(() => new ModelRunnerWorkerConnection(), []);
+  
   const validationController = useMemo(
     () =>
       new ValidationController(
@@ -253,6 +256,7 @@ export function useConstructContextServices(
     deltaInterpreter,
 
     pythonRuntime,
+    modelRunner,
 
     validationController,
     redrawTrigger,

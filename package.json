@@ -19,8 +19,17 @@
     },
     "pyodide": {
         "mung-path": "pyodide/mung",
-        "mung-url": "git@github.com:OmniOMR/mung.git",
+        "mung-url": "https://github.com/OmniOMR/mung",
         "mung-commit": "d37ed97"
+    },
+    "models": {
+        "models-path": "models",
+        "models-url": "https://github.com/OmniOMR/models",
+        "models-tag": "consistent-det-v1.0",
+        "models-date": "2026-04-10",
+        "models-resolution": 640,
+        "onnx-filename": "det-consistent-det.onnx",
+        "config-filename": "config-consistent-det.yaml"
     },
     "devDependencies": {
         "@babel/core": "^7.23.3",
@@ -34,6 +43,7 @@
         "@mui/material": "^6.4.5",
         "@mung-studio/parcel-packager-ms": "file:packages/parcel-packager-ms",
         "@mung-studio/parcel-transformer-ms": "file:packages/parcel-transformer-ms",
+        "@parcel/transformer-yaml": "^2.13.3",
         "@types/d3": "^7.4.3",
         "@types/react": "^19.0.10",
         "d3": "^7.9.0",
@@ -42,6 +52,7 @@
         "gl-matrix": "^3.4.3",
         "http-server": "^14.1.1",
         "jotai": "^2.12.1",
+        "onnxruntime-web": "^1.24.3",
         "parcel": "^2.11.0",
         "prettier": "^3.5.1",
         "process": "^0.11.10",
