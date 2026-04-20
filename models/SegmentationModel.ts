@@ -1,4 +1,4 @@
-import * as ort from "onnxruntime-web/dist/ort.webgl.min.mjs";
+import * as ort from "onnxruntime-web";
 import { SEGMENTATION_MODEL_RESOLUTION, SEGMENTATION_MODEL_URL } from "./SegmentationModelPaths";
 import modelConfig from "./SegmentationModelConfig.yaml";
 
@@ -8,9 +8,10 @@ export class SegmentationModel {
   async init() {
     console.log("Initializing segmentation model from", SEGMENTATION_MODEL_URL);
     this.session = await ort.InferenceSession.create(SEGMENTATION_MODEL_URL, {
-      executionProviders: ["webgl"],
+      executionProviders: ["wasm"],
     });
     console.log("Segmentation model initialized successfully.");
+    console.log(modelConfig);
   }
 
   private async predict(input: ort.Tensor): Promise<ort.Tensor> {
@@ -44,7 +45,7 @@ export class SegmentationModel {
     const inputTensor = await ort.Tensor.fromImage(imageData, {
       tensorFormat: 'BGR',
       dataType: 'float32',
-      tensorLayout: 'NHWC'
+      tensorLayout: 'NCHW'
     });
     return await this.predict(inputTensor);
   }

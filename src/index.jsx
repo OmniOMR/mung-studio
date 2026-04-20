@@ -2,11 +2,16 @@
  * Starts up the entire application
  */
 async function bootstrapApplication() {
+  console.info("[mung-studio] Vite mode:", import.meta.env.MODE, "DEV:", import.meta.env.DEV);
+
   // Debugging tool that displays react re-renders of components.
   // Must be imported before React and React DOM.
   // https://github.com/aidenybai/react-scan
-  if (process.env.NODE_ENV === "development") {
-    await import("react-scan");
+  if (import.meta.env.DEV) {
+    const { scan } = await import("react-scan");
+    if (typeof window !== "undefined") {
+      scan({ enabled: true });
+    }
   }
 
   // import dependencies

@@ -1,43 +1,8 @@
-// Classic web workers cannot import other typescript files so this is
-// a minimalistic approximation of the true type so that type hints work.
-type _PyProxy = any;
-declare class _PyodideInterface {
-  globals: _PyProxy;
-  loadPackagesFromImports(
-    code: string,
-    options?: {
-      messageCallback?: (message: string) => void;
-      errorCallback?: (message: string) => void;
-      checkIntegrity?: boolean;
-    },
-  ): Promise<unknown>;
-  runPythonAsync(
-    code: string,
-    options?: {
-      globals?: _PyProxy;
-      locals?: _PyProxy;
-      filename?: string;
-    },
-  ): Promise<any>;
-  loadPackage: (
-    names: string | _PyProxy | Array<string>,
-    options?: {
-      messageCallback?: (message: string) => void;
-      errorCallback?: (message: string) => void;
-      checkIntegrity?: boolean;
-    },
-  ) => Promise<any>;
-  unpackArchive(
-    buffer: ArrayBuffer,
-    format: string,
-    options?: {
-      extractDir?: string;
-    },
-  ): void;
-}
+import { loadPyodide, PyodideInterface } from "pyodide";
+import { PyProxy } from "pyodide/ffi";
 
 // holds the initialized pyodide instance
-let pyodide: _PyodideInterface | null = null;
+let pyodide: PyodideInterface | null = null;
 
 /**
  * Loads and initializes the pyodide instance
@@ -48,13 +13,11 @@ async function onInitialize(
 ) {
   // console.log("INITIALIZING WORKER...");
 
-  // import pyodide from a CDN
-  importScripts(
-    `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/pyodide.js`,
-  );
-
-  // load pyodide webassembly
-  pyodide = (await self["loadPyodide"]()) as _PyodideInterface;
+  // load pyodide webassembly from the CDN using the version shipped with
+  // the npm package in the main thread.
+  pyodide = await loadPyodide({
+    indexURL: `https://cdn.jsdelivr.net/pyodide/v${pyodideVersion}/full/`,
+  });
 
   // print python version
   // console.log("Pyodide loaded:", pyodide);
@@ -116,7 +79,7 @@ async function onExecutePython(
 
     // convert proxy objects, they cannot be sent outside the web worker
     if (typeof result === "object") {
-      const proxy = result as _PyProxy;
+      const proxy = result as PyProxy;
       result = proxy.toJs({ dict_converter: Object.fromEntries }); // convert
       proxy.destroy(); // release
     }

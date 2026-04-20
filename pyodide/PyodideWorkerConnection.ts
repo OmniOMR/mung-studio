@@ -53,13 +53,14 @@ export class PyodideWorkerConnection {
     // start the worker and bind event handlers
     this.worker = new Worker(
       new URL("./pyodide-web-worker.ts", import.meta.url),
+      { type: "module" },
     );
     this.worker.onmessage = this.onWorkerMessage.bind(this);
 
     // begin worker initialization
     const pyodidePackagesUrl = new URL(
-      "./pyodide-packages",
-      import.meta.url,
+      "./pyodide-packages.zip",
+      import.meta.url
     ).toString();
     this.worker.postMessage(["initialize", pyodideVersion, pyodidePackagesUrl]);
 
@@ -124,7 +125,7 @@ export class PyodideWorkerConnection {
     } else if (messageName === "executedPython") {
       this.onExecutedPython.call(this, ...messageArgs);
     } else {
-      console.error("Pyodide worker sent an unknown message", event);
+      console.error("Pyodide worker sent an unknown message", e);
     }
   }
 

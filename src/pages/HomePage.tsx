@@ -21,9 +21,9 @@ import { ModelRunnerWorkerConnection } from "../../models/ModelRunnerWorkerConne
 const VERSION = packageJson.version;
 
 const HAS_SIMPLE_PHP_BACKEND =
-  process.env["SIMPLE_PHP_BACKEND_URL"] !== undefined;
+  import.meta.env.SIMPLE_PHP_BACKEND_URL !== undefined;
 
-const DATASET_ERRATA_URL = process.env["DATASET_ERRATA_URL"] || null;
+const DATASET_ERRATA_URL = import.meta.env.DATASET_ERRATA_URL || null;
 
 export function HomePage() {
   // note: this UI is a temporary hack
