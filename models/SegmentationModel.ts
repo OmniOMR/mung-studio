@@ -1,5 +1,5 @@
 import * as ort from "onnxruntime-web";
-import { SEGMENTATION_MODEL_RESOLUTION, SEGMENTATION_MODEL_URL } from "./SegmentationModelPaths";
+import { SEGMENTATION_MODEL_DPI, SEGMENTATION_MODEL_RESOLUTION, SEGMENTATION_MODEL_URL } from "./SegmentationModelPaths";
 import modelConfig from "./SegmentationModelConfig.yaml";
 
 export class SegmentationModel {
@@ -18,8 +18,10 @@ export class SegmentationModel {
     if (!this.session) {
       throw new Error("Model not initialized. Call init() before predict().");
     }
-    const output = await this.session.run({ input });
-    return output.output;
+    const output = await this.session.run({ images: input });
+    console.log("Segmentation model prediction completed.");
+    console.log(output);
+    return output.output0;
   }
 
   public getImageResolution() {
@@ -27,11 +29,11 @@ export class SegmentationModel {
   }
 
   public getModelDpi() {
-    return 300;
+    return SEGMENTATION_MODEL_DPI;
   }
 
   public checkImageResolution(imageData: ImageData) {
-    return imageData.width <= SEGMENTATION_MODEL_RESOLUTION && imageData.height <= SEGMENTATION_MODEL_RESOLUTION;
+    return imageData.width === SEGMENTATION_MODEL_RESOLUTION && imageData.height === SEGMENTATION_MODEL_RESOLUTION;
   }
 
   private assertImageResolution(imageData: ImageData) {

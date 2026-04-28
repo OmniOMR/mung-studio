@@ -12,16 +12,22 @@ async function runSegmentationJob(request: SegmentationJobRequest) {
   await job.run();
 }
 
+async function loadModel() {
+  if (!isModelLoaded && !isLoadingModel) {
+    isLoadingModel = true;
+    await segmentationModel.init();
+    isModelLoaded = true;
+    isLoadingModel = false;
+  }
+}
+
 async function enqueueSegmentationJob(request: SegmentationJobRequest) {
   if (isModelLoaded) {
     await runSegmentationJob(request);
   } else {
     segmentationJobRequestQueue.push(request);
     if (!isLoadingModel) {
-      isLoadingModel = true;
-      await segmentationModel.init();
-      isModelLoaded = true;
-      isLoadingModel = false;
+      await loadModel();
       // run all queued requests
       for (const req of segmentationJobRequestQueue) {
         await runSegmentationJob(req);
@@ -43,4 +49,10 @@ self.onmessage = async (event) => {
   }
 };
 
-console.log("Model runner web worker initialized");
+console.log("Model runner web worker initialized. Loading model in background...");
+
+loadModel().then(() => {
+  console.log("Segmentation model loaded.");
+}).catch((error) => {
+  console.error("Error loading segmentation model:", error);
+});

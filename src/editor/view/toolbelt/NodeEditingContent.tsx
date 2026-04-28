@@ -5,6 +5,7 @@ import FilterCenterFocusIcon from "@mui/icons-material/FilterCenterFocus";
 import EditIcon from "@mui/icons-material/Edit";
 import PentagonIcon from "@mui/icons-material/Pentagon";
 import BookmarkRemoveIcon from "@mui/icons-material/BookmarkRemove";
+import ImageSearchIcon from "@mui/icons-material/ImageSearch";
 import { Divider } from "@mui/joy";
 import { useContext } from "react";
 import { EditorContext } from "../../EditorContext";
@@ -82,6 +83,15 @@ export function NodeEditingContent() {
         }
       >
         <ReorderIcon />
+      </ToolbeltButton>
+      <ToolbeltButton
+        tooltip="Segmentation tool [G]"
+        isSelected={nodeTool === NodeTool.SegmentationTool}
+        onClick={() =>
+          nodeEditingController.setCurrentNodeTool(NodeTool.SegmentationTool)
+        }
+      >
+        <ImageSearchIcon />
       </ToolbeltButton>
     </>
   );

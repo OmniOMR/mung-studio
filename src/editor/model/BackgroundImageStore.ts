@@ -69,4 +69,12 @@ export class BackgroundImageStore {
 
     return this.ctx.getImageData(rect.x, rect.y, rect.width, rect.height);
   }
+
+  public getWidth(): number {
+    return this.jotaiStore.get(this.widthAtom);
+  }
+
+  public getHeight(): number {
+    return this.jotaiStore.get(this.heightAtom);
+  }
 }

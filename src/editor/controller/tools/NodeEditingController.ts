@@ -135,37 +135,26 @@ export class NodeEditingController implements IController {
     this.jotaiStore.set(this.currentNodeToolBaseAtom, tool);
   }
 
+  private toolSwitchFunctor(tool: NodeTool, toolOnSecondClick: NodeTool|null = null): () => void {
+    return () => {
+      if (this.currentNodeTool !== tool) {
+        this.setCurrentNodeTool(tool);
+      } else if (toolOnSecondClick !== null) {
+        this.setCurrentNodeTool(toolOnSecondClick);
+      }
+    };
+  }
+
   //////////////////
   // Key bindings //
   //////////////////
 
   public readonly keyBindings = {
-    F: () => {
-      if (this.currentNodeTool !== NodeTool.PolygonFill) {
-        this.setCurrentNodeTool(NodeTool.PolygonFill);
-      }
-    },
-    T: () => {
-      if (this.currentNodeTool !== NodeTool.PolygonErase) {
-        this.setCurrentNodeTool(NodeTool.PolygonErase);
-      } else {
-        this.setCurrentNodeTool(NodeTool.PolygonFill);
-      }
-    },
-    B: () => {
-      if (this.currentNodeTool !== NodeTool.PolygonBinarize) {
-        this.setCurrentNodeTool(NodeTool.PolygonBinarize);
-      } else {
-        this.setCurrentNodeTool(NodeTool.PolygonFill);
-      }
-    },
-    S: () => {
-      if (this.currentNodeTool !== NodeTool.StafflinesTool) {
-        this.setCurrentNodeTool(NodeTool.StafflinesTool);
-      } else {
-        this.setCurrentNodeTool(NodeTool.PolygonFill);
-      }
-    },
+    F: this.toolSwitchFunctor(NodeTool.PolygonFill),
+    T: this.toolSwitchFunctor(NodeTool.PolygonErase, NodeTool.PolygonFill),
+    B: this.toolSwitchFunctor(NodeTool.PolygonBinarize, NodeTool.PolygonFill),
+    S: this.toolSwitchFunctor(NodeTool.StafflinesTool, NodeTool.PolygonFill),
+    G: this.toolSwitchFunctor(NodeTool.SegmentationTool, NodeTool.PolygonFill),
     // Note: "Escape" is handled by sub-tools
   };
 

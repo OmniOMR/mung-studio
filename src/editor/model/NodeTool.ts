@@ -36,4 +36,9 @@ export enum NodeTool {
    * Tool that binarizes stafflines
    */
   StafflinesTool = "StafflinesTool",
+
+  /**
+   * Tool that detects objects in the background image within a polygon.
+   */
+  SegmentationTool = "SegmentationTool",
 }

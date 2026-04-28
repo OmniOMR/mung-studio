@@ -200,6 +200,7 @@ export function useConstructContextServices(
         nodeEditingController,
         backgroundImageStore,
         pythonRuntime,
+        modelRunner,
       ),
     [],
   );

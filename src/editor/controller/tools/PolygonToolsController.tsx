@@ -10,12 +10,24 @@ import { MousePointerController } from "../MousePointerController";
 import { BackgroundImageStore } from "../../model/BackgroundImageStore";
 import { PythonRuntime } from "../../../../pyodide/PythonRuntime";
 import { snapGrowRectangle } from "../../../utils/snapGrowRectangle";
+import { ModelRunnerWorkerConnection } from "../../../../models/ModelRunnerWorkerConnection";
+import { SEGMENTATION_MODEL_DPI, SEGMENTATION_MODEL_RESOLUTION } from "../../../../models/SegmentationModelPaths";
+import { DpiScalerUtil } from "../../../../models/DpiScalerUtil";
+import { SegmentationInput } from "../../../../models/SegmentationJob";
 
 /**
  * Controls both the PolygonFill and PolygonErase tools
  */
 export class PolygonToolsController implements IController {
   public readonly controllerName = "PolygonToolsController";
+
+  public static readonly ALL_POLYGON_TOOLS: Set<NodeTool> = new Set([
+    NodeTool.PolygonFill,
+    NodeTool.PolygonErase,
+    NodeTool.PolygonBinarize,
+    NodeTool.StafflinesTool,
+    NodeTool.SegmentationTool
+  ]);
 
   private readonly jotaiStore: JotaiStore;
 
@@ -25,6 +37,7 @@ export class PolygonToolsController implements IController {
   private readonly nodeEditingController: NodeEditingController;
   private readonly backgroundImageStore: BackgroundImageStore;
   private readonly pythonRuntime: PythonRuntime;
+  private readonly segmentationModelRunner: ModelRunnerWorkerConnection;
 
   constructor(
     jotaiStore: JotaiStore,
@@ -34,6 +47,7 @@ export class PolygonToolsController implements IController {
     nodeEditingController: NodeEditingController,
     backgroundImageStore: BackgroundImageStore,
     pythonRuntime: PythonRuntime,
+    segmentationModelRunner: ModelRunnerWorkerConnection
   ) {
     this.jotaiStore = jotaiStore;
     this.zoomController = zoomController;
@@ -42,12 +56,17 @@ export class PolygonToolsController implements IController {
     this.nodeEditingController = nodeEditingController;
     this.backgroundImageStore = backgroundImageStore;
     this.pythonRuntime = pythonRuntime;
+    this.segmentationModelRunner = segmentationModelRunner;
 
     // redraw when source data changes
     this.zoomController.onTransformChange.subscribe(this.notify.bind(this));
     this.mousePointerController.onScenePointerChange.subscribe(
       this.notify.bind(this),
     );
+  }
+
+  public static isPolygonTool(tool: NodeTool): boolean {
+    return PolygonToolsController.ALL_POLYGON_TOOLS.has(tool);
   }
 
   private notify() {
@@ -57,12 +76,9 @@ export class PolygonToolsController implements IController {
   }
 
   public isEnabledAtom: Atom<boolean> = atom((get) => {
-    const currentNodeTool = get(this.nodeEditingController.currentNodeToolAtom);
-    if (currentNodeTool === NodeTool.PolygonFill) return true;
-    if (currentNodeTool === NodeTool.PolygonErase) return true;
-    if (currentNodeTool === NodeTool.PolygonBinarize) return true;
-    if (currentNodeTool === NodeTool.StafflinesTool) return true;
-    return false;
+    return PolygonToolsController.ALL_POLYGON_TOOLS.has(
+      get(this.nodeEditingController.currentNodeToolAtom)
+    );
   });
 
   public get isEnabled(): boolean {
@@ -207,11 +223,55 @@ export class PolygonToolsController implements IController {
       });
     }
 
+    if (nodeTool === NodeTool.SegmentationTool) {
+      const originalRect = bbox;
+      const imageDpi = 285; // todo
+      const optimizedRect = this.optimizeRectForSegmentationModel(
+        originalRect,
+        DpiScalerUtil.scaleDimension(SEGMENTATION_MODEL_RESOLUTION, SEGMENTATION_MODEL_DPI, imageDpi),
+        this.backgroundImageStore.getWidth(),
+        this.backgroundImageStore.getHeight()
+      );
+      const jobInput: SegmentationInput = {
+        image: this.backgroundImageStore.getImageData(optimizedRect),
+        imageRect: optimizedRect,
+        dpi: imageDpi
+      };
+      this.segmentationModelRunner.runSegmentationJob(jobInput);
+    }
+
     // reset the polygon state
     this.polygonVertices = [];
 
     // make sure draw is called on the next frame
     this.redrawTrigger.requestRedrawNextFrame();
+  }
+
+  /**
+   * Shifts a DOMRect's dimensions to be as large as the segmentation model's
+   * input resolution. This will extend the model to the right or left
+   * as far as possible.
+   * @param rect original rectangle
+   * @param canvas canvas to obtain bounds from
+   * @returns optimized rectangle
+   */
+  private optimizeRectForSegmentationModel(rect: DOMRect, desiredRes: number, maxWidth: number, maxHeight: number): DOMRect {
+    const resolution = desiredRes;
+    const newRect = new DOMRect(rect.x, rect.y, Math.max(rect.width, resolution), Math.max(rect.height, resolution));
+
+    if (newRect.x + newRect.width > maxWidth) {
+      newRect.x = maxWidth - newRect.width;
+    }
+    if (newRect.y + newRect.height > maxHeight) {
+      newRect.y = maxHeight - newRect.height;
+    }
+    if (newRect.x < 0) {
+      newRect.x = 0;
+    }
+    if (newRect.y < 0) {
+      newRect.y = 0;
+    }
+    return newRect;
   }
 
   /**

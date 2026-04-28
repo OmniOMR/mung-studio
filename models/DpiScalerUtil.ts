@@ -22,6 +22,15 @@ export class DpiScalerUtil {
     );
   }
 
+  static scaleDimension(dimension: number, sourceDpi: number, targetDpi: number): number {
+    const scale = targetDpi / sourceDpi;
+    return Math.max(1, Math.round(dimension * scale));
+  }
+
+  static inverseScaleDimension(dimension: number, sourceDpi: number, targetDpi: number): number {
+    return this.scaleDimension(dimension, targetDpi, sourceDpi);
+  }
+
   static scaleCanvasToDpi(
     input: CanvasImageSource,
     inputRect: DOMRectReadOnly,
@@ -29,9 +38,8 @@ export class DpiScalerUtil {
     targetDpi: number,
     quality: ImageSmoothingQuality = "high"
   ): ImageData {
-    const scale = targetDpi / sourceDpi;
-    const outWidth = Math.max(1, Math.round(inputRect.width * scale));
-    const outHeight = Math.max(1, Math.round(inputRect.height * scale));
+    const outWidth = this.scaleDimension(inputRect.width, sourceDpi, targetDpi);
+    const outHeight = this.scaleDimension(inputRect.height, sourceDpi, targetDpi);
 
     // destination canvas
     const dst = new OffscreenCanvas(outWidth, outHeight);

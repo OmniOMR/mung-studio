@@ -41,7 +41,7 @@ const MUNG_COMMIT_HASH = packageJson["pyodide"]["mung-commit"];
 
 console.log("Checking pyodide mung package...");
 
-/*if (fs.existsSync(MUNG_PATH)) {
+if (fs.existsSync(MUNG_PATH)) {
   console.log("Mung package already exists. Removing for re-cloning...");
   fs.rmSync(MUNG_PATH, { recursive: true });
 }
@@ -53,7 +53,7 @@ console.log(`Checking out to the commit ${MUNG_COMMIT_HASH}...`);
 execSync(`git -C ${MUNG_PATH} -c "advice.detachedHead=false" checkout ${MUNG_COMMIT_HASH}`);
 
 console.log("Pyodide mung package is ready.");
-console.log("");*/
+console.log("");
 
 //////////////////////////
 //      OMR models      //
@@ -93,6 +93,7 @@ console.log("Generating model paths file.")
 // create a .ts file that can be included to load the models in the app
 const modelsTsContent =
 `export const SEGMENTATION_MODEL_URL = new URL('./${modelFullName(onnxFilename)}', import.meta.url).toString();
-export const SEGMENTATION_MODEL_RESOLUTION = ${MODELS_RESOLUTION};`;
+export const SEGMENTATION_MODEL_RESOLUTION = ${MODELS_RESOLUTION};
+export const SEGMENTATION_MODEL_DPI = ${MODELS_CONFIG["models-dpi"]};`;
 
 fs.writeFileSync(`${MODELS_PATH}/SegmentationModelPaths.ts`, modelsTsContent);

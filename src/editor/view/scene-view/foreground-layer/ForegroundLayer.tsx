@@ -7,6 +7,7 @@ import { EditorContext } from "../../../EditorContext";
 import { IController } from "../../../controller/IController";
 import { NodeTool } from "../../../model/NodeTool";
 import { createKeybindingsHandler, KeyBindingMap } from "tinykeys";
+import { PolygonToolsController } from "../../../controller/tools/PolygonToolsController";
 
 export function ForegroundLayer() {
   const {
@@ -133,12 +134,7 @@ export function ForegroundLayer() {
   let cursor = "default";
   if (editorTool === EditorTool.Hand) cursor = "grab";
   if (isGrabbing) cursor = "grabbing";
-  if (
-    nodeTool === NodeTool.PolygonErase ||
-    nodeTool == NodeTool.PolygonFill ||
-    nodeTool == NodeTool.PolygonBinarize ||
-    nodeTool == NodeTool.StafflinesTool
-  ) {
+  if (PolygonToolsController.isPolygonTool(nodeTool)) {
     cursor = "crosshair";
   }
 

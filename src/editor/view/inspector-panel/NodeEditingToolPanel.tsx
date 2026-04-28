@@ -11,6 +11,7 @@ import { useContext } from "react";
 import { EditorContext } from "../../EditorContext";
 import { NodeTool } from "../../model/NodeTool";
 import { ClassNameInput } from "./ClassNameInput";
+import { PolygonToolsController } from "../../controller/tools/PolygonToolsController";
 
 export function NodeEditingToolPanel() {
   const { toolbeltController, nodeEditingController } =
@@ -33,10 +34,7 @@ export function NodeEditingToolPanel() {
         <Typography level="title-sm">Node Editing Tool</Typography>
       </AccordionSummary>
       <AccordionDetails>
-        {(nodeTool === NodeTool.PolygonFill ||
-          nodeTool === NodeTool.PolygonErase ||
-          nodeTool === NodeTool.PolygonBinarize ||
-          nodeTool === NodeTool.StafflinesTool) && (
+        {(PolygonToolsController.isPolygonTool(nodeTool)) && (
           <Alert color="primary">
             Start by clicking into the scene which starts drawing the polygon.
             Once done, press Enter/Return or N to commit the polygon.

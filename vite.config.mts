@@ -9,6 +9,10 @@ import ViteYaml from '@modyfi/vite-plugin-yaml';
 const projectRoot = path.dirname(fileURLToPath(import.meta.url));
 const pyodideRoot = path.resolve(projectRoot, "pyodide");
 const pyodidePackagesZipPath = path.resolve(pyodideRoot, "pyodide-packages.zip");
+const crossOriginIsolationHeaders = {
+  "Cross-Origin-Opener-Policy": "same-origin",
+  "Cross-Origin-Embedder-Policy": "require-corp",
+};
 
 function createPyodidePackagesPlugin(): Plugin {
   let rebuildInFlight: Promise<void> | null = null;
@@ -86,6 +90,11 @@ export default defineConfig({
   publicDir: "public",
   server: {
     port: 1234,
+    headers: crossOriginIsolationHeaders,
+  },
+  preview: {
+    port: 1234,
+    headers: crossOriginIsolationHeaders,
   },
   worker: {
     format: "es",

@@ -28,6 +28,7 @@
         "models-tag": "consistent-det-v1.0",
         "models-date": "2026-04-10",
         "models-resolution": 640,
+        "models-dpi": 280,
         "onnx-filename": "det-consistent-det.onnx",
         "config-filename": "config-consistent-det.yaml"
     },
