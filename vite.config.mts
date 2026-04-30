@@ -98,6 +98,7 @@ export default defineConfig({
   },
   worker: {
     format: "es",
+    plugins: () => [ViteYaml()],
   },
   optimizeDeps: {
     exclude: ["onnxruntime-web", "react-scan", "pyodide"],
