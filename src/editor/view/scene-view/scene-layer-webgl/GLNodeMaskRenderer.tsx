@@ -650,7 +650,7 @@ class NodeMaskLayer {
     elementCount: 2, //flags, colorIndex
   });
 
-  private nodeIDToGeomIndex: Map<number, number> = new Map();
+  private nodeIDToGeomID: Map<number, number> = new Map();
 
   public constructor(
     private notationGraph: NotationGraphStore,
@@ -756,22 +756,22 @@ class NodeMaskLayer {
     if (geomIndex !== attrIndex) {
       throw new Error("Internal error: geometry index mismatch");
     }
-    this.nodeIDToGeomIndex.set(nodeId, geomIndex);
+    this.nodeIDToGeomID.set(nodeId, geomIndex);
   }
 
   public updateNodeAttributes(nodeId: number): void {
-    const geomIndex = this.nodeIDToGeomIndex.get(nodeId);
+    const geomIndex = this.nodeIDToGeomID.get(nodeId);
     if (geomIndex !== undefined) {
-      this.attributeBuffer.updateGeometry(geomIndex);
+      this.attributeBuffer.updateGeometryById(geomIndex);
     }
   }
 
   public removeNode(nodeId: number): void {
-    const geomIndex = this.nodeIDToGeomIndex.get(nodeId);
+    const geomIndex = this.nodeIDToGeomID.get(nodeId);
     if (geomIndex !== undefined) {
-      this.positionBuffer.removeGeometry(geomIndex);
-      this.attributeBuffer.removeGeometry(geomIndex);
-      this.nodeIDToGeomIndex.delete(nodeId);
+      this.positionBuffer.removeGeometryById(geomIndex);
+      this.attributeBuffer.removeGeometryById(geomIndex);
+      this.nodeIDToGeomID.delete(nodeId);
     }
   }
 
