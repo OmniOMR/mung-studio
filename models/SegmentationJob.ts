@@ -1,11 +1,15 @@
 import { DpiScalerUtil } from "./DpiScalerUtil";
-import { SegmentationModel } from "./SegmentationModel";
+import { SegmentationModel, SegmentationModelOutput } from "./SegmentationModel";
 
 export interface SegmentationInput {
   image: ImageData;
   imageRect: DOMRectReadOnly | null;
   dpi: number;
-};
+}
+
+export interface SegmentationOutput {
+  detections: SegmentationModelOutput[];
+}
 
 export class SegmentationJob {
 
@@ -17,7 +21,7 @@ export class SegmentationJob {
     this.input = input;
   }
 
-  public async run() {
+  public async run(): Promise<SegmentationOutput> {
     const imageRect = this.input.imageRect ?? new DOMRectReadOnly(0, 0, this.input.image.width, this.input.image.height);
 
     let scaledImageData: ImageData = DpiScalerUtil.scaleImageToDpi(
@@ -46,6 +50,17 @@ export class SegmentationJob {
       scaledImageData = newImageData;
     }
 
-    await this.model.predictTest(scaledImageData);
+    const detections = await this.model.predictForImage(scaledImageData);
+
+    // scale detection boxes back to original image coordinates
+    for (const detection of detections) {
+      detection.rect = DpiScalerUtil.scaleRect(
+        detection.rect,
+        this.model.getModelDpi(),
+        this.input.dpi
+      );
+    }
+
+    return { detections };
   }
 }

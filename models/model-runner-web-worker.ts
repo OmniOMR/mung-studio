@@ -1,4 +1,4 @@
-import { ModelJobRequest, SegmentationJobRequest } from "./ModelRunnerInterface";
+import { JobError, ModelJobRequest, SegmentationJobRequest, SegmentationJobResult } from "./ModelRunnerInterface";
 import { SegmentationJob } from "./SegmentationJob";
 import { SegmentationModel } from "./SegmentationModel";
 
@@ -8,8 +8,23 @@ let isLoadingModel = false;
 let isModelLoaded = false;
 
 async function runSegmentationJob(request: SegmentationJobRequest) {
-  const job: SegmentationJob = new SegmentationJob(segmentationModel, request.input);
-  await job.run();
+  try {
+    const job: SegmentationJob = new SegmentationJob(segmentationModel, request.input);
+    const jobResult = await job.run();
+    const resultPacket: SegmentationJobResult = {
+      type: "segmentation",
+      jobId: request.jobId,
+      output: jobResult
+    };
+    postMessage(resultPacket);
+  } catch (error) {
+    const errorPacket: JobError = {
+      type: "error",
+      jobId: request.jobId,
+      error: error
+    };
+    postMessage(errorPacket);
+  }
 }
 
 async function loadModel() {

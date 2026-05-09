@@ -2,6 +2,13 @@ import * as ort from "onnxruntime-web";
 import { SEGMENTATION_MODEL_DPI, SEGMENTATION_MODEL_RESOLUTION, SEGMENTATION_MODEL_URL } from "./SegmentationModelPaths";
 import modelConfig from "./SegmentationModelConfig.yaml";
 
+
+export interface SegmentationModelOutput {
+  rect: DOMRectReadOnly;
+  className: string;
+  confidence: number;
+}
+
 export class SegmentationModel {
   private session?: ort.InferenceSession;
 
@@ -42,19 +49,29 @@ export class SegmentationModel {
     }
   }
 
-  private async predictForImage(imageData: ImageData): Promise<ort.Tensor> {
+  public async predictForImage(imageData: ImageData): Promise<SegmentationModelOutput[]> {
     this.assertImageResolution(imageData);
     const inputTensor = await ort.Tensor.fromImage(imageData, {
       tensorFormat: 'BGR',
       dataType: 'float32',
       tensorLayout: 'NCHW'
     });
-    return await this.predict(inputTensor);
-  }
-
-  public async predictTest(imageData: ImageData) {
-    const res = await this.predictForImage(imageData);
-    console.log(res);
-    console.log(modelConfig);
+    const outputTensor = await this.predict(inputTensor);
+    const outputData: SegmentationModelOutput[] = new Array();
+    const outputStride = 6;
+    for (let i = 0; i < outputTensor.dims[1] / outputStride; i++) {
+      const outputElement = (idx: number): number => outputTensor.data[i * outputStride + idx] as number;
+      outputData.push({
+        rect: new DOMRectReadOnly(
+          outputElement(0),
+          outputElement(1),
+          outputElement(2) - outputElement(0),
+          outputElement(3) - outputElement(1)
+        ),
+        className: modelConfig.names[outputElement(5)],
+        confidence: outputElement(4)
+      });
+    }
+    return outputData;
   }
 }

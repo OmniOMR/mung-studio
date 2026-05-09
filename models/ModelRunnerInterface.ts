@@ -1,4 +1,4 @@
-import { SegmentationInput } from "./SegmentationJob";
+import { SegmentationInput, SegmentationOutput } from "./SegmentationJob";
 
 interface ModelJobRequestBase {
   jobId: string;
@@ -19,7 +19,12 @@ interface JobResultBase {
 
 export interface SegmentationJobResult extends JobResultBase {
   type: "segmentation";
-  output: any; // TODO: define output type
+  output: SegmentationOutput;
 }
 
 export type ModelJobResult = SegmentationJobResult;
+
+export interface JobError extends JobResultBase {
+  type: "error";
+  error: any;
+};

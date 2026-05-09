@@ -89,7 +89,7 @@ export class NodeEditingController implements IController {
 
     // and deselect the current node, so that the annotator can
     // continue and right away start creating a new node
-    this.selectionStore.changeSelection([]);
+    this.selectionStore.clearSelection();
   }
 
   /////////////////////
@@ -124,7 +124,7 @@ export class NodeEditingController implements IController {
     if (tool === NodeTool.None) {
       throw Error(
         "You cannot set the node tool to none. Set the editor " +
-          "tool to some other tool than node editing instead.",
+        "tool to some other tool than node editing instead.",
       );
     }
 
@@ -135,7 +135,7 @@ export class NodeEditingController implements IController {
     this.jotaiStore.set(this.currentNodeToolBaseAtom, tool);
   }
 
-  private toolSwitchFunctor(tool: NodeTool, toolOnSecondClick: NodeTool|null = null): () => void {
+  private toolSwitchFunctor(tool: NodeTool, toolOnSecondClick: NodeTool | null = null): () => void {
     return () => {
       if (this.currentNodeTool !== tool) {
         this.setCurrentNodeTool(tool);
@@ -176,6 +176,15 @@ export class NodeEditingController implements IController {
     const selectedNodes = get(this.selectionStore.selectedNodesAtom);
     return selectedNodes[0] || null;
   });
+
+  /**
+   * Force the node editing tool to create new nodes in all subsequent edits,
+   * event if there is a node currently selected.
+   */
+  public forceCreateNewNode() {
+    this.selectionStore.clearSelection();
+    this.onEditedNodeChange();
+  }
 
   /**
    * When an node is being edited, this atom controls its class name,
@@ -287,6 +296,8 @@ export class NodeEditingController implements IController {
     if (editedNode === null) {
       // we the newly created node has no extent, then it technically does not
       // exist and so we don't do anything (there isn't anything to create).
+      // note: maskExtent is set to null if it is empty when shrinkMaskToContent
+      // is called
       if (this.maskExtent === null) return;
 
       // create the new node
@@ -354,7 +365,7 @@ export class NodeEditingController implements IController {
     ) {
       throw new Error(
         "Mask extent does not have integer coordinates. This is a mung " +
-          "requirement and therefore signals some implementation bug.",
+        "requirement and therefore signals some implementation bug.",
       );
     }
 
@@ -370,8 +381,8 @@ export class NodeEditingController implements IController {
     ) {
       throw new Error(
         "Mask canvas dimensions do not match the maskExtent dimensions. " +
-          "These two values must be kept in sync and this signals some " +
-          "implementation bug.",
+        "These two values must be kept in sync and this signals some " +
+        "implementation bug.",
       );
     }
 
@@ -419,6 +430,18 @@ export class NodeEditingController implements IController {
 
     // make sure draw is called on the next frame
     this.redrawTrigger.requestRedrawNextFrame();
+  }
+
+  public paintNewNode(
+    className: string,
+    paintingRegion: DOMRect,
+    paintAction: (ctx: OffscreenCanvasRenderingContext2D) => void
+  ): void {
+    const savedNewNodeClassName = this.jotaiStore.get(this.newNodeClassNameAtom);
+    this.jotaiStore.set(this.newNodeClassNameAtom, className);
+    this.forceCreateNewNode();
+    this.paintOverTheMask(paintingRegion, paintAction);
+    this.jotaiStore.set(this.newNodeClassNameAtom, savedNewNodeClassName);
   }
 
   /**

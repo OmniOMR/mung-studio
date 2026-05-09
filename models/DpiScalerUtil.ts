@@ -22,6 +22,15 @@ export class DpiScalerUtil {
     );
   }
 
+  static scaleRect(rect: DOMRectReadOnly, sourceDpi: number, targetDpi: number): DOMRectReadOnly {
+    return new DOMRectReadOnly(
+      DpiScalerUtil.scaleDimension(rect.x, sourceDpi, targetDpi),
+      DpiScalerUtil.scaleDimension(rect.y, sourceDpi, targetDpi),
+      DpiScalerUtil.scaleDimension(rect.width, sourceDpi, targetDpi),
+      DpiScalerUtil.scaleDimension(rect.height, sourceDpi, targetDpi)
+    );
+  }
+
   static scaleDimension(dimension: number, sourceDpi: number, targetDpi: number): number {
     const scale = targetDpi / sourceDpi;
     return Math.max(1, Math.round(dimension * scale));

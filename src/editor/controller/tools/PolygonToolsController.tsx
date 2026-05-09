@@ -13,7 +13,8 @@ import { snapGrowRectangle } from "../../../utils/snapGrowRectangle";
 import { ModelRunnerWorkerConnection } from "../../../../models/ModelRunnerWorkerConnection";
 import { SEGMENTATION_MODEL_DPI, SEGMENTATION_MODEL_RESOLUTION } from "../../../../models/SegmentationModelPaths";
 import { DpiScalerUtil } from "../../../../models/DpiScalerUtil";
-import { SegmentationInput } from "../../../../models/SegmentationJob";
+import { SegmentationInput, SegmentationOutput } from "../../../../models/SegmentationJob";
+import { SegmentationModelOutput } from "../../../../models/SegmentationModel";
 
 /**
  * Controls both the PolygonFill and PolygonErase tools
@@ -232,12 +233,39 @@ export class PolygonToolsController implements IController {
         this.backgroundImageStore.getWidth(),
         this.backgroundImageStore.getHeight()
       );
+      console.log("Original rect:", originalRect);
+      console.log("Model input rect:", optimizedRect);
       const jobInput: SegmentationInput = {
         image: this.backgroundImageStore.getImageData(optimizedRect),
         imageRect: optimizedRect,
         dpi: imageDpi
       };
-      this.segmentationModelRunner.runSegmentationJob(jobInput);
+      const jobOutput: SegmentationOutput = await this.segmentationModelRunner.runSegmentationJob(jobInput);
+      const filteredDetections: SegmentationModelOutput[] = new Array();
+
+      for (const detection of jobOutput.detections) {
+        if (detection.confidence < 0.8 || !detection.className.toLowerCase().includes("notehead")) {
+          continue;
+        }
+        detection.rect = this.translateLocalToGlobalRect(
+          detection.rect,
+          optimizedRect
+        );
+        if (this.rectIsWithin(detection.rect, originalRect)) {
+          filteredDetections.push(detection);
+          console.log("Detection in global coordinates:", detection);
+        }
+      }
+
+      console.log("Segmentation output:", jobOutput);
+
+      for (const detection of filteredDetections) {
+        this.nodeEditingController.paintNewNode(detection.className, detection.rect, (ctx) => {
+          ctx.globalCompositeOperation = "source-over";
+          ctx.fillStyle = "rgba(255, 0, 0, 1.0)";
+          ctx.fillRect(detection.rect.x, detection.rect.y, detection.rect.width, detection.rect.height);
+        });
+      }
     }
 
     // reset the polygon state
@@ -272,6 +300,31 @@ export class PolygonToolsController implements IController {
       newRect.y = 0;
     }
     return newRect;
+  }
+
+  private translateLocalToGlobalPoint(point: DOMPointReadOnly, localSpaceRect: DOMRectReadOnly): DOMPoint {
+    return new DOMPoint(
+      localSpaceRect.x + point.x,
+      localSpaceRect.y + point.y
+    );
+  }
+
+  private translateLocalToGlobalRect(rect: DOMRectReadOnly, localSpaceRect: DOMRectReadOnly): DOMRectReadOnly {
+    return new DOMRectReadOnly(
+      localSpaceRect.x + rect.x,
+      localSpaceRect.y + rect.y,
+      rect.width,
+      rect.height
+    );
+  }
+
+  private rectIsWithin(rect: DOMRectReadOnly, container: DOMRectReadOnly): boolean {
+    return (
+      rect.x >= container.x &&
+      rect.y >= container.y &&
+      rect.x + rect.width <= container.x + container.width &&
+      rect.y + rect.height <= container.y + container.height
+    );
   }
 
   /**
