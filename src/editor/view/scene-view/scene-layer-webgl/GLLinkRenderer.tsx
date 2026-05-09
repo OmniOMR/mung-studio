@@ -405,7 +405,7 @@ class LinkGeometryDrawable implements GLDrawable {
   private classVisibilitySubscription: ISimpleEventHandler<readonly string[]>;
   private zoomSubscription: ISimpleEventHandler<ZoomTransform>;
 
-  private linkToIndexMap = new Map<string, number>();
+  private linkToGeomIDMap = new Map<string, number>();
   private selectedLinks: Set<string> = new Set();
   private linkToClassMap = new Map<string, Set<string>>();
   private classToLinkMap = new Map<string, Set<string>>();
@@ -520,9 +520,9 @@ class LinkGeometryDrawable implements GLDrawable {
   }
 
   private updateAttributeData(key: string) {
-    const index = this.linkToIndexMap.get(key);
+    const index = this.linkToGeomIDMap.get(key);
     if (index !== undefined) {
-      this.attributeBuffer.updateGeometry(index);
+      this.attributeBuffer.updateGeometryById(index);
     }
   }
 
@@ -547,7 +547,7 @@ class LinkGeometryDrawable implements GLDrawable {
       return;
     }
     const key = this.makeLinkKey(meta);
-    if (this.linkToIndexMap.has(key)) {
+    if (this.linkToGeomIDMap.has(key)) {
       return;
     }
     const _this = this;
@@ -597,37 +597,37 @@ class LinkGeometryDrawable implements GLDrawable {
     const index = this.triangleBuffer.addGeometry(trisSource);
     this.normalBuffer.addGeometry(geometry.normalSource());
     this.attributeBuffer.addGeometry(geometry.attributesSourceFor(trisSource));
-    this.linkToIndexMap.set(key, index);
+    this.linkToGeomIDMap.set(key, index);
     //console.log("link insert", key, index);
   }
 
   private onLinkUpdated(link: Link) {
     const key = this.makeLinkKeyFromLink(link);
-    const index = this.linkToIndexMap.get(key);
+    const index = this.linkToGeomIDMap.get(key);
     if (index === undefined) {
       return;
     }
-    this.triangleBuffer.updateGeometry(index);
-    this.normalBuffer.updateGeometry(index);
-    this.attributeBuffer.updateGeometry(index);
+    this.triangleBuffer.updateGeometryById(index);
+    this.normalBuffer.updateGeometryById(index);
+    this.attributeBuffer.updateGeometryById(index);
   }
 
   private onLinkRemoved(meta: LinkRemoveMetadata) {
     const key = this.makeLinkKey(meta);
-    const index = this.linkToIndexMap.get(key);
+    const index = this.linkToGeomIDMap.get(key);
     //console.log("link remove", key, index);
     if (index === undefined) {
       return;
     }
-    this.triangleBuffer.removeGeometry(index);
-    this.normalBuffer.removeGeometry(index);
-    this.attributeBuffer.removeGeometry(index);
-    this.linkToIndexMap.delete(key);
+    this.triangleBuffer.removeGeometryById(index);
+    this.normalBuffer.removeGeometryById(index);
+    this.attributeBuffer.removeGeometryById(index);
+    this.linkToGeomIDMap.delete(key);
 
     // Shift all indices in linkToIndexMap after the removed one
-    this.linkToIndexMap.forEach((value, key) => {
+    this.linkToGeomIDMap.forEach((value, key) => {
       if (value > index) {
-        this.linkToIndexMap.set(key, value - 1);
+        this.linkToGeomIDMap.set(key, value - 1);
       }
     });
 

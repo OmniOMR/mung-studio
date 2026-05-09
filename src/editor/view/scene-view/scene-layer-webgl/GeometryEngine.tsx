@@ -54,6 +54,7 @@ export interface GeometrySource {
 }
 
 interface GeometryLinkRecord {
+  id: number;
   source: GeometrySource;
   vertexOffset: number;
   vertexCount: number;
@@ -82,6 +83,7 @@ export class GeometryBuffer implements GLBuffer {
   private buffer: BufferDataType;
   private vertexTopIndex = 0;
   private geometries: GeometryLinkRecord[];
+  private geometryIdCounter = 1;
 
   private glBuffer: WebGLBuffer | null = null;
   private glBufferSize = 0;
@@ -134,7 +136,9 @@ export class GeometryBuffer implements GLBuffer {
 
   public addGeometry(geometry: GeometrySource): number {
     const index = this.geometries.length;
+    const id = this.geometryIdCounter++;
     this.geometries.push({
+      id,
       source: geometry,
       vertexOffset: this.vertexTopIndex,
       vertexCount: geometry.VERTEX_COUNT,
@@ -143,10 +147,19 @@ export class GeometryBuffer implements GLBuffer {
     this.dirtyState.markDirty(index);
     this.ensureBufferVertexCount(this.vertexTopIndex);
     this.updateGeometry(index);
-    return index;
+    return id;
   }
 
-  public updateGeometry(index: number) {
+  private findGeometryIndexById(id: number): number {
+    for (let i = 0; i < this.geometries.length; i++) {
+      if (this.geometries[i].id === id) {
+        return i;
+      }
+    }
+    return -1;
+  }
+
+  private updateGeometry(index: number) {
     const start = this.getGeomVertexStart(index);
     let subIndex = 0;
 
@@ -170,7 +183,14 @@ export class GeometryBuffer implements GLBuffer {
     this.dirtyState.markDirty(index);
   }
 
-  public removeGeometry(index: number) {
+  public updateGeometryById(id: number) {
+    const index = this.findGeometryIndexById(id);
+    if (index !== -1) {
+      this.updateGeometry(index);
+    }
+  }
+
+  private removeGeometry(index: number) {
     const geometry = this.geometries[index];
     const wasLast = index === this.geometries.length - 1;
     this.geometries.splice(index, 1);
@@ -192,6 +212,13 @@ export class GeometryBuffer implements GLBuffer {
       for (let i = index; i < this.geometries.length; i++) {
         this.geometries[i].vertexOffset -= geometry.vertexCount;
       }
+    }
+  }
+
+  public removeGeometryById(id: number) {
+    const index = this.findGeometryIndexById(id);
+    if (index !== -1) {
+      this.removeGeometry(index);
     }
   }
 
