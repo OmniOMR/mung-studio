@@ -185,6 +185,7 @@ def build_default_validation_engine():
         ]),
         NoteheadChildOrientationRule(2003, "Above", "Below", ["fermata"]),
         NoteheadChildOrientationRule(2004, "Up", "Down", ["graceNoteSlashStem"]),
+        # TODO: notehead may never be linked to BOTH a legerLine and staffSpace/Line
 
         # 3xxx codes are mask pixel-shape validation issues
         SinglePixelLineRule(3001, "barlineSingle", 1),
