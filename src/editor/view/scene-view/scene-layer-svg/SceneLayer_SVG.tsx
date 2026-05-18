@@ -5,10 +5,6 @@ import { NodeDisplayMode } from "../../../model/EditorStateStore";
 import { SvgLink } from "./SvgLink";
 import { SvgNode } from "./SvgNode";
 import { getLinkId } from "../../../../mung/getLinkId";
-import {
-  LINK_OUTLINE_STROKE_WIDTH,
-  LINK_STROKE_WIDTH,
-} from "../../../../mung/linkAppearance";
 import { EditorContext } from "../../../EditorContext";
 
 /**
@@ -30,8 +26,6 @@ export function SceneLayer_SVG() {
     gRef.current?.setAttribute("transform", transform.toString());
   }, []);
 
-  const outlineThickeningRatio = LINK_OUTLINE_STROKE_WIDTH / LINK_STROKE_WIDTH;
-
   return (
     <svg
       style={{
@@ -43,65 +37,6 @@ export function SceneLayer_SVG() {
         background: "none",
       }}
     >
-      <defs>
-        {/* Used by links to render the arrow head */}
-        <marker
-          id="mung-link-arrow-head"
-          viewBox="0 0 10 10"
-          refX="8"
-          refY="5"
-          markerWidth="10"
-          markerHeight="10"
-          orient="auto-start-reverse"
-        >
-          <line
-            x1="4"
-            y1="1"
-            x2="8"
-            y2="5"
-            stroke="context-stroke"
-            strokeWidth="1"
-            strokeLinecap="square"
-          />
-          <line
-            x1="4"
-            y1="9"
-            x2="8"
-            y2="5"
-            stroke="context-stroke"
-            strokeWidth="1"
-            strokeLinecap="square"
-          />
-        </marker>
-        <marker
-          id="mung-link-arrow-head--selection-outline"
-          viewBox="0 0 10 10"
-          refX="8"
-          refY="5"
-          markerWidth={10 / outlineThickeningRatio}
-          markerHeight={10 / outlineThickeningRatio}
-          orient="auto-start-reverse"
-        >
-          <line
-            x1="4"
-            y1="1"
-            x2="8"
-            y2="5"
-            stroke="context-stroke"
-            strokeWidth={outlineThickeningRatio}
-            strokeLinecap="square"
-          />
-          <line
-            x1="4"
-            y1="9"
-            x2="8"
-            y2="5"
-            stroke="context-stroke"
-            strokeWidth={outlineThickeningRatio}
-            strokeLinecap="square"
-          />
-        </marker>
-      </defs>
       <g ref={gRef}>
         {/* Nodes */}
         {nodeDisplayMode !== NodeDisplayMode.Hidden && (
@@ -116,14 +51,12 @@ export function SceneLayer_SVG() {
           </g>
         )}
 
-        {/* Links - currently commented out, rendered with WebGL */}
-        {
-          <g>
-            {links.map((link) => (
-              <SvgLink key={getLinkId(link)} link={link} />
-            ))}
-          </g>
-        }
+        {/* Links */}
+        <g>
+          {links.map((link) => (
+            <SvgLink key={getLinkId(link)} link={link} />
+          ))}
+        </g>
       </g>
     </svg>
   );

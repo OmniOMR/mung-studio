@@ -7,6 +7,7 @@ import { BackgroundLayer } from "./BackgroundLayer";
 import { EditorContext } from "../../EditorContext";
 import { useAtomValue } from "jotai";
 import { SceneRenderingEngine } from "../../model/SettingsStore";
+import { LinkMarkerSvgDefinition } from "./LinkMarkerSvgDefinition";
 
 /**
  * The central surface of the editor. Displays the scene and its
@@ -40,6 +41,9 @@ export function SceneView() {
         height: "100%",
       }}
     >
+      {/* Useful global SVG definitions */}
+      <LinkMarkerSvgDefinition />
+
       {/* The gray background and the scanned document image */}
       <BackgroundLayer />
 
