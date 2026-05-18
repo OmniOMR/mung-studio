@@ -60,7 +60,7 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
   // in the same order as in the SMuFL standard, groupped the same way
 
   // Other symbols
-  unclassified: { uc: "?", mpp: true, notSmufl: true },
+  unclassified: { uc: "?", mpp: true, notSmufl: true, transcribable: true },
   otherNumericSign: { uc: "?", mpp: true, notSmufl: true },
   ossia: { uc: "?", mpp: true, notSmufl: true },
   rehearsalMark: { uc: "?", mpp: true, notSmufl: true },
@@ -454,10 +454,11 @@ const DEFINITIONS: { [className: string]: MungClassDefinition } = {
     smuflEquivalents: ["ottava"],
     transcribable: true,
   },
-  ottava: { uc: "\u{E510}" },
-  ottavaAlta: { uc: "\u{E511}" },
-  ottavaBassa: { uc: "\u{E512}" },
-  ottavaBassaBa: { uc: "\u{E513}" },
+  ottava: { uc: "\u{E511}", transcribable: true },
+  // ottavaAlta: { uc: "\u{E511}" },
+  // ottavaBassa: { uc: "\u{E512}" },
+  // ottavaBassaBa: { uc: "\u{E513}" },
+  ottavaSpanner: { uc: "_\u{00A0}_", notSmufl: true },
 
   // 4.44. Dynamics
   // https://w3c.github.io/smufl/latest/tables/dynamics.html

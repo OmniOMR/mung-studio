@@ -171,7 +171,8 @@ GRAMMAR_ALPHABET: list[str] = [
     "custos",
 
     # Octaves
-    # TODO: 🚧 Under construction.
+    "ottava",
+    "ottavaSpanner",
 
     "arpeggiato",
     "unclassified",

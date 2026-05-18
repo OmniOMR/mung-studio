@@ -207,6 +207,7 @@ def build_default_validation_engine():
         MandatoryTextTranscriptionRule(4001, "dynamicDiminuendo"),
         MandatoryTextTranscriptionRule(4001, "voltaText"),
         MandatoryTextTranscriptionRule(4001, "repeatText"),
+        MandatoryTextTranscriptionRule(4001, "ottava"),
         
         # 5xxx codes are grammar validation issues
         # 5001 - generic grammar issue
