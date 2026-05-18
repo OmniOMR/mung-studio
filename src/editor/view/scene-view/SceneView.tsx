@@ -43,7 +43,7 @@ export function SceneView() {
       {/* The gray background and the scanned document image */}
       <BackgroundLayer />
 
-      {/* Objects that are not being edited, but there is many of them,
+      {/* Objects that are not being edited, but there are many of them,
       so tricks have to be made to render them fast */}
       {sceneRenderingEngine === SceneRenderingEngine.SVG && <SceneLayer_SVG />}
       {sceneRenderingEngine === SceneRenderingEngine.WebGL && (
