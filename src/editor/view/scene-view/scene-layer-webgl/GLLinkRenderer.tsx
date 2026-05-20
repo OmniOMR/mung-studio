@@ -406,8 +406,6 @@ class LinkGeometryDrawable implements GLDrawable {
   private zoomSubscription: ISimpleEventHandler<ZoomTransform>;
 
   private linkToGeomIDMap = new Map<string, number>();
-  private linkToClassMap = new Map<string, Set<string>>();
-  private classToLinkMap = new Map<string, Set<string>>();
 
   private scale: number = 1.0;
 
@@ -469,10 +467,8 @@ class LinkGeometryDrawable implements GLDrawable {
       this.onLinkSelected(link);
     });
 
-    this.classVisibilitySubscription = (classes) => {
-      classes.forEach((clazz) => {
-        this.onClassVisibilityChanged(clazz);
-      });
+    this.classVisibilitySubscription = (classNames: readonly string[]) => {
+      this.onClassVisibilitiesChanged(classNames);
     };
 
     classVisibilityStore.onChange.subscribe(this.classVisibilitySubscription);
@@ -507,11 +503,14 @@ class LinkGeometryDrawable implements GLDrawable {
     this.updateAttributeData(key);
   }
 
-  private onClassVisibilityChanged(clazz: string) {
-    const links = this.classToLinkMap.get(clazz);
-    if (links) {
-      for (const linkKey of links) {
-        this.updateAttributeData(linkKey);
+  private onClassVisibilitiesChanged(classNames: readonly string[]) {
+    for (const node of this.notationGraph.nodes) {
+      if (classNames.includes(node.className)) {
+        // update attributes for links of this node
+        for (const link of this.notationGraph.getLinksOfNode(node.id)) {
+          const linkKey = this.makeLinkKeyFromLink(link);
+          this.updateAttributeData(linkKey);
+        }
       }
     }
   }
@@ -552,48 +551,28 @@ class LinkGeometryDrawable implements GLDrawable {
       toId: meta.toNode.id,
       type: meta.linkType,
     };
-    const _this = this;
+
     const geometry = new LinkGeometry(
       this.notationGraph,
       this.staffGeometryStore,
       meta.fromNode.id,
       meta.toNode.id,
-      new (class implements LinkGeometryStateProvider {
-        isVisible(): boolean {
-          const linkClasses = _this.linkToClassMap.get(key);
-          for (const className of linkClasses || []) {
-            if (_this.classVisibilityStore.hiddenClasses.has(className)) {
-              return false;
-            }
-            if (
-              !_this.classVisibilityStore.visibleClasses.has(className) &&
-              DEFAULT_HIDDEN_CLASSES.has(className)
-            ) {
-              return false;
-            }
-          }
-          return true;
-        }
+      {
+        isVisible: () => {
+          const fromClass = this.notationGraph.getNode(link.fromId).className;
+          const toClass = this.notationGraph.getNode(link.toId).className;
+          const isFromClassVisible = this.classVisibilityStore.visibleClasses.has(fromClass);
+          const isToClassVisible = this.classVisibilityStore.visibleClasses.has(toClass);
+          return isFromClassVisible && isToClassVisible;
+        },
 
-        isHighlighted(): boolean {
-          return _this.selectionStore.isLinkPartiallySelected(link);
+        isHighlighted: () => {
+          return this.selectionStore.isLinkPartiallySelected(link);
         }
-      })(),
+      },
       LinkGeometryDrawable.LINK_WIDTH,
       2.25,
     );
-
-    const linkClasses = new Set([
-      meta.fromNode.className,
-      meta.toNode.className,
-    ]);
-    this.linkToClassMap.set(key, linkClasses);
-    for (const className of linkClasses) {
-      if (!this.classToLinkMap.has(className)) {
-        this.classToLinkMap.set(className, new Set());
-      }
-      this.classToLinkMap.get(className)!.add(key);
-    }
 
     const trisSource = geometry.positionSource();
     const geomId = this.triangleBuffer.addGeometry(trisSource);
@@ -625,17 +604,6 @@ class LinkGeometryDrawable implements GLDrawable {
     this.normalBuffer.removeGeometryById(geomId);
     this.attributeBuffer.removeGeometryById(geomId);
     this.linkToGeomIDMap.delete(key);
-
-    const linkClasses = this.linkToClassMap.get(key);
-    if (linkClasses) {
-      for (const className of linkClasses) {
-        const classLinks = this.classToLinkMap.get(className);
-        if (classLinks) {
-          classLinks.delete(key);
-        }
-      }
-    }
-    this.linkToClassMap.delete(key);
   }
 
   private makeLinkKey(data: LinkInsertMetadata): string {

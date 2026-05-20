@@ -360,6 +360,56 @@ export class NotationGraphStore {
   }
 
   /**
+   * Returns all links of a given node, passing a given filter
+   */
+  public getLinksOfNode(
+    nodeId: number,
+    inlinks: boolean = true,
+    outlinks: boolean = true,
+    syntax: boolean = true,
+    precedence: boolean = true,
+  ): Link[] {
+    const node = this.getNode(nodeId);
+    const links: Link[] = [];
+
+    if (inlinks) {
+      if (syntax) {
+        links.push(...node.syntaxInlinks.map<Link>(fromId => ({
+          fromId: fromId,
+          toId: nodeId,
+          type: LinkType.Syntax,
+        })));
+      }
+      if (precedence) {
+        links.push(...node.precedenceInlinks.map<Link>(fromId => ({
+          fromId: fromId,
+          toId: nodeId,
+          type: LinkType.Precedence,
+        })));
+      }
+    }
+
+    if (outlinks) {
+      if (syntax) {
+        links.push(...node.syntaxOutlinks.map<Link>(toId => ({
+          fromId: nodeId,
+          toId: toId,
+          type: LinkType.Syntax,
+        })));
+      }
+      if (precedence) {
+        links.push(...node.precedenceOutlinks.map<Link>(toId => ({
+          fromId: nodeId,
+          toId: toId,
+          type: LinkType.Precedence,
+        })));
+      }
+    }
+
+    return links;
+  }
+
+  /**
    * Returns true if the given link exists
    */
   public hasLink(fromId: number, toId: number, type: LinkType) {
