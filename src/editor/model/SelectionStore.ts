@@ -284,6 +284,24 @@ export class SelectionStore {
     return this._selectedNodeIDSet.has(nodeId);
   }
 
+  /**
+   * Check whether a link is partially selected.
+   * Has 0(N) where N is the number of selected links,
+   * but can be refactored if that becomes an issue.
+   */
+  public isLinkPartiallySelected(link: Link): boolean {
+    return includesLink(this.partiallySelectedLinks, link);
+  }
+
+  /**
+   * Check whether a link is fully selected.
+   * Has 0(N) where N is the number of selected links,
+   * but can be refactored if that becomes an issue.
+   */
+  public isLinkFullySelected(link: Link): boolean {
+    return includesLink(this.fullySelectedLinks, link);
+  }
+
   ////////////
   // Events //
   ////////////
@@ -372,7 +390,7 @@ export class SelectionStore {
         linkId,
         atom((get) => {
           this.linkSignalAtoms.get(linkId).subscribe(get);
-          return includesLink(this._partiallySelectedLinks, link);
+          return this.isLinkPartiallySelected(link);
         }),
       );
     }
@@ -390,7 +408,7 @@ export class SelectionStore {
         linkId,
         atom((get) => {
           this.linkSignalAtoms.get(linkId).subscribe(get);
-          return includesLink(this._fullySelectedLinks, link);
+          return this.isLinkFullySelected(link);
         }),
       );
     }

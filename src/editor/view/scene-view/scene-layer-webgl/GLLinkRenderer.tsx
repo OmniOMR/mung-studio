@@ -406,7 +406,6 @@ class LinkGeometryDrawable implements GLDrawable {
   private zoomSubscription: ISimpleEventHandler<ZoomTransform>;
 
   private linkToGeomIDMap = new Map<string, number>();
-  private selectedLinks: Set<string> = new Set();
   private linkToClassMap = new Map<string, Set<string>>();
   private classToLinkMap = new Map<string, Set<string>>();
 
@@ -494,7 +493,6 @@ class LinkGeometryDrawable implements GLDrawable {
     //selectedLinks has to be kept despite the link type,
     //so that u_selected is global and not per-type
     const key = this.makeLinkKeyFromLink(Link);
-    this.selectedLinks.add(key);
     if (!this.isLinkAccepted(Link.type)) {
       return;
     }
@@ -503,7 +501,6 @@ class LinkGeometryDrawable implements GLDrawable {
 
   private onLinkDeselected(Link: Link): void {
     const key = this.makeLinkKeyFromLink(Link);
-    this.selectedLinks.delete(key);
     if (!this.isLinkAccepted(Link.type)) {
       return;
     }
@@ -550,6 +547,11 @@ class LinkGeometryDrawable implements GLDrawable {
     if (this.linkToGeomIDMap.has(key)) {
       return;
     }
+    const link: Link = {
+      fromId: meta.fromNode.id,
+      toId: meta.toNode.id,
+      type: meta.linkType,
+    };
     const _this = this;
     const geometry = new LinkGeometry(
       this.notationGraph,
@@ -574,7 +576,7 @@ class LinkGeometryDrawable implements GLDrawable {
         }
 
         isHighlighted(): boolean {
-          return _this.selectedLinks.has(key);
+          return _this.selectionStore.isLinkPartiallySelected(link);
         }
       })(),
       LinkGeometryDrawable.LINK_WIDTH,
@@ -645,7 +647,7 @@ class LinkGeometryDrawable implements GLDrawable {
   public release(gl: GLRenderer) {}
 
   public hasSelectedLinks(): boolean {
-    return this.selectedLinks.size > 0;
+    return this.selectionStore.partiallySelectedLinks.length > 0;
   }
 
   public draw(gl: GLRenderer): void {
