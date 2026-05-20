@@ -374,35 +374,43 @@ export class NotationGraphStore {
 
     if (inlinks) {
       if (syntax) {
-        links.push(...node.syntaxInlinks.map<Link>(fromId => ({
-          fromId: fromId,
-          toId: nodeId,
-          type: LinkType.Syntax,
-        })));
+        links.push(
+          ...node.syntaxInlinks.map<Link>((fromId) => ({
+            fromId: fromId,
+            toId: nodeId,
+            type: LinkType.Syntax,
+          })),
+        );
       }
       if (precedence) {
-        links.push(...node.precedenceInlinks.map<Link>(fromId => ({
-          fromId: fromId,
-          toId: nodeId,
-          type: LinkType.Precedence,
-        })));
+        links.push(
+          ...node.precedenceInlinks.map<Link>((fromId) => ({
+            fromId: fromId,
+            toId: nodeId,
+            type: LinkType.Precedence,
+          })),
+        );
       }
     }
 
     if (outlinks) {
       if (syntax) {
-        links.push(...node.syntaxOutlinks.map<Link>(toId => ({
-          fromId: nodeId,
-          toId: toId,
-          type: LinkType.Syntax,
-        })));
+        links.push(
+          ...node.syntaxOutlinks.map<Link>((toId) => ({
+            fromId: nodeId,
+            toId: toId,
+            type: LinkType.Syntax,
+          })),
+        );
       }
       if (precedence) {
-        links.push(...node.precedenceOutlinks.map<Link>(toId => ({
-          fromId: nodeId,
-          toId: toId,
-          type: LinkType.Precedence,
-        })));
+        links.push(
+          ...node.precedenceOutlinks.map<Link>((toId) => ({
+            fromId: nodeId,
+            toId: toId,
+            type: LinkType.Precedence,
+          })),
+        );
       }
     }
 

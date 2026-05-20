@@ -3,17 +3,17 @@ import { classNameToHue } from "../../../../mung/classNameToHue";
 import { classNameZIndex } from "../../../../mung/classNameZIndex";
 import { Node } from "../../../../mung/Node";
 import { NotationGraphStore } from "../../../model/notation-graph-store/NotationGraphStore";
-import {
-  GLDrawable,
-  GLRenderer,
-} from "./WebGLDriver";
+import { GLDrawable, GLRenderer } from "./WebGLDriver";
 import * as d3 from "d3";
 
 import { NodeUpdateMetadata } from "../../../model/notation-graph-store/NodeCollection";
 import { GeometryBuffer } from "./GeometryEngine";
 import { ClassVisibilityStore } from "../../../model/ClassVisibilityStore";
 import { MUNG_CLASS_NAMES } from "../../../../mung/ontology/mungClasses";
-import { SelectionNodeChangeMetadata, SelectionStore } from "../../../model/SelectionStore";
+import {
+  SelectionNodeChangeMetadata,
+  SelectionStore,
+} from "../../../model/SelectionStore";
 import { ZoomController } from "../../../controller/ZoomController";
 
 const SHADER_COMMON = `#version 300 es
@@ -186,7 +186,7 @@ class TextureAtlasAllocator {
   }
 
   private coalesceFreeTiles(row: TextureAtlasTile[]): void {
-    for (let tileX = 0; tileX < row.length - 1;) {
+    for (let tileX = 0; tileX < row.length - 1; ) {
       const tile = row[tileX];
       const nextTile = row[tileX + 1];
       if (!tile.used && !nextTile.used) {
@@ -433,7 +433,7 @@ class NodeMaskAtlas {
       for (let y = 0; y < srcHeight; y++) {
         for (let x = 0; x < srcWidth; x++) {
           transposedDataWithMargin[
-            (x + margin) * (heightWithMargin) + (y + margin)
+            (x + margin) * heightWithMargin + (y + margin)
           ] = data[y * srcWidth + x];
         }
       }
@@ -443,9 +443,7 @@ class NodeMaskAtlas {
       srcHeight = temp;
       this.fillMarginMarker(data, heightWithMargin, widthWithMargin);
     } else if (!this.noMargin) {
-      const dataWithMargin = new Uint8Array(
-        widthWithMargin * heightWithMargin,
-      );
+      const dataWithMargin = new Uint8Array(widthWithMargin * heightWithMargin);
       for (let y = 0; y < srcHeight; y++) {
         dataWithMargin.set(
           data.subarray(y * srcWidth, (y + 1) * srcWidth),
@@ -467,13 +465,19 @@ class NodeMaskAtlas {
     });
   }
 
-  private fillMarginMarker(data: Uint8Array, width: number, height: number): void {
+  private fillMarginMarker(
+    data: Uint8Array,
+    width: number,
+    height: number,
+  ): void {
     const margin = this.getEffectiveMargin();
     for (let y = 0; y < height; y++) {
       for (let x = 0; x < width; x++) {
         if (
-          x < margin || x >= width - margin ||
-          y < margin || y >= height - margin
+          x < margin ||
+          x >= width - margin ||
+          y < margin ||
+          y >= height - margin
         ) {
           data[y * width + x] = NodeMaskAtlas.MARGIN_MARKER_ALPHA;
         }
@@ -566,10 +570,10 @@ class NodeMaskAtlasManager {
       console.log(
         "Created new NodeMaskAtlas of template",
         NodeMaskAtlasTemplate[requiredTemplate] +
-        ", caused by allocation request of size " +
-        width +
-        "x" +
-        height,
+          ", caused by allocation request of size " +
+          width +
+          "x" +
+          height,
       );
     }
     const allocation = this.allocateFromAtlas(newAtlas, width, height);
@@ -579,10 +583,10 @@ class NodeMaskAtlasManager {
     }
     console.log(
       "Failed to allocate from new NodeMaskAtlas - " +
-      width +
-      "x" +
-      height +
-      " too large?",
+        width +
+        "x" +
+        height +
+        " too large?",
     );
 
     return null;
@@ -658,7 +662,7 @@ class NodeMaskLayer {
     private selectionStore: SelectionStore,
     private colorMap: MaskColorMap,
     private atlas: NodeMaskAtlas | null,
-  ) { }
+  ) {}
 
   public addNode(
     nodeId: number,
@@ -967,7 +971,7 @@ class MaskColorMap {
 export enum HighlightDisplayMode {
   OUTLINE,
   NONE,
-  HIDE
+  HIDE,
 }
 
 export class MaskAtlasRenderer implements GLDrawable {
@@ -998,13 +1002,14 @@ export class MaskAtlasRenderer implements GLDrawable {
   private classVisibilitySubscription: ISimpleEventHandler<readonly string[]>;
   private nodeSelectionSubscription: ISimpleEventHandler<SelectionNodeChangeMetadata>;
 
-  private highlightDisplayMode: HighlightDisplayMode = HighlightDisplayMode.OUTLINE;
+  private highlightDisplayMode: HighlightDisplayMode =
+    HighlightDisplayMode.OUTLINE;
 
   public constructor(
     notationGraph: NotationGraphStore,
     classVisibilityStore: ClassVisibilityStore,
     selectionStore: SelectionStore,
-    zoomController: ZoomController
+    zoomController: ZoomController,
   ) {
     this.notationGraph = notationGraph;
     this.classVisibilityStore = classVisibilityStore;
@@ -1013,17 +1018,17 @@ export class MaskAtlasRenderer implements GLDrawable {
     this.colorMapData = new MaskColorMap();
 
     this.notationGraph.onNodeInserted.subscribe(
-      (this.nodeInsertedSubscription = this.onNodeInserted.bind(this))
+      (this.nodeInsertedSubscription = this.onNodeInserted.bind(this)),
     );
     this.notationGraph.onNodeRemoved.subscribe(
-      (this.nodeRemovedSubscription = this.onNodeRemoved.bind(this))
+      (this.nodeRemovedSubscription = this.onNodeRemoved.bind(this)),
     );
     this.notationGraph.onNodeUpdatedOrLinked.subscribe(
       (this.nodeUpdatedSubscription = (update: NodeUpdateMetadata) => {
         if (!update.isLinkUpdate) {
           this.onNodeUpdated(update.newValue);
         }
-      })
+      }),
     );
     this.classVisibilityStore.onChange.subscribe(
       (this.classVisibilitySubscription = (classNames: readonly string[]) => {
@@ -1032,13 +1037,19 @@ export class MaskAtlasRenderer implements GLDrawable {
             this.updateLayerAttributesForNode(node);
           }
         });
-      })
+      }),
     );
     this.selectionStore.onNodesChange.subscribe(
-      (this.nodeSelectionSubscription = (change: SelectionNodeChangeMetadata) => {
-        change.nodeSetAdditions.forEach((nodeId) => this.updateLayerAttributesForNodeId(nodeId));
-        change.nodeSetRemovals.forEach((nodeId) => this.updateLayerAttributesForNodeId(nodeId));
-      })
+      (this.nodeSelectionSubscription = (
+        change: SelectionNodeChangeMetadata,
+      ) => {
+        change.nodeSetAdditions.forEach((nodeId) =>
+          this.updateLayerAttributesForNodeId(nodeId),
+        );
+        change.nodeSetRemovals.forEach((nodeId) =>
+          this.updateLayerAttributesForNodeId(nodeId),
+        );
+      }),
     );
 
     this.notationGraph.nodes.forEach(this.onNodeInserted.bind(this));
@@ -1100,8 +1111,14 @@ export class MaskAtlasRenderer implements GLDrawable {
     gl.useTexture(1, "u_color_map", this.colorMapTexture);
     gl.setUniformInt("u_highlight_display_mode", this.highlightDisplayMode);
     // *0.5 converts radius to diameter - avoids multiplication on the GPU
-    gl.setUniformFloat("u_highlight_thickness_px", this.calcWorldSpaceZoom() * 0.5);
-    gl.setUniformFloat("u_highlight_anim_weight", this.calcHighlightAnimationWeight());
+    gl.setUniformFloat(
+      "u_highlight_thickness_px",
+      this.calcWorldSpaceZoom() * 0.5,
+    );
+    gl.setUniformFloat(
+      "u_highlight_anim_weight",
+      this.calcHighlightAnimationWeight(),
+    );
     gl.configureTextureUnit(
       1,
       WebGL2RenderingContext.CLAMP_TO_EDGE,
@@ -1117,7 +1134,10 @@ export class MaskAtlasRenderer implements GLDrawable {
   }
 
   private calcWorldSpaceZoom(): number {
-    return MaskAtlasRenderer.HIGHLIGHT_THICKNESS_SCREENSPACE_PX / this.zoomController.currentTransform.k;
+    return (
+      MaskAtlasRenderer.HIGHLIGHT_THICKNESS_SCREENSPACE_PX /
+      this.zoomController.currentTransform.k
+    );
   }
 
   private calcHighlightAnimationWeight(): number {

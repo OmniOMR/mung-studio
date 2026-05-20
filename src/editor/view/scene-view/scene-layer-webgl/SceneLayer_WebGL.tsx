@@ -21,7 +21,7 @@ export function SceneLayer_WebGL() {
     classVisibilityStore,
     editorStateStore,
     zoomController,
-    toolbeltController
+    toolbeltController,
   } = useContext(EditorContext);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -47,14 +47,14 @@ export function SceneLayer_WebGL() {
       width: canvasElement.width,
       height: canvasElement.height,
       pixelScaleX: devicePixelRatio,
-      pixelScaleY: devicePixelRatio
+      pixelScaleY: devicePixelRatio,
     };
 
     const masks = new MaskAtlasRenderer(
       notationGraphStore,
       classVisibilityStore,
       selectionStore,
-      zoomController
+      zoomController,
     );
     glRenderer.addDrawable(masks);
 
@@ -110,7 +110,7 @@ export function SceneLayer_WebGL() {
       } else {
         usingLiveRender = false;
       }
-    }
+    };
 
     const onGraphUpdate = () => {
       if (shouldUseLiveRender()) {
@@ -155,12 +155,8 @@ export function SceneLayer_WebGL() {
         // fallback for Safari that will not always be correct
         ratioX = devicePixelRatio;
         ratioY = devicePixelRatio;
-        width = Math.round(
-          entry.contentBoxSize[0].inlineSize * ratioX,
-        );
-        height = Math.round(
-          entry.contentBoxSize[0].blockSize * ratioY,
-        );
+        width = Math.round(entry.contentBoxSize[0].inlineSize * ratioX);
+        height = Math.round(entry.contentBoxSize[0].blockSize * ratioY);
       }
       canvasElement.width = width;
       canvasElement.height = height;

@@ -28,7 +28,7 @@ export class BufferDirtyStateKeeper {
     return this.minDirtyIndex >= 0 && this.minDirtyIndex < bufSize;
   }
 
-  public getDirtyRange(): [number, number]|null {
+  public getDirtyRange(): [number, number] | null {
     let min = this.minDirtyIndex;
     let max = this.maxDirtyIndex;
     const bufSize = this.bufSizeFunc();

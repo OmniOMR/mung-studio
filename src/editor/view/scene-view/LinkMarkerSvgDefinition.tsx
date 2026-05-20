@@ -8,15 +8,17 @@ import {
  */
 export function LinkMarkerSvgDefinition() {
   const outlineThickeningRatio = LINK_OUTLINE_STROKE_WIDTH / LINK_STROKE_WIDTH;
-  
+
   return (
-    <svg style={{
-      position: "absolute",
-      top: 0,
-      left: 0,
-      width: 0,
-      height: 0,
-    }}>
+    <svg
+      style={{
+        position: "absolute",
+        top: 0,
+        left: 0,
+        width: 0,
+        height: 0,
+      }}
+    >
       <defs>
         {/* Used by links to render the arrow head */}
         <marker
@@ -77,5 +79,5 @@ export function LinkMarkerSvgDefinition() {
         </marker>
       </defs>
     </svg>
-  )
+  );
 }

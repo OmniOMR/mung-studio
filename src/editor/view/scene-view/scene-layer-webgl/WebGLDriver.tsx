@@ -18,7 +18,7 @@ export interface GLViewport {
   width: number;
   /** Height of the viewport in device (physical) pixels */
   height: number;
-  /** 
+  /**
    * Horizontal ratio between DOM and device pixels.
    * The width of the viewport is already scaled by this ratio
    * (rendering is done in device pixels).
@@ -30,7 +30,7 @@ export interface GLViewport {
    * (rendering is done in device pixels).
    */
   pixelScaleY: number;
-};
+}
 
 export class GLRenderer {
   private gl: WebGL2RenderingContext;

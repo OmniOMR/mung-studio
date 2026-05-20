@@ -26,8 +26,9 @@ export class SettingsStore {
   /**
    * Controls the method for scene layer rendering
    */
-  public readonly sceneRenderingEngineAtom = atomWithStorage<SceneRenderingEngine>(
-    "MungStudio::SceneRenderingEngine",
-    SceneRenderingEngine.WebGL,
-  );
+  public readonly sceneRenderingEngineAtom =
+    atomWithStorage<SceneRenderingEngine>(
+      "MungStudio::SceneRenderingEngine",
+      SceneRenderingEngine.WebGL,
+    );
 }

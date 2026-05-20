@@ -84,9 +84,7 @@ export class SelectionStore {
 
     // compute nodes that have been newly selected
     // (in the order they have in the new selection)
-    const nodeSetAdditions = newNodeList.filter(
-      (id) => !oldNodeSet.has(id),
-    );
+    const nodeSetAdditions = newNodeList.filter((id) => !oldNodeSet.has(id));
 
     // compute nodes that have been de-selected
     // (in the order they had in the old selection)
@@ -128,8 +126,7 @@ export class SelectionStore {
     // build up the list of current fully selected links
     const newFullLinkSet: Link[] = newPartialLinkSet.filter(
       (link) =>
-        this.isNodeSelected(link.fromId) &&
-        this.isNodeSelected(link.toId),
+        this.isNodeSelected(link.fromId) && this.isNodeSelected(link.toId),
     );
 
     // partial link set modifications

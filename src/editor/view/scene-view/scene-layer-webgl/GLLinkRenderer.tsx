@@ -23,9 +23,15 @@ import { LinkType } from "../../../../mung/LinkType";
 import { ZoomController } from "../../../controller/ZoomController";
 import { ZoomTransform } from "d3";
 import { getLinksOfNode } from "../../../../mung/getLinksOfNode";
-import { computeLinkCoordinates, LinkRenderCoordinates } from "../computeLinkRenderCoordinates";
+import {
+  computeLinkCoordinates,
+  LinkRenderCoordinates,
+} from "../computeLinkRenderCoordinates";
 import { StaffGeometryStore } from "../../../model/StaffGeometryStore";
-import { LINK_OUTLINE_STROKE_WIDTH, LINK_STROKE_WIDTH } from "../../../../mung/linkAppearance";
+import {
+  LINK_OUTLINE_STROKE_WIDTH,
+  LINK_STROKE_WIDTH,
+} from "../../../../mung/linkAppearance";
 
 const SHADER_COMMON = `#version 300 es
 
@@ -144,7 +150,7 @@ class LinkGeometry {
     private stateProvider: LinkGeometryStateProvider,
     private lineThickness: number = 5,
     private arrowHeadScale: number = 2.0,
-  ) { }
+  ) {}
 
   public positionSource(): GeometrySource {
     return {
@@ -260,7 +266,11 @@ class LinkGeometry {
       [bodyBottomRight, bodyTopRight],
     );
     const bodyBottomLeftN = this.makeCoord(fromPoint, bodyBottomLeft, normalBL);
-    const bodyBottomRightN = this.makeCoord(fromPoint, bodyBottomRight, normalBR);
+    const bodyBottomRightN = this.makeCoord(
+      fromPoint,
+      bodyBottomRight,
+      normalBR,
+    );
     //stretch away from tip - do not overlap arrow triangle
     const bodyTopRightN = this.makeCoord(toPoint, bodyTopRight, normalBR);
     const bodyTopLeftN = this.makeCoord(toPoint, bodyTopLeft, normalBL);
@@ -561,8 +571,10 @@ class LinkGeometryDrawable implements GLDrawable {
         isVisible: () => {
           const fromClass = this.notationGraph.getNode(link.fromId).className;
           const toClass = this.notationGraph.getNode(link.toId).className;
-          const isFromClassVisible = this.classVisibilityStore.visibleClasses.has(fromClass);
-          const isToClassVisible = this.classVisibilityStore.visibleClasses.has(toClass);
+          const isFromClassVisible =
+            this.classVisibilityStore.visibleClasses.has(fromClass);
+          const isToClassVisible =
+            this.classVisibilityStore.visibleClasses.has(toClass);
           const isVisible = isFromClassVisible && isToClassVisible;
           const isSelected = this.selectionStore.isLinkPartiallySelected(link);
           return isVisible || isSelected;
@@ -571,7 +583,7 @@ class LinkGeometryDrawable implements GLDrawable {
         isHighlighted: () => {
           const isSelected = this.selectionStore.isLinkPartiallySelected(link);
           return isSelected;
-        }
+        },
       },
       LinkGeometryDrawable.LINK_WIDTH,
       2.25,
@@ -627,7 +639,10 @@ class LinkGeometryDrawable implements GLDrawable {
     }
     let scale = this.scale;
     gl.setUniformFloat("u_arrow_scale", scale);
-    gl.setUniformFloat("u_outline_thickness", scale * (LINK_OUTLINE_STROKE_WIDTH - LINK_STROKE_WIDTH) / 2);
+    gl.setUniformFloat(
+      "u_outline_thickness",
+      (scale * (LINK_OUTLINE_STROKE_WIDTH - LINK_STROKE_WIDTH)) / 2,
+    );
     gl.bindBuffer(this.triangleBuffer, "a_position");
     gl.bindBuffer(this.normalBuffer, "a_normal");
     gl.bindBuffer(this.attributeBuffer, "a_attributes");
