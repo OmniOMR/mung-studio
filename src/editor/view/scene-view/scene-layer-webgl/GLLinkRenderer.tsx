@@ -563,11 +563,14 @@ class LinkGeometryDrawable implements GLDrawable {
           const toClass = this.notationGraph.getNode(link.toId).className;
           const isFromClassVisible = this.classVisibilityStore.visibleClasses.has(fromClass);
           const isToClassVisible = this.classVisibilityStore.visibleClasses.has(toClass);
-          return isFromClassVisible && isToClassVisible;
+          const isVisible = isFromClassVisible && isToClassVisible;
+          const isSelected = this.selectionStore.isLinkPartiallySelected(link);
+          return isVisible || isSelected;
         },
 
         isHighlighted: () => {
-          return this.selectionStore.isLinkPartiallySelected(link);
+          const isSelected = this.selectionStore.isLinkPartiallySelected(link);
+          return isSelected;
         }
       },
       LinkGeometryDrawable.LINK_WIDTH,
