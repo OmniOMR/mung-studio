@@ -17,6 +17,26 @@ export class EditorStateStore {
   // View options //
   //////////////////
 
+  /**
+   * Does the background image have reduced contrast,
+   * to aid visibility of B/W images?
+   */
+  public readonly isImageContrastReducedAtom = atom<boolean>(false);
+
+  public get isImageContrastReduced(): boolean {
+    return this.jotaiStore.get(this.isImageContrastReducedAtom);
+  }
+
+  public set isImageContrastReduced(value: boolean) {
+    this.jotaiStore.set(this.isImageContrastReducedAtom, value);
+  }
+
+  /**
+   * Is the background image inverted to aid visibility
+   * of white-on-black images?
+   */
+  public readonly isImageInvertedAtom = atom<boolean>(false);
+
   // atom that manages display of syntax links
   private displaySyntaxLinksAtomWithEvent = AtomWithEvent.primitiveAtom(true);
   public get displaySyntaxLinksAtom() {

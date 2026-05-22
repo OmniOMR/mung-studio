@@ -7,9 +7,10 @@ import {
 } from "@mui/joy";
 import PolylineIcon from "@mui/icons-material/Polyline";
 import TimelineIcon from "@mui/icons-material/Timeline";
-import RectangleIcon from "@mui/icons-material/Rectangle";
-import PentagonIcon from "@mui/icons-material/Pentagon";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import CropOriginalIcon from "@mui/icons-material/CropOriginal";
+import ContrastIcon from "@mui/icons-material/Contrast";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useAtom } from "jotai";
 import { useContext } from "react";
 import { EditorContext } from "../../EditorContext";
@@ -17,6 +18,13 @@ import { SceneRenderingEngine } from "../../model/SettingsStore";
 
 export function DisplayModeButtons() {
   const { editorStateStore, settingsStore } = useContext(EditorContext);
+
+  const [isImageContrastReduced, setIsImageContrastReduced] = useAtom(
+    editorStateStore.isImageContrastReducedAtom,
+  );
+  const [isImageInverted, setIsImageInverted] = useAtom(
+    editorStateStore.isImageInvertedAtom,
+  );
 
   const [displaySyntaxLinks, setDisplaySyntaxLinks] = useAtom(
     editorStateStore.displaySyntaxLinksAtom,
@@ -30,21 +38,36 @@ export function DisplayModeButtons() {
 
   return (
     <>
-      {/* Node display mode */}
+      {/* Background image filters */}
       <ButtonGroup size="sm">
-        <Tooltip arrow title="Display nodes as bounding boxes">
-          <IconButton disabled aria-pressed={false} onClick={() => {}}>
-            <RectangleIcon />
+        <Tooltip arrow title="Show original image with no filters">
+          <IconButton
+            aria-pressed={!isImageContrastReduced && !isImageInverted}
+            onClick={() => {
+              setIsImageContrastReduced(false);
+              setIsImageInverted(false);
+            }}
+          >
+            <CropOriginalIcon />
           </IconButton>
         </Tooltip>
-        <Tooltip arrow title="Display nodes as polygons and masks (slow)">
-          <IconButton disabled aria-pressed={false} onClick={() => {}}>
-            <PentagonIcon />
+        <Tooltip arrow title="Reduce image contrast to better see B/W images">
+          <IconButton
+            aria-pressed={isImageContrastReduced}
+            onClick={() => setIsImageContrastReduced(!isImageContrastReduced)}
+          >
+            <AutoAwesomeIcon />
           </IconButton>
         </Tooltip>
-        <Tooltip arrow title="Hide nodes">
-          <IconButton disabled aria-pressed={false} onClick={() => {}}>
-            <VisibilityOffIcon />
+        <Tooltip
+          arrow
+          title="Invert image colors for the white-on-black experience"
+        >
+          <IconButton
+            aria-pressed={isImageInverted}
+            onClick={() => setIsImageInverted(!isImageInverted)}
+          >
+            <ContrastIcon />
           </IconButton>
         </Tooltip>
       </ButtonGroup>

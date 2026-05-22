@@ -1,6 +1,7 @@
 import { atom } from "jotai";
 import { JotaiStore } from "./JotaiStore";
 import { snapGrowRectangle } from "../../utils/snapGrowRectangle";
+import { ISignal, SignalDispatcher } from "strongly-typed-events";
 
 /**
  * Holds the page scan pixel data as well as image metadata.
@@ -18,15 +19,41 @@ export class BackgroundImageStore {
    */
   public readonly imageUrl: string | null;
 
+  // === readiness ===
+
   public readonly isReadyAtom = atom<boolean>(false);
 
   public get isReady(): boolean {
     return this.jotaiStore.get(this.isReadyAtom);
   }
 
+  private _onReady = new SignalDispatcher();
+
+  /**
+   * Event fires when the background image gets loaded and all data
+   * and functionality within this store becomes available.
+   */
+  public get onReady(): ISignal {
+    return this._onReady.asEvent();
+  }
+
+  // === image width ===
+
   public readonly widthAtom = atom<number>(0);
 
+  public get width(): number {
+    return this.jotaiStore.get(this.widthAtom);
+  }
+
+  // === image height ===
+
   public readonly heightAtom = atom<number>(0);
+
+  public get height(): number {
+    return this.jotaiStore.get(this.heightAtom);
+  }
+
+  // === image pixel data ===
 
   private canvas: OffscreenCanvas | null = null;
   private ctx: OffscreenCanvasRenderingContext2D | null = null;
@@ -56,9 +83,16 @@ export class BackgroundImageStore {
       this.jotaiStore.set(this.widthAtom, imgElement.width);
       this.jotaiStore.set(this.heightAtom, imgElement.height);
       this.jotaiStore.set(this.isReadyAtom, true);
+
+      // fire the readiness event
+      this._onReady.dispatch();
     };
   }
 
+  /**
+   * Gets pixel data of the background image. The image must be loaded
+   * (the isReady value must be true) otherwise this method throws an error.
+   */
   public getImageData(rect: DOMRect): ImageData {
     if (this.ctx === null) {
       throw new Error("Cannot get image data, canvas context not ready yet.");
