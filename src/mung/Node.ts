@@ -69,7 +69,9 @@ export interface Node {
   /**
    * Decoded pixels of the node mask.
    * When null, the annotated symbol is understood to occupy the
-   * entire bounding box.
+   * entire bounding box. The pixel data is in RGBA format, uint8.
+   * Transparent pixels are (0, 0, 0, 0) and mask pixels are red
+   * (255, 0, 0, 255). Any other values should not be present.
    */
   readonly decodedMask: ImageData | null;
 
@@ -87,7 +89,4 @@ export interface Node {
    * been parsed into other fields of the Node instance.
    */
   readonly data: DataItems;
-
-  // TODO: remove this, since it's obsolete
-  readonly polygon: number[] | null;
 }

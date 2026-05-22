@@ -100,7 +100,6 @@ export class StafflinesToolController implements IController {
         decodedMask: mask,
         textTranscription: null,
         data: {},
-        polygon: null,
       };
       this.notationGraphStore.insertNode(newStafflineNode);
       newNodes.push(newStafflineNode);

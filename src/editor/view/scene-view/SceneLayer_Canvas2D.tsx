@@ -89,30 +89,5 @@ function renderToCanvas(
 
     // bbox
     ctx.fillRect(node.left, node.top, node.width, node.height);
-
-    // polygon
-    fillPolygon(ctx, node);
   }
-}
-
-function fillPolygon(ctx: CanvasRenderingContext2D, node: Node) {
-  const polygon = node.polygon;
-
-  if (polygon === null) {
-    return;
-  }
-
-  ctx.beginPath();
-  let i = 0;
-
-  ctx.moveTo(polygon[i], polygon[i + 1]);
-  i += 2;
-
-  while (i < polygon.length) {
-    ctx.lineTo(polygon[i], polygon[i + 1]);
-    i += 2;
-  }
-
-  ctx.closePath();
-  ctx.fill();
 }

@@ -216,7 +216,6 @@ export class MainMenuController implements IController {
       decodedMask: proposedStaff.decodedMask,
       textTranscription: null,
       data: {},
-      polygon: null,
     };
     this.notationGraphStore.insertNode(staff);
 
@@ -248,7 +247,6 @@ export class MainMenuController implements IController {
         decodedMask: proposedStaffspace.decodedMask,
         textTranscription: null,
         data: {},
-        polygon: null,
       };
       staffSpaces.push(staffSpace);
       this.notationGraphStore.insertNode(staffSpace);

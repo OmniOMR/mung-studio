@@ -1,5 +1,4 @@
 import { useAtomValue } from "jotai";
-import { svgPathFromMungPolygon } from "../../../../mung/svgPathFromMungPolygon";
 import { classNameToHue } from "../../../../mung/classNameToHue";
 import { NodeDisplayMode } from "../../../model/EditorStateStore";
 import { useDataUrlFromMask } from "./useDataUrlFromMask";
@@ -31,30 +30,15 @@ export function SvgNode(props: SvgNodeProps) {
   const maskDataUrl = useDataUrlFromMask(node);
 
   // decide on what to display
-  const displayPolygon =
-    props.nodeDisplayMode === NodeDisplayMode.PolygonsAndMasks &&
-    node.polygon &&
-    isVisible;
   const displayMask =
     maskDataUrl !== undefined &&
-    !displayPolygon &&
     props.nodeDisplayMode === NodeDisplayMode.PolygonsAndMasks &&
     node.decodedMask &&
     isVisible;
-  const displayBbox = !displayPolygon && !displayMask && isVisible;
+  const displayBbox = !displayMask && isVisible;
 
   return (
     <>
-      {/* Polygon */}
-      {displayPolygon && (
-        <path
-          d={svgPathFromMungPolygon(node)}
-          fill={`hsla(${hue}, 100%, 50%, 0.2)`}
-          stroke={isSelected ? "white" : `hsla(${hue}, 100%, 50%, 1.0)`}
-          strokeWidth={isSelected ? "var(--scene-screen-pixel)" : "0"}
-        />
-      )}
-
       {/* Mask */}
       {displayMask && (
         <>

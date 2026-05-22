@@ -86,30 +86,17 @@ function pick_nearby_node(nodes: Node[], center: Node): Node {
 }
 
 /**
- * Generates the polygon field for the given node
+ * Generates the decodedMask field for the given node
  */
-function generatePolygon(
-  top: number,
-  left: number,
-  width: number,
-  height: number,
-): number[] {
-  const points: number[] = [];
-
-  const vertices = 50;
-  const center_x = left + width / 2;
-  const center_y = top + height / 2;
-  const radius = Math.min(width, height);
-  for (let i = 0; i < vertices; i++) {
-    const angle = (i / vertices) * 2 * Math.PI;
-    const radius_fraction = uniform(0.8, 1);
-    const x = center_x + Math.cos(angle) * radius * radius_fraction;
-    const y = center_y + Math.sin(angle) * radius * radius_fraction;
-
-    points.push(Math.round(x), Math.round(y));
+function generateMask(width: number, height: number): ImageData {
+  const pixelData = new Uint8ClampedArray(width * height * 4);
+  for (let i = 0; i < pixelData.length; i += 4) {
+    pixelData[i + 0] = 255; // R
+    pixelData[i + 1] = 0; // G
+    pixelData[i + 2] = 0; // B
+    pixelData[i + 3] = 255; // A
   }
-
-  return points;
+  return new ImageData(pixelData, width, height);
 }
 
 function generateTestNodes(): Node[] {
@@ -139,10 +126,9 @@ function generateTestNodes(): Node[] {
       syntaxInlinks: [],
       precedenceOutlinks: [],
       precedenceInlinks: [],
-      decodedMask: null,
+      decodedMask: generateMask(width, height),
       textTranscription: null,
       data: {},
-      polygon: generatePolygon(top, left, width, height),
     };
     nodes.push(node);
   }
