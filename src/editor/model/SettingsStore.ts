@@ -5,7 +5,6 @@ import { atomWithStorage } from "jotai/utils";
 export enum SceneRenderingEngine {
   SVG = "SVG",
   WebGL = "WebGL",
-  Canvas2D = "Canvas2D",
 }
 
 export class SettingsStore {

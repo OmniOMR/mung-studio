@@ -109,7 +109,6 @@ export function DisplayModeButtons() {
         >
           {sceneRenderingEngine === SceneRenderingEngine.SVG ? "SVG" : ""}
           {sceneRenderingEngine === SceneRenderingEngine.WebGL ? "GL" : ""}
-          {sceneRenderingEngine === SceneRenderingEngine.Canvas2D ? "2D" : ""}
         </Chip>
       </Tooltip>
     </>

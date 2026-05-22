@@ -1,6 +1,5 @@
 import { useContext, useRef } from "react";
 import { ForegroundLayer } from "./foreground-layer/ForegroundLayer";
-import { SceneLayer_Canvas2D } from "./SceneLayer_Canvas2D";
 import { SceneLayer_SVG } from "./scene-layer-svg/SceneLayer_SVG";
 import { SceneLayer_WebGL } from "./scene-layer-webgl/SceneLayer_WebGL";
 import { BackgroundLayer } from "./BackgroundLayer";
@@ -52,9 +51,6 @@ export function SceneView() {
       {sceneRenderingEngine === SceneRenderingEngine.SVG && <SceneLayer_SVG />}
       {sceneRenderingEngine === SceneRenderingEngine.WebGL && (
         <SceneLayer_WebGL />
-      )}
-      {sceneRenderingEngine === SceneRenderingEngine.Canvas2D && (
-        <SceneLayer_Canvas2D />
       )}
 
       {/* The editing overlay for the current object, consumes pointer events

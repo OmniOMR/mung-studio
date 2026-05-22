@@ -60,16 +60,6 @@ export function SettingsWindow() {
           >
             WebGL
           </Button>
-          <Button
-            aria-pressed={
-              sceneRenderingEngine === SceneRenderingEngine.Canvas2D
-            }
-            onClick={() =>
-              setSceneRenderingEngine(SceneRenderingEngine.Canvas2D)
-            }
-          >
-            Canvas2D
-          </Button>
         </ButtonGroup>
         <Typography id="modal-desc" textColor="text.tertiary">
           More settings to be added here...
