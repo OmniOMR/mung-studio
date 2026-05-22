@@ -1,13 +1,11 @@
 import { useAtomValue } from "jotai";
 import { classNameToHue } from "../../../../mung/classNameToHue";
-import { NodeDisplayMode } from "../../../model/EditorStateStore";
 import { useDataUrlFromMask } from "./useDataUrlFromMask";
 import { useContext } from "react";
 import { EditorContext } from "../../../EditorContext";
 
 export interface SvgNodeProps {
   readonly nodeId: number;
-  readonly nodeDisplayMode: NodeDisplayMode;
 }
 
 export function SvgNode(props: SvgNodeProps) {
@@ -31,10 +29,7 @@ export function SvgNode(props: SvgNodeProps) {
 
   // decide on what to display
   const displayMask =
-    maskDataUrl !== undefined &&
-    props.nodeDisplayMode === NodeDisplayMode.PolygonsAndMasks &&
-    node.decodedMask &&
-    isVisible;
+    maskDataUrl !== undefined && node.decodedMask && isVisible;
   const displayBbox = !displayMask && isVisible;
 
   return (

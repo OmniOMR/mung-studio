@@ -3,15 +3,6 @@ import { JotaiStore } from "./JotaiStore";
 import { AtomWithEvent } from "./AtomWithEvent";
 
 /**
- * How should nodes in the scene view be displayed
- */
-export enum NodeDisplayMode {
-  Bboxes = "Bboxes",
-  PolygonsAndMasks = "PolygonsAndMasks",
-  Hidden = "Hidden",
-}
-
-/**
  * Contans state that belongs to the editor
  * (what is visible, what editing mode is currently on, etc.)
  */
@@ -26,11 +17,6 @@ export class EditorStateStore {
   // View options //
   //////////////////
 
-  // atom that manages display of nodes
-  public readonly nodeDisplayModeAtom: PrimitiveAtom<NodeDisplayMode> = atom(
-    NodeDisplayMode.PolygonsAndMasks,
-  );
-
   // atom that manages display of syntax links
   private displaySyntaxLinksAtomWithEvent = AtomWithEvent.primitiveAtom(true);
   public get displaySyntaxLinksAtom() {
@@ -40,7 +26,7 @@ export class EditorStateStore {
     return this.displaySyntaxLinksAtomWithEvent.event;
   }
 
-  // atom that manages display of syntax links
+  // atom that manages display of precedence links
   private displayPrecedenceLinksAtomWithEvent =
     AtomWithEvent.primitiveAtom(true);
   public get displayPrecedenceLinksAtom() {

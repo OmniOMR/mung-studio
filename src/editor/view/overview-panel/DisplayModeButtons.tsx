@@ -11,7 +11,6 @@ import RectangleIcon from "@mui/icons-material/Rectangle";
 import PentagonIcon from "@mui/icons-material/Pentagon";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
 import { useAtom } from "jotai";
-import { NodeDisplayMode } from "../../model/EditorStateStore";
 import { useContext } from "react";
 import { EditorContext } from "../../EditorContext";
 import { SceneRenderingEngine } from "../../model/SettingsStore";
@@ -19,9 +18,6 @@ import { SceneRenderingEngine } from "../../model/SettingsStore";
 export function DisplayModeButtons() {
   const { editorStateStore, settingsStore } = useContext(EditorContext);
 
-  const [nodeDisplayMode, setNodeDisplayMode] = useAtom(
-    editorStateStore.nodeDisplayModeAtom,
-  );
   const [displaySyntaxLinks, setDisplaySyntaxLinks] = useAtom(
     editorStateStore.displaySyntaxLinksAtom,
   );
@@ -37,26 +33,17 @@ export function DisplayModeButtons() {
       {/* Node display mode */}
       <ButtonGroup size="sm">
         <Tooltip arrow title="Display nodes as bounding boxes">
-          <IconButton
-            aria-pressed={nodeDisplayMode === NodeDisplayMode.Bboxes}
-            onClick={() => setNodeDisplayMode(NodeDisplayMode.Bboxes)}
-          >
+          <IconButton disabled aria-pressed={false} onClick={() => {}}>
             <RectangleIcon />
           </IconButton>
         </Tooltip>
         <Tooltip arrow title="Display nodes as polygons and masks (slow)">
-          <IconButton
-            aria-pressed={nodeDisplayMode === NodeDisplayMode.PolygonsAndMasks}
-            onClick={() => setNodeDisplayMode(NodeDisplayMode.PolygonsAndMasks)}
-          >
+          <IconButton disabled aria-pressed={false} onClick={() => {}}>
             <PentagonIcon />
           </IconButton>
         </Tooltip>
         <Tooltip arrow title="Hide nodes">
-          <IconButton
-            aria-pressed={nodeDisplayMode === NodeDisplayMode.Hidden}
-            onClick={() => setNodeDisplayMode(NodeDisplayMode.Hidden)}
-          >
+          <IconButton disabled aria-pressed={false} onClick={() => {}}>
             <VisibilityOffIcon />
           </IconButton>
         </Tooltip>

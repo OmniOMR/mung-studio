@@ -1,7 +1,6 @@
 import * as d3 from "d3";
 import { useAtomValue } from "jotai";
 import { useContext, useRef } from "react";
-import { NodeDisplayMode } from "../../../model/EditorStateStore";
 import { SvgLink } from "./SvgLink";
 import { SvgNode } from "./SvgNode";
 import { getLinkId } from "../../../../mung/getLinkId";
@@ -11,10 +10,7 @@ import { EditorContext } from "../../../EditorContext";
  * Scene layer, rendered via SVG
  */
 export function SceneLayer_SVG() {
-  const { notationGraphStore, editorStateStore, zoomController } =
-    useContext(EditorContext);
-
-  const nodeDisplayMode = useAtomValue(editorStateStore.nodeDisplayModeAtom);
+  const { notationGraphStore, zoomController } = useContext(EditorContext);
 
   const nodeIds = useAtomValue(notationGraphStore.nodeIdsInSceneOrderAtom);
   const links = useAtomValue(notationGraphStore.linksAtom);
@@ -39,17 +35,11 @@ export function SceneLayer_SVG() {
     >
       <g ref={gRef}>
         {/* Nodes */}
-        {nodeDisplayMode !== NodeDisplayMode.Hidden && (
-          <g>
-            {nodeIds.map((nodeId) => (
-              <SvgNode
-                key={nodeId}
-                nodeId={nodeId}
-                nodeDisplayMode={nodeDisplayMode}
-              />
-            ))}
-          </g>
-        )}
+        <g>
+          {nodeIds.map((nodeId) => (
+            <SvgNode key={nodeId} nodeId={nodeId} />
+          ))}
+        </g>
 
         {/* Links */}
         <g>
