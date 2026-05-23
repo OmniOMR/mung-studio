@@ -4,16 +4,16 @@ import { Editor } from "../editor/Editor";
 import { Node } from "../mung/Node";
 import { useState } from "react";
 import { MungFileMetadata } from "../mung/MungFileMetadata";
+import { showcaseIndex } from "../assets/showcase";
 
 export function PerformanceTestingPage() {
   const navigate = useNavigate();
 
-  // This image was probbably incorrectly scanned by MZK and has insane DPI:
-  // 6670x8281 pixels, 570 DPI, 7.3 MB
-  // So it's an ideal test case. If this runs smooth, everything else will too.
+  // use an image from the showcase
   const imageUrl =
-    "https://kramerius.mzk.cz/search/iiif/uuid:" +
-    "3dcb2498-c7c1-4835-b2fa-a3cf9fdc2e68/full/max/0/default.jpg";
+    showcaseIndex[
+      "3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808"
+    ].imageUrl.toString();
 
   // Generates 2K random nodes.
   const [nodes, _] = useState<Node[]>(() => generateTestNodes());
@@ -104,10 +104,10 @@ function generateTestNodes(): Node[] {
 
   // generate nodes
   const classes = ["noteheadBlack", "stem", "flag8thUp", "beam", "barline"];
-  const page_width = 6670;
-  const page_height = 8281;
-  const min_size = 20;
-  const max_size = 200;
+  const page_width = 3912;
+  const page_height = 3314;
+  const min_size = 10;
+  const max_size = 100;
 
   for (let i = 0; i < 2_000; i++) {
     const top = Math.round(Math.random() * (page_height - max_size));
