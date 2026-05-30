@@ -23,9 +23,15 @@ import { LinkType } from "../../../../mung/LinkType";
 import { ZoomController } from "../../../controller/ZoomController";
 import { ZoomTransform } from "d3";
 import { getLinksOfNode } from "../../../../mung/getLinksOfNode";
-import { computeLinkCoordinates, LinkRenderCoordinates } from "../computeLinkRenderCoordinates";
+import {
+  computeLinkCoordinates,
+  LinkRenderCoordinates,
+} from "../computeLinkRenderCoordinates";
 import { StaffGeometryStore } from "../../../model/StaffGeometryStore";
-import { LINK_OUTLINE_STROKE_WIDTH, LINK_STROKE_WIDTH } from "../../../../mung/linkAppearance";
+import {
+  LINK_OUTLINE_STROKE_WIDTH,
+  LINK_STROKE_WIDTH,
+} from "../../../../mung/linkAppearance";
 
 const SHADER_COMMON = `#version 300 es
 
@@ -229,7 +235,7 @@ class LinkGeometry {
 
     const headFrontLength = this.lineThickness * 2 * this.arrowHeadScale;
     const headSideLength = this.lineThickness * this.arrowHeadScale;
-
+    
     const bodyEnd = vec2.create();
     vec2.scaleAndAdd(bodyEnd, toPoint, toFromNormVec, headFrontLength);
 
@@ -250,17 +256,23 @@ class LinkGeometry {
     const bodyBottomRight = vec2.sub(vec2.create(), fromPoint, bodyDisp);
     const bodyTopLeft = vec2.add(vec2.create(), bodyEnd, bodyDisp);
     const bodyTopRight = vec2.sub(vec2.create(), bodyEnd, bodyDisp);
+    const bodyTopLeftNoDisp = vec2.add(vec2.create(), toPoint, bodyDisp);
+    const bodyTopRightNoDisp = vec2.sub(vec2.create(), toPoint, bodyDisp);
 
     const normalBL = this.calcAvgNormal(
-      [bodyTopLeft, bodyBottomLeft],
+      [bodyTopLeftNoDisp, bodyBottomLeft],
       [bodyBottomLeft, bodyBottomRight],
     );
     const normalBR = this.calcAvgNormal(
       [bodyBottomLeft, bodyBottomRight],
-      [bodyBottomRight, bodyTopRight],
+      [bodyBottomRight, bodyTopRightNoDisp],
     );
     const bodyBottomLeftN = this.makeCoord(fromPoint, bodyBottomLeft, normalBL);
-    const bodyBottomRightN = this.makeCoord(fromPoint, bodyBottomRight, normalBR);
+    const bodyBottomRightN = this.makeCoord(
+      fromPoint,
+      bodyBottomRight,
+      normalBR,
+    );
     //stretch away from tip - do not overlap arrow triangle
     const bodyTopRightN = this.makeCoord(toPoint, bodyTopRight, normalBR);
     const bodyTopLeftN = this.makeCoord(toPoint, bodyTopLeft, normalBL);
@@ -406,9 +418,6 @@ class LinkGeometryDrawable implements GLDrawable {
   private zoomSubscription: ISimpleEventHandler<ZoomTransform>;
 
   private linkToGeomIDMap = new Map<string, number>();
-  private selectedLinks: Set<string> = new Set();
-  private linkToClassMap = new Map<string, Set<string>>();
-  private classToLinkMap = new Map<string, Set<string>>();
 
   private scale: number = 1.0;
 
@@ -470,10 +479,8 @@ class LinkGeometryDrawable implements GLDrawable {
       this.onLinkSelected(link);
     });
 
-    this.classVisibilitySubscription = (classes) => {
-      classes.forEach((clazz) => {
-        this.onClassVisibilityChanged(clazz);
-      });
+    this.classVisibilitySubscription = (classNames: readonly string[]) => {
+      this.onClassVisibilitiesChanged(classNames);
     };
 
     classVisibilityStore.onChange.subscribe(this.classVisibilitySubscription);
@@ -494,7 +501,6 @@ class LinkGeometryDrawable implements GLDrawable {
     //selectedLinks has to be kept despite the link type,
     //so that u_selected is global and not per-type
     const key = this.makeLinkKeyFromLink(Link);
-    this.selectedLinks.add(key);
     if (!this.isLinkAccepted(Link.type)) {
       return;
     }
@@ -503,26 +509,28 @@ class LinkGeometryDrawable implements GLDrawable {
 
   private onLinkDeselected(Link: Link): void {
     const key = this.makeLinkKeyFromLink(Link);
-    this.selectedLinks.delete(key);
     if (!this.isLinkAccepted(Link.type)) {
       return;
     }
     this.updateAttributeData(key);
   }
 
-  private onClassVisibilityChanged(clazz: string) {
-    const links = this.classToLinkMap.get(clazz);
-    if (links) {
-      for (const linkKey of links) {
-        this.updateAttributeData(linkKey);
+  private onClassVisibilitiesChanged(classNames: readonly string[]) {
+    for (const node of this.notationGraph.nodes) {
+      if (classNames.includes(node.className)) {
+        // update attributes for links of this node
+        for (const link of this.notationGraph.getLinksOfNode(node.id)) {
+          const linkKey = this.makeLinkKeyFromLink(link);
+          this.updateAttributeData(linkKey);
+        }
       }
     }
   }
 
   private updateAttributeData(key: string) {
-    const index = this.linkToGeomIDMap.get(key);
-    if (index !== undefined) {
-      this.attributeBuffer.updateGeometryById(index);
+    const geomId = this.linkToGeomIDMap.get(key);
+    if (geomId !== undefined) {
+      this.attributeBuffer.updateGeometryById(geomId);
     }
   }
 
@@ -550,109 +558,81 @@ class LinkGeometryDrawable implements GLDrawable {
     if (this.linkToGeomIDMap.has(key)) {
       return;
     }
-    const _this = this;
+    const link: Link = {
+      fromId: meta.fromNode.id,
+      toId: meta.toNode.id,
+      type: meta.linkType,
+    };
+
     const geometry = new LinkGeometry(
       this.notationGraph,
       this.staffGeometryStore,
       meta.fromNode.id,
       meta.toNode.id,
-      new (class implements LinkGeometryStateProvider {
-        isVisible(): boolean {
-          const linkClasses = _this.linkToClassMap.get(key);
-          for (const className of linkClasses || []) {
-            if (_this.classVisibilityStore.hiddenClasses.has(className)) {
-              return false;
-            }
-            if (
-              !_this.classVisibilityStore.visibleClasses.has(className) &&
-              DEFAULT_HIDDEN_CLASSES.has(className)
-            ) {
-              return false;
-            }
-          }
-          return true;
-        }
+      {
+        isVisible: () => {
+          const fromClass = this.notationGraph.getNode(link.fromId).className;
+          const toClass = this.notationGraph.getNode(link.toId).className;
+          const isFromClassVisible =
+            this.classVisibilityStore.visibleClasses.has(fromClass);
+          const isToClassVisible =
+            this.classVisibilityStore.visibleClasses.has(toClass);
+          const isVisible = isFromClassVisible && isToClassVisible;
+          const isSelected = this.selectionStore.isLinkPartiallySelected(link);
+          return isVisible || isSelected;
+        },
 
-        isHighlighted(): boolean {
-          return _this.selectedLinks.has(key);
-        }
-      })(),
+        isHighlighted: () => {
+          const isSelected = this.selectionStore.isLinkPartiallySelected(link);
+          return isSelected;
+        },
+      },
       LinkGeometryDrawable.LINK_WIDTH,
       2.25,
     );
 
-    const linkClasses = new Set([
-      meta.fromNode.className,
-      meta.toNode.className,
-    ]);
-    this.linkToClassMap.set(key, linkClasses);
-    for (const className of linkClasses) {
-      if (!this.classToLinkMap.has(className)) {
-        this.classToLinkMap.set(className, new Set());
-      }
-      this.classToLinkMap.get(className)!.add(key);
-    }
-
     const trisSource = geometry.positionSource();
-    const index = this.triangleBuffer.addGeometry(trisSource);
+    const geomId = this.triangleBuffer.addGeometry(trisSource);
     this.normalBuffer.addGeometry(geometry.normalSource());
     this.attributeBuffer.addGeometry(geometry.attributesSourceFor(trisSource));
-    this.linkToGeomIDMap.set(key, index);
-    //console.log("link insert", key, index);
+    this.linkToGeomIDMap.set(key, geomId);
+    //console.log("link insert", key, geomId);
   }
 
   private onLinkUpdated(link: Link) {
     const key = this.makeLinkKeyFromLink(link);
-    const index = this.linkToGeomIDMap.get(key);
-    if (index === undefined) {
+    const geomId = this.linkToGeomIDMap.get(key);
+    if (geomId === undefined) {
       return;
     }
-    this.triangleBuffer.updateGeometryById(index);
-    this.normalBuffer.updateGeometryById(index);
-    this.attributeBuffer.updateGeometryById(index);
+    this.triangleBuffer.updateGeometryById(geomId);
+    this.normalBuffer.updateGeometryById(geomId);
+    this.attributeBuffer.updateGeometryById(geomId);
   }
 
   private onLinkRemoved(meta: LinkRemoveMetadata) {
     const key = this.makeLinkKey(meta);
-    const index = this.linkToGeomIDMap.get(key);
-    //console.log("link remove", key, index);
-    if (index === undefined) {
+    const geomId = this.linkToGeomIDMap.get(key);
+    //console.log("link remove", key, geomId);
+    if (geomId === undefined) {
       return;
     }
-    this.triangleBuffer.removeGeometryById(index);
-    this.normalBuffer.removeGeometryById(index);
-    this.attributeBuffer.removeGeometryById(index);
+    this.triangleBuffer.removeGeometryById(geomId);
+    this.normalBuffer.removeGeometryById(geomId);
+    this.attributeBuffer.removeGeometryById(geomId);
     this.linkToGeomIDMap.delete(key);
-
-    // Shift all indices in linkToIndexMap after the removed one
-    this.linkToGeomIDMap.forEach((value, key) => {
-      if (value > index) {
-        this.linkToGeomIDMap.set(key, value - 1);
-      }
-    });
-
-    const linkClasses = this.linkToClassMap.get(key);
-    if (linkClasses) {
-      for (const className of linkClasses) {
-        const classLinks = this.classToLinkMap.get(className);
-        if (classLinks) {
-          classLinks.delete(key);
-        }
-      }
-    }
-    this.linkToClassMap.delete(key);
   }
 
   private makeLinkKey(data: LinkInsertMetadata): string {
     return `${data.fromNode.id}-${data.toNode.id}-${data.linkType}`;
   }
 
-  public attach(gl: GLRenderer) {}
+  public attach(gl: GLRenderer) { }
 
-  public release(gl: GLRenderer) {}
+  public release(gl: GLRenderer) { }
 
   public hasSelectedLinks(): boolean {
-    return this.selectedLinks.size > 0;
+    return this.selectionStore.partiallySelectedLinks.length > 0;
   }
 
   public draw(gl: GLRenderer): void {
@@ -661,7 +641,10 @@ class LinkGeometryDrawable implements GLDrawable {
     }
     let scale = this.scale;
     gl.setUniformFloat("u_arrow_scale", scale);
-    gl.setUniformFloat("u_outline_thickness", scale * (LINK_OUTLINE_STROKE_WIDTH - LINK_STROKE_WIDTH) / 2);
+    gl.setUniformFloat(
+      "u_outline_thickness",
+      (scale * (LINK_OUTLINE_STROKE_WIDTH - LINK_STROKE_WIDTH)) / 2,
+    );
     gl.bindBuffer(this.triangleBuffer, "a_position");
     gl.bindBuffer(this.normalBuffer, "a_normal");
     gl.bindBuffer(this.attributeBuffer, "a_attributes");

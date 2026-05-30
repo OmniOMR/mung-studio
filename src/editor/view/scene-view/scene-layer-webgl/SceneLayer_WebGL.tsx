@@ -21,43 +21,42 @@ export function SceneLayer_WebGL() {
     classVisibilityStore,
     editorStateStore,
     zoomController,
-    toolbeltController
+    toolbeltController,
   } = useContext(EditorContext);
 
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
-  const glRef = useRef<GLRenderer | null>(null);
 
   useEffect(() => {
     if (!canvasRef.current) return;
 
-    // Get WebGL context
-    const gl = canvasRef.current.getContext("webgl2", {
+    // Use this variable to access the canvas element
+    // inside this useEffect block. Different instantiations
+    // of the <SceneLayer_WebGL> react component will trigger
+    // separate invocations of this code which will create
+    // separate instances for all necessary services.
+    const canvasElement = canvasRef.current;
+
+    const webglCanvasContext = canvasElement.getContext("webgl2", {
       premultipliedAlpha: true,
     });
+    if (!webglCanvasContext) return;
 
-    if (!gl) return;
-    if (glRef.current !== null && glRef.current.isCurrent(gl)) {
-      glRef.current.release();
-      glRef.current = null;
-    }
-    if (glRef.current === null) {
-      glRef.current = new GLRenderer(gl);
-    }
+    const glRenderer = new GLRenderer(webglCanvasContext);
 
     const viewport: GLViewport = {
-      width: canvasRef.current.width,
-      height: canvasRef.current.height,
+      width: canvasElement.width,
+      height: canvasElement.height,
       pixelScaleX: devicePixelRatio,
-      pixelScaleY: devicePixelRatio
+      pixelScaleY: devicePixelRatio,
     };
 
     const masks = new MaskAtlasRenderer(
       notationGraphStore,
       classVisibilityStore,
       selectionStore,
-      zoomController
+      zoomController,
     );
-    glRef.current.addDrawable(masks);
+    glRenderer.addDrawable(masks);
 
     const syntaxLinks = new SyntaxLinkGeometryDrawable(
       notationGraphStore,
@@ -79,7 +78,7 @@ export function SceneLayer_WebGL() {
       syntaxLinks,
       precedenceLinks,
     ]);
-    glRef.current.addDrawable(masterDrawable);
+    glRenderer.addDrawable(masterDrawable);
 
     let noMoreUpdates = false;
 
@@ -87,14 +86,14 @@ export function SceneLayer_WebGL() {
       if (noMoreUpdates) {
         return;
       }
-      glRef.current?.draw();
+      glRenderer.draw();
     };
 
-    glRef.current!.updateTransform(zoomController.currentTransform);
-    glRef.current!.setViewport(viewport);
+    glRenderer.updateTransform(zoomController.currentTransform);
+    glRenderer.setViewport(viewport);
 
     const onZoom = (transform: d3.ZoomTransform) => {
-      glRef.current!.updateTransform(transform);
+      glRenderer.updateTransform(transform);
       render();
     };
 
@@ -111,7 +110,7 @@ export function SceneLayer_WebGL() {
       } else {
         usingLiveRender = false;
       }
-    }
+    };
 
     const onGraphUpdate = () => {
       if (shouldUseLiveRender()) {
@@ -138,11 +137,9 @@ export function SceneLayer_WebGL() {
     //https://wikis.khronos.org/webgl/HandlingHighDPI
 
     const resizeObserver = new ResizeObserver(resizeTheCanvasToDisplaySize);
-    resizeObserver.observe(canvasRef.current);
+    resizeObserver.observe(canvasElement);
 
     function resizeTheCanvasToDisplaySize(entries) {
-      let canvas = canvasRef.current!;
-
       const entry = entries[0];
       let width;
       let height;
@@ -158,21 +155,17 @@ export function SceneLayer_WebGL() {
         // fallback for Safari that will not always be correct
         ratioX = devicePixelRatio;
         ratioY = devicePixelRatio;
-        width = Math.round(
-          entry.contentBoxSize[0].inlineSize * ratioX,
-        );
-        height = Math.round(
-          entry.contentBoxSize[0].blockSize * ratioY,
-        );
+        width = Math.round(entry.contentBoxSize[0].inlineSize * ratioX);
+        height = Math.round(entry.contentBoxSize[0].blockSize * ratioY);
       }
-      canvas.width = width;
-      canvas.height = height;
+      canvasElement.width = width;
+      canvasElement.height = height;
 
       viewport.width = width;
       viewport.height = height;
       viewport.pixelScaleX = ratioX;
       viewport.pixelScaleY = ratioY;
-      glRef.current!.setViewport(viewport);
+      glRenderer.setViewport(viewport);
 
       render();
     }

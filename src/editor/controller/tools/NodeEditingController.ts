@@ -315,7 +315,6 @@ export class NodeEditingController implements IController {
         decodedMask: this.exportMaskImageDataFromCanvas(),
         textTranscription: null,
         data: {},
-        polygon: null,
       };
       this.notationGraphStore.insertNode(node);
 

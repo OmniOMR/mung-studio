@@ -84,9 +84,7 @@ export class SelectionStore {
 
     // compute nodes that have been newly selected
     // (in the order they have in the new selection)
-    const nodeSetAdditions = newNodeList.filter(
-      (id) => !oldNodeSet.has(id),
-    );
+    const nodeSetAdditions = newNodeList.filter((id) => !oldNodeSet.has(id));
 
     // compute nodes that have been de-selected
     // (in the order they had in the old selection)
@@ -128,8 +126,7 @@ export class SelectionStore {
     // build up the list of current fully selected links
     const newFullLinkSet: Link[] = newPartialLinkSet.filter(
       (link) =>
-        this.isNodeSelected(link.fromId) &&
-        this.isNodeSelected(link.toId),
+        this.isNodeSelected(link.fromId) && this.isNodeSelected(link.toId),
     );
 
     // partial link set modifications
@@ -284,6 +281,24 @@ export class SelectionStore {
     return this._selectedNodeIDSet.has(nodeId);
   }
 
+  /**
+   * Check whether a link is partially selected.
+   * Has 0(N) where N is the number of selected links,
+   * but can be refactored if that becomes an issue.
+   */
+  public isLinkPartiallySelected(link: Link): boolean {
+    return includesLink(this.partiallySelectedLinks, link);
+  }
+
+  /**
+   * Check whether a link is fully selected.
+   * Has 0(N) where N is the number of selected links,
+   * but can be refactored if that becomes an issue.
+   */
+  public isLinkFullySelected(link: Link): boolean {
+    return includesLink(this.fullySelectedLinks, link);
+  }
+
   ////////////
   // Events //
   ////////////
@@ -372,7 +387,7 @@ export class SelectionStore {
         linkId,
         atom((get) => {
           this.linkSignalAtoms.get(linkId).subscribe(get);
-          return includesLink(this._partiallySelectedLinks, link);
+          return this.isLinkPartiallySelected(link);
         }),
       );
     }
@@ -390,7 +405,7 @@ export class SelectionStore {
         linkId,
         atom((get) => {
           this.linkSignalAtoms.get(linkId).subscribe(get);
-          return includesLink(this._fullySelectedLinks, link);
+          return this.isLinkFullySelected(link);
         }),
       );
     }

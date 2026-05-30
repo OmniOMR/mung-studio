@@ -4,16 +4,16 @@ import { Editor } from "../editor/Editor";
 import { Node } from "../mung/Node";
 import { useState } from "react";
 import { MungFileMetadata } from "../mung/MungFileMetadata";
+import { showcaseIndex } from "../assets/showcase";
 
 export function PerformanceTestingPage() {
   const navigate = useNavigate();
 
-  // This image was probbably incorrectly scanned by MZK and has insane DPI:
-  // 6670x8281 pixels, 570 DPI, 7.3 MB
-  // So it's an ideal test case. If this runs smooth, everything else will too.
+  // use an image from the showcase
   const imageUrl =
-    "https://kramerius.mzk.cz/search/iiif/uuid:" +
-    "3dcb2498-c7c1-4835-b2fa-a3cf9fdc2e68/full/max/0/default.jpg";
+    showcaseIndex[
+      "3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808"
+    ].imageUrl.toString();
 
   // Generates 2K random nodes.
   const [nodes, _] = useState<Node[]>(() => generateTestNodes());
@@ -86,41 +86,28 @@ function pick_nearby_node(nodes: Node[], center: Node): Node {
 }
 
 /**
- * Generates the polygon field for the given node
+ * Generates the decodedMask field for the given node
  */
-function generatePolygon(
-  top: number,
-  left: number,
-  width: number,
-  height: number,
-): number[] {
-  const points: number[] = [];
-
-  const vertices = 50;
-  const center_x = left + width / 2;
-  const center_y = top + height / 2;
-  const radius = Math.min(width, height);
-  for (let i = 0; i < vertices; i++) {
-    const angle = (i / vertices) * 2 * Math.PI;
-    const radius_fraction = uniform(0.8, 1);
-    const x = center_x + Math.cos(angle) * radius * radius_fraction;
-    const y = center_y + Math.sin(angle) * radius * radius_fraction;
-
-    points.push(Math.round(x), Math.round(y));
+function generateMask(width: number, height: number): ImageData {
+  const pixelData = new Uint8ClampedArray(width * height * 4);
+  for (let i = 0; i < pixelData.length; i += 4) {
+    pixelData[i + 0] = 255; // R
+    pixelData[i + 1] = 0; // G
+    pixelData[i + 2] = 0; // B
+    pixelData[i + 3] = 255; // A
   }
-
-  return points;
+  return new ImageData(pixelData, width, height);
 }
 
 function generateTestNodes(): Node[] {
   const nodes: Node[] = [];
 
   // generate nodes
-  const classes = ["noteheadFull", "stem", "flag", "beam", "barline"];
-  const page_width = 6670;
-  const page_height = 8281;
-  const min_size = 20;
-  const max_size = 200;
+  const classes = ["noteheadBlack", "stem", "flag8thUp", "beam", "barline"];
+  const page_width = 3912;
+  const page_height = 3314;
+  const min_size = 10;
+  const max_size = 100;
 
   for (let i = 0; i < 2_000; i++) {
     const top = Math.round(Math.random() * (page_height - max_size));
@@ -139,10 +126,9 @@ function generateTestNodes(): Node[] {
       syntaxInlinks: [],
       precedenceOutlinks: [],
       precedenceInlinks: [],
-      decodedMask: null,
+      decodedMask: generateMask(width, height),
       textTranscription: null,
       data: {},
-      polygon: generatePolygon(top, left, width, height),
     };
     nodes.push(node);
   }

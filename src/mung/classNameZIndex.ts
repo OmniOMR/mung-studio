@@ -220,6 +220,7 @@ const lookupTable = {
   ottavaAlta: 6_700,
   ottavaBassa: 6_700,
   ottavaBassaBa: 6_700,
+  ottavaSpanner: 6_701,
 
   dynamicsText: 6_800,
   dynamicPiano: 6_801,

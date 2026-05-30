@@ -7,11 +7,11 @@ import {
 } from "@mui/joy";
 import PolylineIcon from "@mui/icons-material/Polyline";
 import TimelineIcon from "@mui/icons-material/Timeline";
-import RectangleIcon from "@mui/icons-material/Rectangle";
-import PentagonIcon from "@mui/icons-material/Pentagon";
 import VisibilityOffIcon from "@mui/icons-material/VisibilityOff";
+import CropOriginalIcon from "@mui/icons-material/CropOriginal";
+import ContrastIcon from "@mui/icons-material/Contrast";
+import AutoAwesomeIcon from "@mui/icons-material/AutoAwesome";
 import { useAtom } from "jotai";
-import { NodeDisplayMode } from "../../model/EditorStateStore";
 import { useContext } from "react";
 import { EditorContext } from "../../EditorContext";
 import { SceneRenderingEngine } from "../../model/SettingsStore";
@@ -19,9 +19,13 @@ import { SceneRenderingEngine } from "../../model/SettingsStore";
 export function DisplayModeButtons() {
   const { editorStateStore, settingsStore } = useContext(EditorContext);
 
-  const [nodeDisplayMode, setNodeDisplayMode] = useAtom(
-    editorStateStore.nodeDisplayModeAtom,
+  const [isImageContrastReduced, setIsImageContrastReduced] = useAtom(
+    editorStateStore.isImageContrastReducedAtom,
   );
+  const [isImageInverted, setIsImageInverted] = useAtom(
+    editorStateStore.isImageInvertedAtom,
+  );
+
   const [displaySyntaxLinks, setDisplaySyntaxLinks] = useAtom(
     editorStateStore.displaySyntaxLinksAtom,
   );
@@ -34,30 +38,36 @@ export function DisplayModeButtons() {
 
   return (
     <>
-      {/* Node display mode */}
+      {/* Background image filters */}
       <ButtonGroup size="sm">
-        <Tooltip arrow title="Display nodes as bounding boxes">
+        <Tooltip arrow title="Show original image with no filters">
           <IconButton
-            aria-pressed={nodeDisplayMode === NodeDisplayMode.Bboxes}
-            onClick={() => setNodeDisplayMode(NodeDisplayMode.Bboxes)}
+            aria-pressed={!isImageContrastReduced && !isImageInverted}
+            onClick={() => {
+              setIsImageContrastReduced(false);
+              setIsImageInverted(false);
+            }}
           >
-            <RectangleIcon />
+            <CropOriginalIcon />
           </IconButton>
         </Tooltip>
-        <Tooltip arrow title="Display nodes as polygons and masks (slow)">
+        <Tooltip arrow title="Reduce image contrast to better see B/W images">
           <IconButton
-            aria-pressed={nodeDisplayMode === NodeDisplayMode.PolygonsAndMasks}
-            onClick={() => setNodeDisplayMode(NodeDisplayMode.PolygonsAndMasks)}
+            aria-pressed={isImageContrastReduced}
+            onClick={() => setIsImageContrastReduced(!isImageContrastReduced)}
           >
-            <PentagonIcon />
+            <AutoAwesomeIcon />
           </IconButton>
         </Tooltip>
-        <Tooltip arrow title="Hide nodes">
+        <Tooltip
+          arrow
+          title="Invert image colors for the white-on-black experience"
+        >
           <IconButton
-            aria-pressed={nodeDisplayMode === NodeDisplayMode.Hidden}
-            onClick={() => setNodeDisplayMode(NodeDisplayMode.Hidden)}
+            aria-pressed={isImageInverted}
+            onClick={() => setIsImageInverted(!isImageInverted)}
           >
-            <VisibilityOffIcon />
+            <ContrastIcon />
           </IconButton>
         </Tooltip>
       </ButtonGroup>
@@ -109,7 +119,6 @@ export function DisplayModeButtons() {
         >
           {sceneRenderingEngine === SceneRenderingEngine.SVG ? "SVG" : ""}
           {sceneRenderingEngine === SceneRenderingEngine.WebGL ? "GL" : ""}
-          {sceneRenderingEngine === SceneRenderingEngine.Canvas2D ? "2D" : ""}
         </Chip>
       </Tooltip>
     </>

@@ -2,7 +2,7 @@ import { Link as RouterLink } from "react-router-dom";
 import Link from "@mui/joy/Link";
 import Typography from "@mui/joy/Typography";
 import Box from "@mui/joy/Box";
-import { Card, Grid } from "@mui/joy";
+import { AspectRatio, Card, CardContent, CardOverflow, Grid } from "@mui/joy";
 import ComputerIcon from "@mui/icons-material/Computer";
 import ConstructionIcon from "@mui/icons-material/Construction";
 import FilterDramaIcon from "@mui/icons-material/FilterDrama";
@@ -14,6 +14,7 @@ import ErrorIcon from "@mui/icons-material/Error";
 
 import packageJson from "../../package.json";
 import { JSX } from "react";
+import { showcaseIndex } from "../assets/showcase";
 const VERSION = packageJson.version;
 
 const HAS_SIMPLE_PHP_BACKEND =
@@ -34,9 +35,41 @@ export function HomePage() {
         Version {VERSION}
       </Typography>
       <Typography level="body-md" gutterBottom>
-        This is a viewer and editor for the MuNG format.
+        MuNG Studio is a viewer and editor for the Music Notation Graph format.
       </Typography>
       <Box sx={{ height: 30 }}></Box>
+
+      <Typography level="h2" gutterBottom>
+        Showcase
+      </Typography>
+      <Typography level="body-md" gutterBottom>
+        Open documents below and play with them to get used to MuNG Studio and
+        understand the MuNG format. Changes you make will not be saved so don't
+        worry about breaking things.
+      </Typography>
+      <Grid container spacing={2} sx={{ flexGrow: 1, mb: 4, mt: 2 }}>
+        <Grid size={4}>
+          <ShowcaseCard
+            title="Modern Handwritten"
+            description="OmniOMR dataset"
+            documentName="ca625f33-b4e1-49a9-bbc4-63130ba0fe70_b611e394-9858-4732-a14c-648f11497bb9"
+          />
+        </Grid>
+        <Grid size={4}>
+          <ShowcaseCard
+            title="Old Typeset"
+            description="OmniOMR dataset"
+            documentName="3bb9e322-bc61-4307-856b-6f8fb1a640df_2d5f652c-1df0-474c-ae23-3fb699afe808"
+          />
+        </Grid>
+        <Grid size={4}>
+          <ShowcaseCard
+            title="Old Handwritten"
+            description="OmniOMR dataset"
+            documentName="7a040274-1704-4a21-b1c5-f48c821e3841_ced95a07-0587-473c-9c91-199a35555360"
+          />
+        </Grid>
+      </Grid>
 
       <Typography level="h2" gutterBottom>
         Work on documents
@@ -183,6 +216,39 @@ function ClickableCard(props: ClickableCardProps) {
       >
         <Typography level="body-md">{props.description}</Typography>
       </Link>
+    </Card>
+  );
+}
+
+interface ShowcaseCardProps {
+  readonly title?: string;
+  readonly description?: string;
+  readonly documentName: string;
+}
+
+function ShowcaseCard(props: ShowcaseCardProps) {
+  return (
+    <Card variant="outlined" color="neutral" sx={{ p: 2 }}>
+      <CardOverflow>
+        <AspectRatio minHeight="120px" maxHeight="200px">
+          <img
+            src={showcaseIndex[props.documentName].thumbnailUrl.toString()}
+            loading="lazy"
+            alt=""
+          />
+        </AspectRatio>
+      </CardOverflow>
+      <CardContent>
+        <Typography level="title-md">{props.title}</Typography>
+        <Link
+          overlay
+          component={RouterLink}
+          to={"showcase/" + props.documentName}
+          sx={{ display: "block" }}
+        >
+          <Typography level="body-sm">{props.description}</Typography>
+        </Link>
+      </CardContent>
     </Card>
   );
 }

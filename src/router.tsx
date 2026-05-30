@@ -4,6 +4,7 @@ import { InMemoryPage } from "./pages/InMemoryPage";
 import { PerformanceTestingPage } from "./pages/PerformanceTestingPage";
 import { DocumentsPage as SimpleBackendDocumentsPage } from "./pages/simple-backend/DocumentsPage";
 import { DocumentEditorPage } from "./pages/simple-backend/DocumentEditorPage";
+import { ShowcasePage } from "./pages/ShowcasePage";
 
 export const router = createHashRouter([
   {
@@ -13,6 +14,10 @@ export const router = createHashRouter([
   {
     path: "in-memory",
     element: <InMemoryPage />,
+  },
+  {
+    path: "showcase/:documentName",
+    element: <ShowcasePage />,
   },
   {
     path: "performance-testing",

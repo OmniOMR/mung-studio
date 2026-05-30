@@ -29,8 +29,7 @@ export class ToolbeltController implements IController {
    */
   public readonly currentToolAtom = atom<EditorTool>(EditorTool.Pointer);
 
-  private _onToolChange =
-    new SimpleEventDispatcher<ToolChangeMetadata>();
+  private _onToolChange = new SimpleEventDispatcher<ToolChangeMetadata>();
 
   /**
    * Fires whenever a new tool is activated.

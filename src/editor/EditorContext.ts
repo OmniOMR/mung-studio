@@ -26,6 +26,7 @@ import { BackgroundImageStore } from "./model/BackgroundImageStore";
 import { StafflinesToolController } from "./controller/tools/StafflinesToolController";
 import { StaffGeometryStore } from "./model/StaffGeometryStore";
 import { NodeNavigationController } from "./controller/NodeNavigationController";
+import { StartupController } from "./controller/StartupController";
 import { ModelRunnerWorkerConnection } from "../../models/ModelRunnerWorkerConnection";
 
 /**
@@ -58,6 +59,7 @@ export interface EditorContextState {
   readonly stafflinesToolController: StafflinesToolController;
   readonly mainMenuController: MainMenuController;
   readonly nodeNavigationController: NodeNavigationController;
+  readonly startupController: StartupController;
 }
 
 /**
@@ -244,6 +246,16 @@ export function useConstructContextServices(
     [],
   );
 
+  const startupController = useMemo(
+    () =>
+      new StartupController(
+        backgroundImageStore,
+        zoomController,
+        editorStateStore,
+      ),
+    [],
+  );
+
   return {
     backgroundImageStore,
     notationGraphStore,
@@ -271,6 +283,7 @@ export function useConstructContextServices(
     stafflinesToolController,
     mainMenuController,
     nodeNavigationController,
+    startupController,
   };
 }
 

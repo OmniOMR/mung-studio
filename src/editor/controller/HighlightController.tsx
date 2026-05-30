@@ -232,16 +232,19 @@ export class HighlightController implements IController {
     return (
       <>
         <text
-          x={highlightedNode.left + highlightedNode.width}
-          y={highlightedNode.top}
+          x="0"
+          y="0"
           fill="white"
-          fontSize="calc(var(--scene-screen-pixel) * 16)"
+          fontSize="16"
           fontFamily="monospace"
           fontWeight="700"
           style={{
             transform:
-              "translateY(calc(var(--scene-screen-pixel) * 15px))" +
-              "translateX(calc(var(--scene-screen-pixel) * 10px))",
+              // move origin to node corner
+              `translateX(${highlightedNode.left + highlightedNode.width}px) ` +
+              `translateY(${highlightedNode.top}px) ` +
+              "scale(calc(var(--scene-screen-pixel))) " + // scale to zoom
+              "translate(10px, 15px)", // position text wrt origin
             textShadow: "1px 1px 2px rgba(0, 0, 0, 0.4)",
           }}
         >
@@ -268,18 +271,23 @@ export class HighlightController implements IController {
         )}
         {highlightedNode.textTranscription && (
           <text
-            x={highlightedNode.left}
-            y={highlightedNode.top + highlightedNode.height}
+            x="0"
+            y="0"
             fill="white"
-            fontSize="calc(var(--scene-screen-pixel) * 12)"
+            fontSize="12"
             fontFamily="monospace"
             fontWeight="400"
             style={{
+              transform:
+                // move origin to node corner
+                `translateX(${highlightedNode.left}px) ` +
+                `translateY(${highlightedNode.top + highlightedNode.height}px) ` +
+                "scale(calc(var(--scene-screen-pixel)))", // scale to zoom
               textShadow: "1px 1px 2px rgba(0, 0, 0, 0.4)",
             }}
           >
             {highlightedNode.textTranscription.split("\n").map((line, i) => (
-              <tspan key={i} x={highlightedNode.left} dy="1.3em">
+              <tspan key={i} x="0" dy="1.3em">
                 {line}
               </tspan>
             ))}

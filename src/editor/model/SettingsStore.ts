@@ -5,7 +5,6 @@ import { atomWithStorage } from "jotai/utils";
 export enum SceneRenderingEngine {
   SVG = "SVG",
   WebGL = "WebGL",
-  Canvas2D = "Canvas2D",
 }
 
 export class SettingsStore {
@@ -26,8 +25,9 @@ export class SettingsStore {
   /**
    * Controls the method for scene layer rendering
    */
-  public readonly sceneRenderingEngineAtom = atomWithStorage<SceneRenderingEngine>(
-    "sceneRenderingEngine",
-    SceneRenderingEngine.SVG,
-  );
+  public readonly sceneRenderingEngineAtom =
+    atomWithStorage<SceneRenderingEngine>(
+      "MungStudio::SceneRenderingEngine",
+      SceneRenderingEngine.WebGL,
+    );
 }

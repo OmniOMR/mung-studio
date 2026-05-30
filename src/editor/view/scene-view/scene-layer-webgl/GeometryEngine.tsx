@@ -28,15 +28,18 @@ export class BufferDirtyStateKeeper {
     return this.minDirtyIndex >= 0 && this.minDirtyIndex < bufSize;
   }
 
-  public getDirtyRange(): [number, number] {
+  public getDirtyRange(): [number, number] | null {
     let min = this.minDirtyIndex;
     let max = this.maxDirtyIndex;
     const bufSize = this.bufSizeFunc();
-    if (min > bufSize) {
-      min = bufSize;
+    if (bufSize === 0) {
+      return null;
     }
-    if (max > bufSize) {
-      max = bufSize;
+    if (min >= bufSize) {
+      return null;
+    }
+    if (max >= bufSize) {
+      max = bufSize - 1;
     }
     return [min, max];
   }
@@ -205,8 +208,13 @@ export class GeometryBuffer implements GLBuffer {
 
       this.vertexTopIndex -= geometry.vertexCount;
 
-      this.dirtyState.markDirty(index);
-      this.dirtyState.markDirty(this.geometries.length - 1);
+      if (index < this.geometries.length) {
+        // do not mark if past the end of the new array (last element),
+        // in that case we just decrease the vertexTopIndex when drawing
+        this.dirtyState.markDirty(index);
+        // effectively marks all geometries since the index as empty
+        this.dirtyState.markDirty(this.geometries.length - 1);
+      }
 
       //update vertex offsets
       for (let i = index; i < this.geometries.length; i++) {
@@ -245,7 +253,11 @@ export class GeometryBuffer implements GLBuffer {
       gl.bufferData(gl.ARRAY_BUFFER, this.buffer, gl.STATIC_DRAW);
       this.glBufferSize = this.buffer.length;
     } else {
-      const [startGeom, endGeom] = this.dirtyState.getDirtyRange();
+      const dirtyRange = this.dirtyState.getDirtyRange();
+      if (dirtyRange === null) {
+        return;
+      }
+      const [startGeom, endGeom] = dirtyRange;
 
       const startVertex = this.getGeomVertexStart(startGeom);
       const endVertex = this.getGeomVertexEnd(endGeom);

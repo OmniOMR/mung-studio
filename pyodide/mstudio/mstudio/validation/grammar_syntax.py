@@ -586,7 +586,15 @@ ANYOF(""" + _NORMAL_NOTEHEADS + """) | ornamentShortTrill{1,}
 # Octaves #
 ###########
 
-# 🚧 Under construction.
+# ottava
+# ======
+# must be owned by the spanner
+ottavaSpanner | ottava{1}
+
+# ottavaSpanner
+# =============
+# can be owned by 1 or 2 durable parents
+ANYOF(""" + _DURABLE_PARENT + """) | ottavaSpanner{1,2}
 
 # arpeggiato
 # ==========

@@ -185,6 +185,7 @@ def build_default_validation_engine():
         ]),
         NoteheadChildOrientationRule(2003, "Above", "Below", ["fermata"]),
         NoteheadChildOrientationRule(2004, "Up", "Down", ["graceNoteSlashStem"]),
+        # TODO: notehead may never be linked to BOTH a legerLine and staffSpace/Line
 
         # 3xxx codes are mask pixel-shape validation issues
         SinglePixelLineRule(3001, "barlineSingle", 1),
@@ -206,6 +207,7 @@ def build_default_validation_engine():
         MandatoryTextTranscriptionRule(4001, "dynamicDiminuendo"),
         MandatoryTextTranscriptionRule(4001, "voltaText"),
         MandatoryTextTranscriptionRule(4001, "repeatText"),
+        MandatoryTextTranscriptionRule(4001, "ottava"),
         
         # 5xxx codes are grammar validation issues
         # 5001 - generic grammar issue

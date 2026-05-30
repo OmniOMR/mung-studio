@@ -87,7 +87,6 @@ export function unmarshalMungNode(mnode: MarshalledNode): Node {
     data: {
       // yes, discard additional data - this is a temporary solution for now
     },
-    polygon: null, // deprecated field
   };
 }
 

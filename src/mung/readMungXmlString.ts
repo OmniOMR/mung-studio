@@ -68,7 +68,6 @@ function readNodeFromXmlElement(element: Element): Node {
     decodedMask,
     textTranscription,
     data: dataItems,
-    polygon: null,
   };
 }
 
