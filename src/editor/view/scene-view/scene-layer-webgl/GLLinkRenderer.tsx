@@ -150,7 +150,7 @@ class LinkGeometry {
     private stateProvider: LinkGeometryStateProvider,
     private lineThickness: number = 5,
     private arrowHeadScale: number = 2.0,
-  ) {}
+  ) { }
 
   public positionSource(): GeometrySource {
     return {
@@ -235,15 +235,7 @@ class LinkGeometry {
 
     const headFrontLength = this.lineThickness * 2 * this.arrowHeadScale;
     const headSideLength = this.lineThickness * this.arrowHeadScale;
-
-    // Short links are those that at zoom 1.0 have body nested inside
-    // of the head. This changes the clockwise-anticlockwise nature
-    // of body corners and throws off body normals which in turn
-    // throws off link selection outlines. Therefore for short links,
-    // the body normals have to be computed slightly differently.
-    const linkLength = vec2.len(vec2.sub(vec2.create(), fromPoint, toPoint));
-    const isShortLink = linkLength < headFrontLength;
-
+    
     const bodyEnd = vec2.create();
     vec2.scaleAndAdd(bodyEnd, toPoint, toFromNormVec, headFrontLength);
 
@@ -264,25 +256,17 @@ class LinkGeometry {
     const bodyBottomRight = vec2.sub(vec2.create(), fromPoint, bodyDisp);
     const bodyTopLeft = vec2.add(vec2.create(), bodyEnd, bodyDisp);
     const bodyTopRight = vec2.sub(vec2.create(), bodyEnd, bodyDisp);
+    const bodyTopLeftNoDisp = vec2.add(vec2.create(), toPoint, bodyDisp);
+    const bodyTopRightNoDisp = vec2.sub(vec2.create(), toPoint, bodyDisp);
 
-    const normalBL = isShortLink
-      ? this.calcAvgNormal(
-          [bodyBottomLeft, bodyTopLeft],
-          [bodyTopLeft, bodyTopRight],
-        )
-      : this.calcAvgNormal(
-          [bodyTopLeft, bodyBottomLeft],
-          [bodyBottomLeft, bodyBottomRight],
-        );
-    const normalBR = isShortLink
-      ? this.calcAvgNormal(
-          [bodyTopLeft, bodyTopRight],
-          [bodyTopRight, bodyBottomRight],
-        )
-      : this.calcAvgNormal(
-          [bodyBottomLeft, bodyBottomRight],
-          [bodyBottomRight, bodyTopRight],
-        );
+    const normalBL = this.calcAvgNormal(
+      [bodyTopLeftNoDisp, bodyBottomLeft],
+      [bodyBottomLeft, bodyBottomRight],
+    );
+    const normalBR = this.calcAvgNormal(
+      [bodyBottomLeft, bodyBottomRight],
+      [bodyBottomRight, bodyTopRightNoDisp],
+    );
     const bodyBottomLeftN = this.makeCoord(fromPoint, bodyBottomLeft, normalBL);
     const bodyBottomRightN = this.makeCoord(
       fromPoint,
@@ -643,9 +627,9 @@ class LinkGeometryDrawable implements GLDrawable {
     return `${data.fromNode.id}-${data.toNode.id}-${data.linkType}`;
   }
 
-  public attach(gl: GLRenderer) {}
+  public attach(gl: GLRenderer) { }
 
-  public release(gl: GLRenderer) {}
+  public release(gl: GLRenderer) { }
 
   public hasSelectedLinks(): boolean {
     return this.selectionStore.partiallySelectedLinks.length > 0;
