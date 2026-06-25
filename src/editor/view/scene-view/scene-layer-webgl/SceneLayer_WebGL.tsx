@@ -146,7 +146,7 @@ export function SceneLayer_WebGL() {
       let ratioX;
       let ratioY;
       if (entry.devicePixelContentBoxSize) {
-        console.log(entry);
+        //console.log(entry);
         width = entry.devicePixelContentBoxSize[0].inlineSize;
         height = entry.devicePixelContentBoxSize[0].blockSize;
         ratioX = width / entry.contentBoxSize[0].inlineSize;

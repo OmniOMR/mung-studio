@@ -8,11 +8,13 @@ export class DpiScalerUtil {
     quality: ImageSmoothingQuality = "high"
   ): ImageData {
     // source canvas
-    const src = new OffscreenCanvas(inputRect.width, inputRect.height);
+    // this must be as big as the inputRect's absolute coordinates, because putImageData
+    // does not actually crop the source image
+    const src = new OffscreenCanvas(inputRect.x + inputRect.width, inputRect.y + inputRect.height);
     const srcCtx = src.getContext("2d", { willReadFrequently: true });
     if (!srcCtx) throw new Error("Failed to create source 2D context");
-    srcCtx.putImageData(input, 0, 0, 0, 0, inputRect.width, inputRect.height);
-
+    srcCtx.putImageData(input, 0, 0, inputRect.x, inputRect.y, inputRect.width, inputRect.height);
+    
     return this.scaleCanvasToDpi(
       src,
       inputRect,
@@ -28,6 +30,13 @@ export class DpiScalerUtil {
       DpiScalerUtil.scaleDimension(rect.y, sourceDpi, targetDpi),
       DpiScalerUtil.scaleDimension(rect.width, sourceDpi, targetDpi),
       DpiScalerUtil.scaleDimension(rect.height, sourceDpi, targetDpi)
+    );
+  }
+
+  static scalePoint(point: DOMPointReadOnly, sourceDpi: number, targetDpi: number): DOMPointReadOnly {
+    return new DOMPointReadOnly(
+      DpiScalerUtil.scaleDimension(point.x, sourceDpi, targetDpi),
+      DpiScalerUtil.scaleDimension(point.y, sourceDpi, targetDpi)
     );
   }
 
@@ -57,7 +66,7 @@ export class DpiScalerUtil {
 
     dstCtx.imageSmoothingEnabled = true;
     dstCtx.imageSmoothingQuality = quality;
-    dstCtx.drawImage(input, 0, 0, outWidth, outHeight);
+    dstCtx.drawImage(input, inputRect.x, inputRect.y, inputRect.width, inputRect.height, 0, 0, outWidth, outHeight);
 
     return dstCtx.getImageData(0, 0, outWidth, outHeight);
   }

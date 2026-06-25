@@ -172,7 +172,7 @@ export class PolygonToolsController implements IController {
 
     const nodeTool = this.nodeEditingController.currentNodeTool;
     const bbox = snapGrowRectangle(this.calculatePolygonBbox());
-    const path = new Path2D(this.buildPolygonPathData(false));
+    const path = new Path2D(this.buildMyPolygonPathData(false));
 
     // draw polygon
     if (nodeTool === NodeTool.PolygonFill) {
@@ -237,7 +237,7 @@ export class PolygonToolsController implements IController {
       console.log("Model input rect:", optimizedRect);
       const jobInput: SegmentationInput = {
         image: this.backgroundImageStore.getImageData(optimizedRect),
-        imageRect: optimizedRect,
+        imageRect: new DOMRectReadOnly(0, 0, optimizedRect.width, optimizedRect.height),
         dpi: imageDpi
       };
       const jobOutput: SegmentationOutput = await this.segmentationModelRunner.runSegmentationJob(jobInput);
@@ -260,10 +260,12 @@ export class PolygonToolsController implements IController {
       console.log("Segmentation output:", jobOutput);
 
       for (const detection of filteredDetections) {
+        const maskBitmap = await createImageBitmap(detection.mask);
+
         this.nodeEditingController.paintNewNode(detection.className, detection.rect, (ctx) => {
           ctx.globalCompositeOperation = "source-over";
           ctx.fillStyle = "rgba(255, 0, 0, 1.0)";
-          ctx.fillRect(detection.rect.x, detection.rect.y, detection.rect.width, detection.rect.height);
+          ctx.drawImage(maskBitmap, detection.rect.x, detection.rect.y);
         });
       }
     }
@@ -345,32 +347,36 @@ export class PolygonToolsController implements IController {
   private svgPathElement: SVGPathElement | null = null;
   private svgPatterElements: SVGPatternElement[] = [];
 
-  private buildPolygonPathData(includePointer: boolean): string {
+  private buildPolygonPathData(polygonVertices: DOMPointReadOnly[], includePointer: boolean): string {
     let d = "";
 
-    for (let i = 0; i < this.polygonVertices.length; i++) {
+    for (let i = 0; i < polygonVertices.length; i++) {
       d += i === 0 ? "M " : "L ";
-      d += this.polygonVertices[i].x + "," + this.polygonVertices[i].y;
+      d += polygonVertices[i].x + "," + polygonVertices[i].y;
       d += " ";
     }
 
-    if (this.polygonVertices.length > 0 && includePointer) {
+    if (polygonVertices.length > 0 && includePointer) {
       // get mouse pointer position in the scene
       const scenePointer = this.mousePointerController.scenePointer;
       d += "L " + scenePointer.x + "," + scenePointer.y + " ";
     }
 
     // close the path
-    if (this.polygonVertices.length > 0) {
+    if (polygonVertices.length > 0) {
       d += "Z";
     }
 
     return d;
   }
 
+  private buildMyPolygonPathData(includePointer: boolean): string {
+    return this.buildPolygonPathData(this.polygonVertices, includePointer);
+  }
+
   public update(): void {
     // update SVG path definition
-    this.svgPathElement?.setAttribute("d", this.buildPolygonPathData(true));
+    this.svgPathElement?.setAttribute("d", this.buildMyPolygonPathData(true));
 
     // update crosshatch patern scaling
     for (const pattern of this.svgPatterElements) {

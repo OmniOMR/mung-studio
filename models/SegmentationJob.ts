@@ -59,6 +59,12 @@ export class SegmentationJob {
         this.model.getModelDpi(),
         this.input.dpi
       );
+      detection.mask = DpiScalerUtil.scaleImageToDpi(
+        detection.mask,
+        new DOMRectReadOnly(0, 0, detection.rect.width, detection.rect.height),
+        this.model.getModelDpi(),
+        this.input.dpi
+      );
     }
 
     return { detections };
