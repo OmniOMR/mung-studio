@@ -41,16 +41,26 @@ const MUNG_COMMIT_HASH = packageJson["pyodide"]["mung-commit"];
 
 console.log("Checking pyodide mung package...");
 
+let hasLatestMung = false;
+
 if (fs.existsSync(MUNG_PATH)) {
-  console.log("Mung package already exists. Removing for re-cloning...");
-  fs.rmSync(MUNG_PATH, { recursive: true });
+  const currentCommitHash = execSync(`git -C ${MUNG_PATH} rev-parse HEAD`).toString().trim();
+  if (currentCommitHash.startsWith(MUNG_COMMIT_HASH)) {
+    console.log("Mung package already exists and is up to date.");
+    hasLatestMung = true;
+  } else {
+    console.log("Mung package already exists, but is outdated. Removing for re-cloning...");
+    fs.rmSync(MUNG_PATH, { recursive: true });
+  }
 }
 
-console.log("Cloning the mung repository...")
-execSync(`git clone ${MUNG_REPO_URL} ${MUNG_PATH}`);
+if (!hasLatestMung) {
+  console.log("Cloning the mung repository...")
+  execSync(`git clone ${MUNG_REPO_URL} ${MUNG_PATH}`);
 
-console.log(`Checking out to the commit ${MUNG_COMMIT_HASH}...`);
-execSync(`git -C ${MUNG_PATH} -c "advice.detachedHead=false" checkout ${MUNG_COMMIT_HASH}`);
+  console.log(`Checking out to the commit ${MUNG_COMMIT_HASH}...`);
+  execSync(`git -C ${MUNG_PATH} -c "advice.detachedHead=false" checkout ${MUNG_COMMIT_HASH}`);
+}
 
 console.log("Pyodide mung package is ready.");
 console.log("");
