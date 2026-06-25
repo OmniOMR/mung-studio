@@ -127,7 +127,7 @@ export function SceneLayer_WebGL() {
       if (tool == EditorTool.NodeEditing) {
         masks.setHighlightDisplayMode(HighlightDisplayMode.HIDE);
       } else {
-        masks.setHighlightDisplayMode(HighlightDisplayMode.OUTLINE);
+        masks.setHighlightDisplayMode(masks.getDefaultHighlightDisplayMode());
       }
     };
 

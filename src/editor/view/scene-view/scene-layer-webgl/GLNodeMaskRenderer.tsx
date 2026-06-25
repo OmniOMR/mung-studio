@@ -186,7 +186,7 @@ class TextureAtlasAllocator {
   }
 
   private coalesceFreeTiles(row: TextureAtlasTile[]): void {
-    for (let tileX = 0; tileX < row.length - 1; ) {
+    for (let tileX = 0; tileX < row.length - 1;) {
       const tile = row[tileX];
       const nextTile = row[tileX + 1];
       if (!tile.used && !nextTile.used) {
@@ -570,10 +570,10 @@ class NodeMaskAtlasManager {
       console.log(
         "Created new NodeMaskAtlas of template",
         NodeMaskAtlasTemplate[requiredTemplate] +
-          ", caused by allocation request of size " +
-          width +
-          "x" +
-          height,
+        ", caused by allocation request of size " +
+        width +
+        "x" +
+        height,
       );
     }
     const allocation = this.allocateFromAtlas(newAtlas, width, height);
@@ -583,10 +583,10 @@ class NodeMaskAtlasManager {
     }
     console.log(
       "Failed to allocate from new NodeMaskAtlas - " +
-        width +
-        "x" +
-        height +
-        " too large?",
+      width +
+      "x" +
+      height +
+      " too large?",
     );
 
     return null;
@@ -662,7 +662,7 @@ class NodeMaskLayer {
     private selectionStore: SelectionStore,
     private colorMap: MaskColorMap,
     private atlas: NodeMaskAtlas | null,
-  ) {}
+  ) { }
 
   public addNode(
     nodeId: number,
@@ -829,9 +829,10 @@ const MASK_FRAGMENT_SHADER_SOURCE =
   const float MASK_ALPHA = 0.2;
   const float MARGIN_ALPHA = 1.0 / 255.0;
 
-  const int HIGHLIGHT_DISPLAY_MODE_OUTLINE = 0;
-  const int HIGHLIGHT_DISPLAY_MODE_NONE = 1;
-  const int HIGHLIGHT_DISPLAY_MODE_HIDE = 2;
+  const int HIGHLIGHT_DISPLAY_MODE_OUTLINE_STATIC = 0;
+  const int HIGHLIGHT_DISPLAY_MODE_OUTLINE_ANIMATED = 1;
+  const int HIGHLIGHT_DISPLAY_MODE_NONE = 2;
+  const int HIGHLIGHT_DISPLAY_MODE_HIDE = 3;
 
   uniform sampler2D u_texture;
   uniform sampler2D u_color_map;
@@ -839,6 +840,7 @@ const MASK_FRAGMENT_SHADER_SOURCE =
   uniform int u_highlight_display_mode;
   uniform float u_highlight_thickness_px;
   uniform float u_highlight_anim_weight;
+  uniform vec4 u_highlight_color;
 
   in vec2 v_texcoord;
   in vec2 v_screenspace_pos;
@@ -884,9 +886,13 @@ const MASK_FRAGMENT_SHADER_SOURCE =
   }
 
   vec4 getHighlightPixelColor() {
-    vec2 coords = v_screenspace_pos;
-    float pattern = step(0.5, fract((coords.x * 0.5 + coords.y * 0.5) * 100.0 + u_highlight_anim_weight));
-    return vec4(vec3(pattern), 1.0);
+    if (u_highlight_display_mode == HIGHLIGHT_DISPLAY_MODE_OUTLINE_STATIC) {
+      return u_highlight_color;
+    } else {
+      vec2 coords = v_screenspace_pos;
+      float pattern = step(0.5, fract((coords.x * 0.5 + coords.y * 0.5) * 100.0 + u_highlight_anim_weight));
+      return vec4(vec3(pattern), 1.0) * u_highlight_color;
+    }
   }
 
   void main() {
@@ -908,7 +914,7 @@ const MASK_FRAGMENT_SHADER_SOURCE =
       outColor = vec4(colorMapValue.rgb, maskAlpha);
     }
 
-    if (u_highlight_display_mode == HIGHLIGHT_DISPLAY_MODE_OUTLINE && (v_flags & FLAG_HIGHLIGHTED) != 0u) {
+    if (u_highlight_display_mode != HIGHLIGHT_DISPLAY_MODE_NONE && (v_flags & FLAG_HIGHLIGHTED) != 0u) {
       vec2 indicators = calcHighlightPixelIndicator();
 
       if (outColor.a > 0.0 || indicators.y > 0.0) {
@@ -969,7 +975,8 @@ class MaskColorMap {
 }
 
 export enum HighlightDisplayMode {
-  OUTLINE,
+  OUTLINE_STATIC,
+  OUTLINE_ANIMATED,
   NONE,
   HIDE,
 }
@@ -1002,8 +1009,12 @@ export class MaskAtlasRenderer implements GLDrawable {
   private classVisibilitySubscription: ISimpleEventHandler<readonly string[]>;
   private nodeSelectionSubscription: ISimpleEventHandler<SelectionNodeChangeMetadata>;
 
+  private readonly defaultHighlightDisplayMode: HighlightDisplayMode =
+    HighlightDisplayMode.OUTLINE_STATIC;
   private highlightDisplayMode: HighlightDisplayMode =
-    HighlightDisplayMode.OUTLINE;
+    this.defaultHighlightDisplayMode;
+
+  private highlightColor: number = 0xFFFFFFFF;
 
   public constructor(
     notationGraph: NotationGraphStore,
@@ -1119,6 +1130,7 @@ export class MaskAtlasRenderer implements GLDrawable {
       "u_highlight_anim_weight",
       this.calcHighlightAnimationWeight(),
     );
+    gl.setUniformColorInt("u_highlight_color", this.highlightColor);
     gl.configureTextureUnit(
       1,
       WebGL2RenderingContext.CLAMP_TO_EDGE,
@@ -1231,10 +1243,18 @@ export class MaskAtlasRenderer implements GLDrawable {
   }
 
   public hasLiveAnimation(): boolean {
-    return this.selectionStore.selectedNodeIDSet.size > 0;
+    return this.selectionStore.selectedNodeIDSet.size > 0 && this.highlightDisplayMode === HighlightDisplayMode.OUTLINE_ANIMATED;
   }
 
   public setHighlightDisplayMode(mode: HighlightDisplayMode): void {
     this.highlightDisplayMode = mode;
+  }
+
+  public getDefaultHighlightDisplayMode(): HighlightDisplayMode {
+    return this.defaultHighlightDisplayMode;
+  }
+
+  public setHighlightColor(color: number): void {
+    this.highlightColor = color;
   }
 }
