@@ -186,7 +186,7 @@ class TextureAtlasAllocator {
   }
 
   private coalesceFreeTiles(row: TextureAtlasTile[]): void {
-    for (let tileX = 0; tileX < row.length - 1;) {
+    for (let tileX = 0; tileX < row.length - 1; ) {
       const tile = row[tileX];
       const nextTile = row[tileX + 1];
       if (!tile.used && !nextTile.used) {
@@ -570,10 +570,10 @@ class NodeMaskAtlasManager {
       console.log(
         "Created new NodeMaskAtlas of template",
         NodeMaskAtlasTemplate[requiredTemplate] +
-        ", caused by allocation request of size " +
-        width +
-        "x" +
-        height,
+          ", caused by allocation request of size " +
+          width +
+          "x" +
+          height,
       );
     }
     const allocation = this.allocateFromAtlas(newAtlas, width, height);
@@ -583,10 +583,10 @@ class NodeMaskAtlasManager {
     }
     console.log(
       "Failed to allocate from new NodeMaskAtlas - " +
-      width +
-      "x" +
-      height +
-      " too large?",
+        width +
+        "x" +
+        height +
+        " too large?",
     );
 
     return null;
@@ -662,7 +662,7 @@ class NodeMaskLayer {
     private selectionStore: SelectionStore,
     private colorMap: MaskColorMap,
     private atlas: NodeMaskAtlas | null,
-  ) { }
+  ) {}
 
   public addNode(
     nodeId: number,
@@ -1014,7 +1014,7 @@ export class MaskAtlasRenderer implements GLDrawable {
   private highlightDisplayMode: HighlightDisplayMode =
     this.defaultHighlightDisplayMode;
 
-  private highlightColor: number = 0xFFFFFFFF;
+  private highlightColor: number = 0xffffffff;
 
   public constructor(
     notationGraph: NotationGraphStore,
@@ -1037,7 +1037,7 @@ export class MaskAtlasRenderer implements GLDrawable {
     this.notationGraph.onNodeUpdatedOrLinked.subscribe(
       (this.nodeUpdatedSubscription = (update: NodeUpdateMetadata) => {
         if (!update.isLinkUpdate) {
-          this.onNodeUpdated(update.newValue);
+          this.onNodeUpdated(update.oldValue, update.newValue);
         }
       }),
     );
@@ -1221,9 +1221,9 @@ export class MaskAtlasRenderer implements GLDrawable {
     }
   }
 
-  private onNodeUpdated(node: Node) {
-    this.onNodeRemoved(node);
-    this.onNodeInserted(node);
+  private onNodeUpdated(oldNode: Node, newNode: Node) {
+    this.onNodeRemoved(oldNode);
+    this.onNodeInserted(newNode);
   }
 
   public unsubscribeEvents(): void {
@@ -1243,7 +1243,10 @@ export class MaskAtlasRenderer implements GLDrawable {
   }
 
   public hasLiveAnimation(): boolean {
-    return this.selectionStore.selectedNodeIDSet.size > 0 && this.highlightDisplayMode === HighlightDisplayMode.OUTLINE_ANIMATED;
+    return (
+      this.selectionStore.selectedNodeIDSet.size > 0 &&
+      this.highlightDisplayMode === HighlightDisplayMode.OUTLINE_ANIMATED
+    );
   }
 
   public setHighlightDisplayMode(mode: HighlightDisplayMode): void {

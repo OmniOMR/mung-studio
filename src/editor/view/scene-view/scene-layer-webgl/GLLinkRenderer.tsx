@@ -150,7 +150,7 @@ class LinkGeometry {
     private stateProvider: LinkGeometryStateProvider,
     private lineThickness: number = 5,
     private arrowHeadScale: number = 2.0,
-  ) { }
+  ) {}
 
   public positionSource(): GeometrySource {
     return {
@@ -235,7 +235,7 @@ class LinkGeometry {
 
     const headFrontLength = this.lineThickness * 2 * this.arrowHeadScale;
     const headSideLength = this.lineThickness * this.arrowHeadScale;
-    
+
     const bodyEnd = vec2.create();
     vec2.scaleAndAdd(bodyEnd, toPoint, toFromNormVec, headFrontLength);
 
@@ -627,9 +627,9 @@ class LinkGeometryDrawable implements GLDrawable {
     return `${data.fromNode.id}-${data.toNode.id}-${data.linkType}`;
   }
 
-  public attach(gl: GLRenderer) { }
+  public attach(gl: GLRenderer) {}
 
-  public release(gl: GLRenderer) { }
+  public release(gl: GLRenderer) {}
 
   public hasSelectedLinks(): boolean {
     return this.selectionStore.partiallySelectedLinks.length > 0;
